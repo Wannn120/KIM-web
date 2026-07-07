@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+:root {
+  --background: #020617;
+  --foreground: #f8fafc;
+  --surface: #0f172a;
+  --surface-strong: #111827;
+  --muted: #94a3b8;
+  --accent: #22d3ee;
+  --accent-strong: #06b6d4;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: rgba(34, 211, 238, 0.28);
+  color: white;
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-full bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-slate-950 transition duration-200 hover:bg-cyan-400;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-full border border-cyan-400/30 bg-cyan-500/10 px-5 py-2.5 text-sm font-semibold text-cyan-300 transition duration-200 hover:bg-cyan-500/20;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-semibold text-slate-200 transition duration-200 hover:bg-white/10;
+  }
+
+  .card-surface {
+    @apply rounded-3xl border border-white/10 bg-slate-900/70 shadow-2xl shadow-black/30 backdrop-blur;
+  }
+
+  .card-glow {
+    @apply rounded-3xl border border-cyan-400/20 bg-cyan-500/10 shadow-[0_20px_80px_rgba(6,182,212,0.18)] backdrop-blur;
+  }
+
+  .navbar-shell {
+    @apply border-b border-white/10 bg-slate-950/80 backdrop-blur;
+  }
+
+  .sidebar-shell {
+    @apply rounded-3xl border border-white/10 bg-slate-900/70 p-4 shadow-2xl shadow-black/30;
+  }
+
+  .table-shell {
+    @apply overflow-hidden rounded-2xl border border-white/10;
+  }
+
+  .modal-shell {
+    @apply rounded-[2rem] border border-white/10 bg-slate-900/90 p-6 shadow-[0_20px_80px_rgba(6,182,212,0.18)] backdrop-blur;
+  }
+
+  .toast-shell {
+    @apply rounded-2xl border border-cyan-400/20 bg-slate-900/90 px-4 py-3 text-sm text-slate-200 shadow-[0_20px_80px_rgba(6,182,212,0.18)];
+  }
+
+  .loading-shell {
+    @apply animate-pulse rounded-2xl bg-slate-800/70;
+  }
+}
