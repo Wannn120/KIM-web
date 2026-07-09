@@ -20,7 +20,7 @@ export function HeroSection() {
 
   return (
     <section
-      className="relative overflow-hidden bg-[color:var(--background)]"
+      className="relative overflow-hidden bg-[color:var(--background)] -mt-16 pt-20 sm:pt-24"
       style={{
         backgroundImage: `url(${content.backgroundImageUrl})`,
         backgroundSize: "cover",
