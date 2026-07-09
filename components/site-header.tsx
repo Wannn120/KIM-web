@@ -1,20 +1,25 @@
 import Link from "next/link";
+import { UserMenu } from "@/components/user-menu";
 
 const navItems = [
   { href: "/", label: "Home" },
-  { href: "/fields", label: "Fields" },
-  { href: "/book", label: "Book" },
-  { href: "/login", label: "Login" },
+  { href: "/book", label: "Booking" },
+  { href: "/booking-history", label: "History" },
   { href: "/admin", label: "Admin" },
 ];
 
 export function SiteHeader() {
   return (
-    <header className="border-b border-white/10 bg-slate-950/80 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
-        <Link href="/" className="text-lg font-semibold text-white">
-          MiniSoccer
-        </Link>
+    <header className="navbar-shell sticky top-0 z-40 border-b border-white/10 bg-slate-950/90 backdrop-blur">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-4 lg:px-8">
+        <div className="flex items-center gap-4">
+          <Link href="/" className="text-lg font-semibold text-white">
+            Klaten International Minisoccer
+          </Link>
+          <span className="hidden rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs uppercase tracking-[0.3em] text-cyan-300 sm:inline-block">
+            1 field, premium booking
+          </span>
+        </div>
         <nav className="hidden items-center gap-6 text-sm text-slate-300 md:flex">
           {navItems.map((item) => (
             <Link key={item.href} href={item.href} className="transition hover:text-cyan-400">
@@ -22,12 +27,15 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <Link
-          href="/fields"
-          className="rounded-full bg-cyan-500 px-4 py-2 text-sm font-medium text-slate-950 transition hover:bg-cyan-400"
-        >
-          Book a Field
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/book"
+            className="btn-primary hidden md:inline-flex"
+          >
+            Book a field
+          </Link>
+          <UserMenu />
+        </div>
       </div>
     </header>
   );

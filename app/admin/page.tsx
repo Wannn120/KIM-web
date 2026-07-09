@@ -1,4 +1,6 @@
 import { AnimatedCard } from "@/components/animated-card";
+import { AdminContentEditor } from "@/components/admin-content-editor";
+import { AdminReviewManager } from "@/components/admin-review-manager";
 import { getAdminSummary } from "@/lib/admin-dashboard";
 
 export const dynamic = "force-dynamic";
@@ -138,6 +140,11 @@ export default function AdminPage() {
               ))}
             </div>
           </AnimatedCard>
+        </div>
+
+        <div className="grid gap-8 xl:grid-cols-[0.95fr_1.05fr]">
+          <AdminContentEditor />
+          <AdminReviewManager />
         </div>
       </div>
     </main>

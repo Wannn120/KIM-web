@@ -1,8 +1,31 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export const dynamic = "force-dynamic";
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      setMessage("Nama, email, dan password wajib diisi.");
+      return;
+    }
+
+    const user = { name, email, phone };
+    window.localStorage.setItem("minisoccer-user", JSON.stringify(user));
+    router.push("/profile");
+  };
+
   return (
     <main className="flex-1 bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.2),_transparent_35%)] px-6 py-16 lg:px-8">
       <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
@@ -25,28 +48,50 @@ export default function RegisterPage() {
             <Link href="/login" className="text-sm text-cyan-300 hover:text-cyan-200">Sign in instead</Link>
           </div>
 
-          <form className="mt-6 space-y-4">
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4 text-sm text-slate-300">
             <div className="grid gap-4 md:grid-cols-2">
               <label className="text-sm text-slate-300">
                 <span className="mb-2 block">Full name</span>
-                <input className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none" placeholder="Ari Putra" />
+                <input
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none"
+                  placeholder="Ari Putra"
+                />
               </label>
               <label className="text-sm text-slate-300">
                 <span className="mb-2 block">Phone</span>
-                <input className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none" placeholder="0812xxxx" />
+                <input
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
+                  className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none"
+                  placeholder="0812xxxx"
+                />
               </label>
             </div>
             <label className="block text-sm text-slate-300">
               <span className="mb-2 block">Email</span>
-              <input className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none" placeholder="you@example.com" />
+              <input
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none"
+                placeholder="you@example.com"
+              />
             </label>
             <label className="block text-sm text-slate-300">
               <span className="mb-2 block">Password</span>
-              <input className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none" type="password" placeholder="••••••••" />
+              <input
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none"
+                type="password"
+                placeholder="••••••••"
+              />
             </label>
             <button className="w-full rounded-full bg-cyan-500 px-4 py-3 font-semibold text-slate-950 transition hover:bg-cyan-400">
               Create account
             </button>
+            {message ? <p className="text-sm text-rose-300">{message}</p> : null}
           </form>
         </section>
       </div>
