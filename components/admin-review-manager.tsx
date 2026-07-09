@@ -55,9 +55,9 @@ export function AdminReviewManager() {
 
   return (
     <div className="rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 backdrop-blur">
-      <div className="mb-6 flex items-center justify-between gap-4">
+          <div className="mb-6 flex items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">Review management</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Review management</p>
           <h2 className="mt-2 text-2xl font-semibold text-white">Edit or remove customer ratings</h2>
         </div>
       </div>
@@ -72,14 +72,10 @@ export function AdminReviewManager() {
                 <div>
                   <p className="font-semibold text-white">{review.customerName}</p>
                   <p className="text-sm text-slate-400">{review.date}</p>
-                  <p className="text-sm text-cyan-300">{review.rating} ★</p>
+                  <p className="text-sm text-[color:var(--accent)]">{review.rating} ★</p>
                 </div>
                 <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => startEdit(review)}
-                    className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-2 text-sm text-cyan-200 transition hover:bg-cyan-500/20"
-                  >
+                  <button type="button" onClick={() => startEdit(review)} className="rounded-full border border-[color:rgba(16,185,129,0.18)] bg-[color:rgba(16,185,129,0.06)] px-3 py-2 text-sm text-[color:var(--accent)] transition hover:bg-[color:rgba(16,185,129,0.08)]">
                     Edit
                   </button>
                   <button

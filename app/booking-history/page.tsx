@@ -15,35 +15,65 @@ export default function BookingHistoryPage() {
         <AnimatedCard className="p-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">Booking history</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Booking history</p>
               <h1 className="mt-2 text-4xl font-semibold text-white">Your complete booking timeline</h1>
             </div>
-            <button className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-300">Export</button>
+            <button className="rounded-full border border-[color:rgba(16,185,129,0.18)] bg-[color:rgba(16,185,129,0.06)] px-4 py-2 text-sm text-[color:var(--accent)]">Export</button>
           </div>
 
-          <div className="mt-8 overflow-hidden rounded-2xl border border-white/10">
-            <table className="min-w-full text-left text-sm text-slate-300">
-              <thead className="bg-slate-950/80 text-slate-400">
-                <tr>
-                  <th className="px-4 py-3">Booking ID</th>
-                  <th className="px-4 py-3">Field</th>
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Amount</th>
-                  <th className="px-4 py-3">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {history.map((item) => (
-                  <tr key={item.id} className="border-t border-white/10 bg-slate-900/40">
-                    <td className="px-4 py-3 text-white">{item.id}</td>
-                    <td className="px-4 py-3">{item.field}</td>
-                    <td className="px-4 py-3">{item.date}</td>
-                    <td className="px-4 py-3">{item.amount}</td>
-                    <td className="px-4 py-3"><span className="rounded-full bg-cyan-500/15 px-3 py-1 text-cyan-300">{item.status}</span></td>
+          <div className="mt-8">
+            <div className="hidden md:block overflow-x-auto rounded-2xl border border-white/10">
+              <table className="min-w-[640px] w-full table-auto text-left text-sm text-slate-300">
+                <thead className="bg-slate-950/80 text-slate-400">
+                  <tr>
+                    <th className="px-4 py-3">Booking ID</th>
+                    <th className="px-4 py-3">Field</th>
+                    <th className="px-4 py-3">Date</th>
+                    <th className="px-4 py-3">Amount</th>
+                    <th className="px-4 py-3">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {history.map((item) => (
+                    <tr key={item.id} className="border-t border-white/10 bg-slate-900/40">
+                      <td className="px-4 py-3 text-white">{item.id}</td>
+                      <td className="px-4 py-3">{item.field}</td>
+                      <td className="px-4 py-3">{item.date}</td>
+                      <td className="px-4 py-3">{item.amount}</td>
+                      <td className="px-4 py-3"><span className="rounded-full bg-[color:rgba(16,185,129,0.12)] px-3 py-1 text-[color:var(--accent)]">{item.status}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="md:hidden space-y-3">
+              {history.map((item) => (
+                <div key={item.id} className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-slate-400">Booking ID</p>
+                      <p className="font-semibold text-white">{item.id}</p>
+                    </div>
+                    <span className="rounded-full bg-[color:rgba(16,185,129,0.12)] px-3 py-1 text-[color:var(--accent)] text-sm">{item.status}</span>
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-slate-300">
+                    <div>
+                      <p className="text-xs text-slate-400">Field</p>
+                      <p className="text-sm text-white">{item.field}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400">Date</p>
+                      <p className="text-sm text-white">{item.date}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-xs text-slate-400">Amount</p>
+                      <p className="text-sm text-white">{item.amount}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </AnimatedCard>
       </div>

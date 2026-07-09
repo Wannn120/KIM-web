@@ -30,7 +30,7 @@ export function HeroSection() {
       <div className="absolute inset-0 bg-slate-950/60" />
       <div className="relative px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
         <div className="mx-auto max-w-5xl text-center text-white">
-          <p className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-300">
+          <p className="text-sm font-semibold uppercase tracking-[0.35em] text-[color:var(--accent-strong)]">
             {content.locationLabel}
           </p>
           <h1 className="mt-5 text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">

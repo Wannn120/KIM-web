@@ -31,14 +31,14 @@ export default function AdminPage() {
       <div className="mx-auto max-w-6xl space-y-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">Owner / admin</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Owner / admin</p>
             <h1 className="mt-3 text-3xl font-semibold text-white sm:text-4xl">Operations command center</h1>
             <p className="mt-3 max-w-2xl text-sm text-slate-400 sm:text-base">
               Track revenue, demand patterns, field utilization, and customer activity from one place.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <a href="/api/admin/export/excel" className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20">
+            <a href="/api/admin/export/excel" className="rounded-full border border-[color:rgba(16,185,129,0.18)] bg-[color:rgba(16,185,129,0.06)] px-4 py-2 text-sm font-medium text-[color:var(--accent)] transition hover:bg-[color:rgba(16,185,129,0.08)]">
               Export Excel
             </a>
             <a href="/api/admin/export/pdf" className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10">
@@ -70,17 +70,17 @@ export default function AdminPage() {
           <AnimatedCard className="p-8">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm uppercase tracking-[0.3em] text-cyan-400">Revenue chart</p>
+                <p className="text-sm uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Revenue chart</p>
                 <h2 className="mt-2 text-2xl font-semibold text-white">Weekly demand snapshot</h2>
               </div>
-              <a href="/reports" className="text-sm text-cyan-300">Open reports →</a>
+              <a href="/reports" className="text-sm text-[color:var(--accent)]">Open reports →</a>
             </div>
             <div className="mt-8 overflow-x-auto rounded-2xl border border-white/10 bg-slate-950/60 p-4">
               <div className="min-w-[560px] flex h-48 items-end gap-3">
                 {chartSeries.map((point) => (
                   <div key={point.label} className="flex flex-1 flex-col items-center gap-3">
                     <div className="flex h-32 w-full items-end rounded-xl bg-slate-900/80 p-1">
-                      <div className="w-full rounded-lg bg-gradient-to-t from-cyan-500 to-cyan-300" style={{ height: `${Math.max(point.value, 20)}%` }} />
+                      <div className="w-full rounded-lg bg-gradient-to-t from-[color:var(--accent)] to-[color:var(--accent-strong)]" style={{ height: `${Math.max(point.value, 20)}%` }} />
                     </div>
                     <span className="text-xs text-slate-400">{point.label}</span>
                   </div>
@@ -95,7 +95,7 @@ export default function AdminPage() {
               {summary.peakHours.map((slot) => (
                 <div key={slot.hour} className="flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-slate-300">
                   <span>{slot.hour}</span>
-                  <span className="font-semibold text-cyan-300">{slot.bookings} bookings</span>
+                  <span className="font-semibold text-[color:var(--accent)]">{slot.bookings} bookings</span>
                 </div>
               ))}
             </div>
@@ -118,7 +118,7 @@ export default function AdminPage() {
               </div>
               <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3">
                 <span>Active customers</span>
-                <span className="font-semibold text-cyan-300">{summary.customerStats.activeCustomers}</span>
+                <span className="font-semibold text-[color:var(--accent)]">{summary.customerStats.activeCustomers}</span>
               </div>
               <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3">
                 <span>New this month</span>
@@ -130,13 +130,13 @@ export default function AdminPage() {
           <AnimatedCard className="p-8">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-semibold text-white">Calendar</h2>
-              <a href="/admin/calendar" className="text-sm text-cyan-300">View full →</a>
+              <a href="/admin/calendar" className="text-sm text-[color:var(--accent)]">View full →</a>
             </div>
             <div className="mt-6 space-y-3">
               {summary.calendarEvents.map((event) => (
                 <div key={event.title} className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-slate-300">
                   <p className="font-semibold text-white">{event.title}</p>
-                  <p className="mt-1 text-cyan-300">{event.date}</p>
+                  <p className="mt-1 text-[color:var(--accent)]">{event.date}</p>
                   <p className="mt-1 text-slate-400">{event.field}</p>
                 </div>
               ))}

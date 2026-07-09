@@ -20,10 +20,10 @@ export default function AdminCalendarPage() {
         <AnimatedCard className="p-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">Admin calendar</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Admin calendar</p>
               <h1 className="mt-2 text-4xl font-semibold text-white">Weekly field schedule</h1>
             </div>
-            <button className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-300">+ Add availability</button>
+            <button className="rounded-full border border-[color:rgba(16,185,129,0.18)] bg-[color:rgba(16,185,129,0.06)] px-4 py-2 text-sm text-[color:var(--accent)]">+ Add availability</button>
           </div>
 
           <div className="mt-8 grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-7">
@@ -32,7 +32,7 @@ export default function AdminCalendarPage() {
                 <h3 className="text-lg font-semibold text-white">{slot.day}</h3>
                 <div className="mt-4 space-y-2">
                   {slot.items.map((item) => (
-                    <div key={item} className="rounded-2xl bg-cyan-500/10 p-3 text-sm text-cyan-200">{item}</div>
+                    <div key={item} className="rounded-2xl bg-[color:rgba(16,185,129,0.06)] p-3 text-sm text-[color:var(--accent)]">{item}</div>
                   ))}
                 </div>
               </div>

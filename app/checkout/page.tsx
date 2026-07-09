@@ -8,7 +8,7 @@ export default function CheckoutPage() {
     <main className="flex-1 px-6 py-16 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-8">
         <div className="card-surface p-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">Secure checkout</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Secure checkout</p>
           <h1 className="mt-3 text-4xl font-semibold text-white">Review your booking details</h1>
           <p className="mt-4 max-w-2xl text-lg text-slate-400">
             Confirm the field, date, and time before moving to the payment gateway.
@@ -40,7 +40,7 @@ export default function CheckoutPage() {
             <div className="flex justify-between"><span>Discount</span><span>- Rp 20.000</span></div>
             <div className="flex justify-between border-t border-white/10 pt-4 text-base font-semibold text-white"><span>Total</span><span>Rp 170.000</span></div>
           </div>
-          <Link href="/payment" className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-cyan-500 px-4 py-3 font-semibold text-slate-950 transition hover:bg-cyan-400">
+          <Link href="/payment" className="mt-8 btn-primary">
             Proceed to payment
           </Link>
         </AnimatedCard>

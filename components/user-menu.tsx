@@ -58,16 +58,12 @@ export function UserMenu() {
               <>
                 <Link
                   href="/profile"
-                  className="block rounded-2xl border border-white/10 bg-slate-900/80 px-3 py-2 text-sm transition hover:border-cyan-400/30 hover:bg-white/5"
+                  className="block rounded-2xl border border-white/10 bg-slate-900/80 px-3 py-2 text-sm transition hover:border-[color:rgba(16,185,129,0.12)] hover:bg-white/5"
                   onClick={() => setOpen(false)}
                 >
                   Edit profile
                 </Link>
-                <button
-                  type="button"
-                  onClick={logout}
-                  className="w-full rounded-2xl bg-cyan-500 px-3 py-2 text-left text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
-                >
+                <button type="button" onClick={logout} className="w-full rounded-2xl bg-[color:var(--accent)] px-3 py-2 text-left text-sm font-semibold text-slate-950 transition hover:bg-[color:var(--accent-strong)]">
                   Sign out
                 </button>
               </>
@@ -75,16 +71,12 @@ export function UserMenu() {
               <>
                 <Link
                   href="/login"
-                  className="block rounded-2xl border border-white/10 bg-slate-900/80 px-3 py-2 text-sm transition hover:border-cyan-400/30 hover:bg-white/5"
+                  className="block rounded-2xl border border-white/10 bg-slate-900/80 px-3 py-2 text-sm transition hover:border-[color:rgba(16,185,129,0.12)] hover:bg-white/5"
                   onClick={() => setOpen(false)}
                 >
                   Sign in
                 </Link>
-                <Link
-                  href="/register"
-                  className="block rounded-2xl bg-cyan-500 px-3 py-2 text-center text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
-                  onClick={() => setOpen(false)}
-                >
+                <Link href="/register" className="block rounded-2xl bg-[color:var(--accent)] px-3 py-2 text-center text-sm font-semibold text-slate-950 transition hover:bg-[color:var(--accent-strong)]" onClick={() => setOpen(false)}>
                   Sign up
                 </Link>
               </>

@@ -69,7 +69,7 @@ export function ReviewSection() {
         <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-6">
             <div className="rounded-[2rem] border border-white/10 bg-slate-950/70 p-8 backdrop-blur">
-              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">Add a review</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Add a review</p>
               <h2 className="mt-2 text-3xl font-semibold text-white sm:text-4xl">Tell us about your game experience</h2>
               <form onSubmit={handleSubmit} className="mt-6 space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
@@ -123,9 +123,9 @@ export function ReviewSection() {
                     <p className="font-semibold text-white">{review.customerName}</p>
                     <p className="text-sm text-slate-400">{review.date}</p>
                   </div>
-                  <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-sm text-cyan-300">
-                    {review.rating} ★
-                  </span>
+                    <span className="rounded-full border border-[color:rgba(16,185,129,0.18)] bg-[color:rgba(16,185,129,0.06)] px-3 py-1 text-sm text-[color:var(--accent)]">
+                      {review.rating} ★
+                    </span>
                 </div>
                 <p className="mt-4 text-slate-300">{review.comment}</p>
               </div>

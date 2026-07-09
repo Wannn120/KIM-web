@@ -10,10 +10,10 @@ export default function FieldsPage() {
       <div className="mx-auto max-w-7xl">
         <div className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">Browse fields</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Browse fields</p>
             <h1 className="mt-2 text-4xl font-semibold text-white">Find a field for your next match</h1>
           </div>
-          <Link href="/book" className="rounded-full border border-cyan-400/40 px-5 py-2 text-sm text-cyan-300 transition hover:bg-cyan-400/10">
+          <Link href="/book" className="rounded-full border border-[color:rgba(16,185,129,0.24)] px-5 py-2 text-sm text-[color:var(--accent)] transition hover:bg-[color:rgba(16,185,129,0.06)]">
             Continue to booking
           </Link>
         </div>

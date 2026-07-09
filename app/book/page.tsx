@@ -8,7 +8,7 @@ export default function BookPage() {
     <main className="flex-1 px-6 py-16 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-10">
         <section className="card-surface p-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">Booking flow</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Booking flow</p>
           <h1 className="mt-3 text-4xl font-semibold text-white">Choose your date, time, and payment method</h1>
           <p className="mt-4 max-w-2xl text-lg text-slate-400">
             The booking experience is designed for fast checkout with instant confirmation and a clean hourly schedule.
@@ -28,7 +28,7 @@ export default function BookPage() {
           <div className="card-surface p-8">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">Available schedule</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Available schedule</p>
                 <h2 className="mt-2 text-3xl font-semibold text-white">One client per slot, selected by hour</h2>
               </div>
               <p className="text-sm text-slate-400 max-w-xl">
@@ -36,27 +36,54 @@ export default function BookPage() {
               </p>
             </div>
 
-            <div className="mt-8 overflow-x-auto rounded-3xl border border-white/10 bg-slate-950/70">
-              <table className="min-w-[640px] w-full table-auto text-left text-sm text-slate-300">
-                <thead className="bg-slate-900/80 text-slate-400">
-                  <tr>
-                    <th className="whitespace-nowrap px-4 py-3">Date</th>
-                    <th className="whitespace-nowrap px-4 py-3">Time</th>
-                    <th className="whitespace-nowrap px-4 py-3">Field</th>
-                    <th className="whitespace-nowrap px-4 py-3">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bookedSlots.map((slot) => (
-                    <tr key={`${slot.date}-${slot.time}-${slot.field}`} className="border-t border-white/10 bg-slate-950/50">
-                      <td className="px-4 py-3 text-white">{slot.date}</td>
-                      <td className="px-4 py-3">{slot.time}</td>
-                      <td className="px-4 py-3">{slot.field}</td>
-                      <td className="px-4 py-3 text-cyan-300">{slot.status}</td>
+            <div className="mt-8">
+              <div className="hidden md:block overflow-x-auto rounded-3xl border border-white/10 bg-slate-950/70">
+                <table className="min-w-[640px] w-full table-auto text-left text-sm text-slate-300">
+                  <thead className="bg-slate-900/80 text-slate-400">
+                    <tr>
+                      <th className="whitespace-nowrap px-4 py-3">Date</th>
+                      <th className="whitespace-nowrap px-4 py-3">Time</th>
+                      <th className="whitespace-nowrap px-4 py-3">Field</th>
+                      <th className="whitespace-nowrap px-4 py-3">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {bookedSlots.map((slot) => (
+                      <tr key={`${slot.date}-${slot.time}-${slot.field}`} className="border-t border-white/10 bg-slate-950/50">
+                        <td className="px-4 py-3 text-white">{slot.date}</td>
+                        <td className="px-4 py-3">{slot.time}</td>
+                        <td className="px-4 py-3">{slot.field}</td>
+                        <td className="px-4 py-3 text-[color:var(--accent)]">{slot.status}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="md:hidden space-y-3">
+                {bookedSlots.map((slot) => (
+                  <div key={`${slot.date}-${slot.time}-${slot.field}`} className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-slate-400">Date</p>
+                        <p className="font-semibold text-white">{slot.date}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-400">Time</p>
+                        <p className="text-sm text-white">{slot.time}</p>
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <p className="text-xs text-slate-400">Field</p>
+                      <p className="text-sm text-white">{slot.field}</p>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between">
+                      <p className="text-xs text-slate-400">Status</p>
+                      <span className="rounded-full bg-[color:rgba(16,185,129,0.12)] px-3 py-1 text-[color:var(--accent)] text-sm">{slot.status}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -68,7 +95,7 @@ export default function BookPage() {
               <div className="flex justify-between"><span>Time</span><span>19:00 - 20:00</span></div>
               <div className="flex justify-between border-t border-white/10 pt-4 text-base font-semibold text-white"><span>Total</span><span>Rp 180.000</span></div>
             </div>
-            <Link href="/checkout" className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-cyan-500 px-4 py-3 font-semibold text-slate-950 transition hover:bg-cyan-400">
+            <Link href="/checkout" className="mt-8 btn-primary">
               Continue to checkout
             </Link>
           </aside>

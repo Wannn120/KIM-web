@@ -15,10 +15,10 @@ export default function CustomerManagementPage() {
         <AnimatedCard className="p-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">Customer management</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Customer management</p>
               <h1 className="mt-2 text-4xl font-semibold text-white">Maintain relationships and engagement</h1>
             </div>
-            <button className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-300">+ Add customer</button>
+            <button className="rounded-full border border-[color:rgba(16,185,129,0.18)] bg-[color:rgba(16,185,129,0.06)] px-4 py-2 text-sm text-[color:var(--accent)]">+ Add customer</button>
           </div>
 
           <div className="mt-8 grid gap-4">
@@ -28,7 +28,7 @@ export default function CustomerManagementPage() {
                   <h3 className="font-semibold text-white">{customer.name}</h3>
                   <p className="text-sm text-slate-400">{customer.bookings} bookings</p>
                 </div>
-                <span className="rounded-full bg-cyan-500/15 px-3 py-1 text-sm text-cyan-300">{customer.status}</span>
+                <span className="rounded-full bg-[color:rgba(16,185,129,0.12)] px-3 py-1 text-sm text-[color:var(--accent)]">{customer.status}</span>
               </div>
             ))}
           </div>

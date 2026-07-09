@@ -20,10 +20,10 @@ export default function DashboardPage() {
       <div className="mx-auto max-w-6xl space-y-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">Customer dashboard</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Customer dashboard</p>
             <h1 className="mt-3 text-3xl font-semibold text-white sm:text-4xl">Your match-day control center</h1>
           </div>
-          <div className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-300">
+          <div className="rounded-full border border-[color:rgba(16,185,129,0.18)] bg-[color:rgba(16,185,129,0.06)] px-4 py-2 text-sm text-[color:var(--accent)]">
             Welcome back, Ari
           </div>
         </div>
@@ -44,7 +44,7 @@ export default function DashboardPage() {
                 <h2 className="text-2xl font-semibold text-white">Upcoming bookings</h2>
                 <p className="mt-2 text-sm text-slate-400">Keep track of your next matches and arrivals.</p>
               </div>
-              <a href="/booking-history" className="text-sm text-cyan-300">View history →</a>
+              <a href="/booking-history" className="text-sm text-[color:var(--accent)]">View history →</a>
             </div>
             <div className="mt-6 space-y-4">
               {upcoming.map((item) => (
@@ -53,7 +53,7 @@ export default function DashboardPage() {
                     <h3 className="font-semibold text-white">{item.field}</h3>
                     <p className="text-sm text-slate-400">{item.time}</p>
                   </div>
-                  <span className="rounded-full bg-cyan-500/15 px-3 py-1 text-sm text-cyan-300">{item.status}</span>
+                  <span className="rounded-full bg-[color:rgba(16,185,129,0.12)] px-3 py-1 text-sm text-[color:var(--accent)]">{item.status}</span>
                 </div>
               ))}
             </div>
@@ -69,7 +69,7 @@ export default function DashboardPage() {
                 "Get confirmation",
               ].map((step, index) => (
                 <div key={step} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/70 p-4">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-500/15 text-sm font-semibold text-cyan-300">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[color:rgba(16,185,129,0.12)] text-sm font-semibold text-[color:var(--accent)]">
                     {index + 1}
                   </div>
                   <span className="text-sm text-slate-300">{step}</span>

@@ -28,7 +28,7 @@ export function DesignSystemPreview() {
             <h3 className="mt-2 text-xl font-semibold text-white">Elevated content</h3>
           </div>
           <div className="card-glow p-6">
-            <p className="text-sm text-cyan-300">Glow card</p>
+            <p className="text-sm text-[color:var(--accent)]">Glow card</p>
             <h3 className="mt-2 text-xl font-semibold text-white">Interactive highlight</h3>
           </div>
         </div>

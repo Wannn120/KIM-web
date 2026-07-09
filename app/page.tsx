@@ -15,10 +15,10 @@ export default function Home() {
         <div className="mx-auto max-w-6xl">
           <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">Lapangan unggulan</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Lapangan unggulan</p>
               <h2 className="mt-2 text-3xl font-semibold text-white sm:text-4xl">Satu lapangan terbaik untuk setiap laga</h2>
             </div>
-            <Link href="/book" className="text-sm font-medium text-cyan-300 transition hover:text-cyan-200">
+            <Link href="/book" className="text-sm font-medium text-[color:var(--accent)] transition hover:text-[color:var(--accent-strong)]">
               Booking sekarang →
             </Link>
           </div>
@@ -37,7 +37,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">Lokasi lapangan</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Lokasi lapangan</p>
               <h2 className="mt-2 text-3xl font-semibold text-white">Temukan lapangan kami di Klaten</h2>
               <p className="mt-4 text-lg text-slate-400 max-w-2xl">
                 Lapangan terletak strategis, mudah dijangkau, dan didukung fasilitas pendukung untuk tim mini soccer.

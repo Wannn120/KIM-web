@@ -18,17 +18,15 @@ export function SiteHeader() {
     <header className="navbar-shell sticky top-0 z-40 border-b border-white/10 bg-slate-950/90 backdrop-blur">
       <div className="mx-auto flex max-w-7xl flex-nowrap items-center justify-between gap-2 px-3 py-3 sm:px-4 lg:px-6">
         <div className="flex items-center gap-3 min-w-0">
-          <Link href="/" className="text-base font-semibold text-white sm:text-lg truncate max-w-[180px] md:max-w-none">
-            Klaten Minisoccer
+          <Link href="/" className="inline-flex items-center gap-3 truncate max-w-[220px] md:max-w-none">
+            <img src="/kim-logo.svg" alt="KIM" width={36} height={36} className="h-9 w-9 rounded-lg object-cover" />
+            <span className="text-base font-semibold text-white sm:text-lg truncate">Klaten Minisoccer</span>
           </Link>
-          <span className="hidden rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-cyan-300 sm:inline-block">
-            1 field, premium booking
-          </span>
         </div>
 
         <nav className="hidden items-center gap-6 text-sm text-slate-300 md:flex">
           {navItems.map((item) => (
-            <Link key={item.href} href={item.href} className="transition hover:text-cyan-400">
+            <Link key={item.href} href={item.href} className="transition hover:text-[color:var(--accent-strong)]">
               {item.label}
             </Link>
           ))}
@@ -64,11 +62,7 @@ export function SiteHeader() {
                 {item.label}
               </Link>
             ))}
-            <Link
-              href="/book"
-              className="block rounded-2xl bg-cyan-500 px-4 py-3 text-center text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
-              onClick={() => setMobileOpen(false)}
-            >
+            <Link href="/book" className="btn-primary block" onClick={() => setMobileOpen(false)}>
               Book a field
             </Link>
           </div>

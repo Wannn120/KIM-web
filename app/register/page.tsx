@@ -29,23 +29,23 @@ export default function RegisterPage() {
   return (
     <main className="flex-1 bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.2),_transparent_35%)] px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-        <section className="rounded-[2rem] border border-white/10 bg-slate-900/70 p-8 shadow-2xl shadow-cyan-950/20">
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">Join the platform</p>
+        <section className="rounded-[2rem] border border-white/10 bg-slate-900/70 p-8 shadow-2xl shadow-[0_20px_80px_rgba(16,185,129,0.08)]">
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Join the platform</p>
           <h1 className="mt-4 text-3xl font-semibold text-white sm:text-4xl">Create your account and start booking</h1>
           <p className="mt-4 text-base text-slate-400 sm:text-lg">
             Unlock instant booking, secure payments, and personalized field recommendations.
           </p>
           <div className="mt-8 space-y-3 text-sm text-slate-300">
-            <div className="rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-4">✓ Fast booking in under 2 minutes</div>
-            <div className="rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-4">✓ Smart reminders and confirmations</div>
-            <div className="rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-4">✓ Live availability and secure checkout</div>
+            <div className="rounded-2xl border border-[color:rgba(16,185,129,0.12)] bg-[color:rgba(16,185,129,0.06)] p-4">✓ Fast booking in under 2 minutes</div>
+            <div className="rounded-2xl border border-[color:rgba(16,185,129,0.12)] bg-[color:rgba(16,185,129,0.06)] p-4">✓ Smart reminders and confirmations</div>
+            <div className="rounded-2xl border border-[color:rgba(16,185,129,0.12)] bg-[color:rgba(16,185,129,0.06)] p-4">✓ Live availability and secure checkout</div>
           </div>
         </section>
 
         <section className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-8 shadow-2xl shadow-cyan-950/20">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-2xl font-semibold text-white">Create account</h2>
-            <Link href="/login" className="text-sm text-cyan-300 hover:text-cyan-200">Sign in instead</Link>
+            <Link href="/login" className="text-sm text-[color:var(--accent)] hover:text-[color:var(--accent-strong)]">Sign in instead</Link>
           </div>
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4 text-sm text-slate-300">
@@ -88,7 +88,7 @@ export default function RegisterPage() {
                 placeholder="••••••••"
               />
             </label>
-            <button className="w-full rounded-full bg-cyan-500 px-4 py-3 font-semibold text-slate-950 transition hover:bg-cyan-400">
+            <button className="btn-primary">
               Create account
             </button>
             {message ? <p className="text-sm text-rose-300">{message}</p> : null}
