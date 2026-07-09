@@ -1,6 +1,5 @@
 import { AnimatedCard } from "@/components/animated-card";
 
-const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const slots = [
   { day: "Mon", items: ["09:00 Elite Turf 1", "19:00 Club Arena"] },
   { day: "Tue", items: ["10:00 Elite Turf 2"] },

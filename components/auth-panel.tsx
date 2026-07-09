@@ -1,5 +1,3 @@
-import type { ReactNode } from "react";
-
 interface AuthPanelProps {
   eyebrow: string;
   title: string;

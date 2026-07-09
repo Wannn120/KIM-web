@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { siteContent, facilityImages } from "@/lib/mock-data";
 
@@ -64,7 +65,7 @@ export function HeroSection() {
             {facilityImages.map((facility) => (
               <div key={facility.title} className="rounded-[2rem] border border-[color:var(--border-strong)] bg-[color:var(--surface)] p-4 shadow-sm backdrop-blur-xl">
                 <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-[color:var(--surface)] sm:aspect-[16/9]">
-                  <img src={facility.imageUrl} alt={facility.title} className="h-full w-full object-cover" />
+                  <Image src={facility.imageUrl} alt={facility.title} fill sizes="(max-width: 768px) 100vw, 25vw" loading="lazy" className="object-cover" />
                 </div>
                 <h3 className="mt-4 text-lg font-semibold text-[color:var(--foreground)]">{facility.title}</h3>
                 <p className="mt-2 text-sm text-[color:var(--muted)]">{facility.description}</p>
