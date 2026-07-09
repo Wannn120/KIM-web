@@ -4,13 +4,13 @@
 :root {
   --background: #eff4fb;
   --foreground: #111827;
-  --surface: rgba(255,255,255,0.42);
-  --surface-strong: rgba(255,255,255,0.68);
+  --surface: rgba(255,255,255,0.08);
+  --surface-strong: rgba(255,255,255,0.12);
   --muted: #475569;
   --border-strong: rgba(15,23,42,0.08);
   --accent: #10b981;
   --accent-strong: #22c55e;
-  --background-image: radial-gradient(circle at 18% 18%, rgba(255,255,255,0.96), transparent 14%), radial-gradient(circle at 80% 16%, rgba(241,245,249,0.88), transparent 16%), radial-gradient(circle at 50% 70%, rgba(226,232,240,0.65), transparent 24%), linear-gradient(180deg, rgba(239,244,251,1), rgba(245,249,253,1));
+  --background-image: radial-gradient(circle at 18% 18%, rgba(255,255,255,0.92), transparent 14%), radial-gradient(circle at 80% 16%, rgba(241,245,249,0.72), transparent 16%), radial-gradient(circle at 50% 70%, rgba(226,232,240,0.45), transparent 24%), linear-gradient(180deg, rgba(239,244,251,0.92), rgba(245,249,253,0.96));
 }
 
 [data-theme="dark"] {
@@ -76,24 +76,24 @@ body[data-theme="light"] .border-white\/10 {
 }
 
 .hero-overlay {
-  background-color: rgba(255,255,255,0.42);
-  backdrop-filter: blur(12px);
+  background-color: rgba(255,255,255,0.08);
+  backdrop-filter: blur(18px);
 }
 
 .hero-accent {
-  background-image: linear-gradient(135deg, rgba(251,203,232,0.32), rgba(147,197,253,0.16), rgba(199,210,254,0));
+  background-image: linear-gradient(135deg, rgba(251,203,232,0.18), rgba(147,197,253,0.10), rgba(199,210,254,0));
 }
 
 .hero-glow {
-  background-color: rgba(255,255,255,0.92);
+  background-color: rgba(255,255,255,0.12);
 }
 
 .hero-ring {
-  background-color: rgba(59,130,246,0.14);
+  background-color: rgba(59,130,246,0.10);
 }
 
 .hero-bottom {
-  background-color: rgba(14,165,233,0.08);
+  background-color: rgba(14,165,233,0.06);
 }
 
 html[data-theme="dark"] .hero-overlay,
@@ -180,11 +180,11 @@ a {
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-full border border-[color:rgba(147,197,253,0.36)] bg-gradient-to-r from-[rgba(219,234,254,0.92)] to-[rgba(255,255,255,0.9)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition duration-200 hover:brightness-105;
+    @apply inline-flex items-center justify-center rounded-full border border-[color:rgba(147,197,253,0.36)] bg-gradient-to-r from-[rgba(219,234,254,0.72)] to-[rgba(255,255,255,0.5)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition duration-200 hover:brightness-105;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] transition duration-200 hover:bg-[color:rgba(255,255,255,0.14)];
+    @apply inline-flex items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:rgba(255,255,255,0.08)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] transition duration-200 hover:bg-[color:rgba(255,255,255,0.12)];
   }
 
   .btn-primary-sm {
@@ -192,15 +192,15 @@ a {
   }
 
   .card-surface {
-    @apply rounded-3xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] backdrop-blur-2xl shadow-[0_20px_60px_rgba(15,23,42,0.08)];
+    @apply rounded-3xl border border-[color:var(--border-strong)] bg-[color:rgba(255,255,255,0.08)] backdrop-blur-2xl shadow-[0_20px_60px_rgba(15,23,42,0.06)];
   }
 
   .card-glow {
-    @apply rounded-3xl border border-[color:rgba(15,23,42,0.12)] bg-[color:var(--surface)] shadow-[0_20px_80px_rgba(15,23,42,0.08)] backdrop-blur-2xl;
+    @apply rounded-3xl border border-[color:rgba(15,23,42,0.1)] bg-[color:rgba(255,255,255,0.08)] shadow-[0_20px_80px_rgba(15,23,42,0.06)] backdrop-blur-2xl;
   }
 
   .navbar-shell {
-    @apply border-b border-[color:var(--border-strong)] bg-[color:var(--surface)] backdrop-blur-2xl;
+    @apply border-b border-[color:var(--border-strong)] bg-[color:rgba(255,255,255,0.08)] backdrop-blur-2xl;
   }
 
   .sidebar-shell {
