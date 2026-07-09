@@ -16,10 +16,10 @@ export function FieldCard({ field }: { field: Field }) {
       <div className="p-5">
         <div className="mb-4 flex items-center justify-between gap-4">
           <div>
-            <h3 className="text-xl font-semibold text-white">{field.name}</h3>
+            <h3 className="text-xl font-semibold text-[color:var(--foreground)]">{field.name}</h3>
             <p className="text-sm text-[color:var(--muted)]">{field.location}</p>
           </div>
-          <span className="rounded-full border border-[color:rgba(16,185,129,0.12)] bg-[color:rgba(16,185,129,0.06)] px-3 py-1 text-sm text-[color:var(--accent)]">
+          <span className="rounded-full border border-[color:rgba(16,185,129,0.12)] bg-[color:rgba(255,255,255,0.78)] px-3 py-1 text-sm text-[color:var(--accent)]">
             {field.size}
           </span>
         </div>

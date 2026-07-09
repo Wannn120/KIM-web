@@ -11,12 +11,12 @@ export default function Home() {
     <main className="flex-1">
       <HeroSection />
 
-      <section className="px-4 py-16 sm:px-6 lg:px-8">
+      <section className="rounded-[3rem] border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-4 py-16 shadow-[0_24px_80px_rgba(15,23,42,0.06)] sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
           <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Lapangan unggulan</p>
-              <h2 className="mt-2 text-3xl font-semibold text-white sm:text-4xl">Satu lapangan terbaik untuk setiap laga</h2>
+              <h2 className="mt-2 text-3xl font-semibold text-[color:var(--foreground)] sm:text-4xl">Satu lapangan terbaik untuk setiap laga</h2>
             </div>
             <Link href="/book" className="text-sm font-medium text-[color:var(--accent)] transition hover:text-[color:var(--accent-strong)]">
               Booking sekarang →
@@ -33,7 +33,7 @@ export default function Home() {
 
       <ReviewSection />
 
-      <section className="border-t border-white/10 card-surface px-6 py-16 lg:px-8">
+      <section className="rounded-[3rem] border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-6 py-16 shadow-[0_24px_80px_rgba(15,23,42,0.06)] lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
             <div>

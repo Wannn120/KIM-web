@@ -64,13 +64,13 @@ export function ReviewSection() {
   };
 
   return (
-    <section className="px-4 py-16 sm:px-6 lg:px-8">
+    <section className="rounded-[3rem] border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-4 py-16 shadow-[0_24px_80px_rgba(15,23,42,0.06)] sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
         <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-6">
-            <div className="rounded-[2rem] border border-white/10 card-surface p-8">
+            <div className="rounded-[2.5rem] border border-[color:var(--border-strong)] bg-[color:var(--surface)] p-8 shadow-sm shadow-[0_18px_40px_rgba(15,23,42,0.06)]">
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Add a review</p>
-              <h2 className="mt-2 text-3xl font-semibold text-white sm:text-4xl">Tell us about your game experience</h2>
+              <h2 className="mt-2 text-3xl font-semibold text-[color:var(--foreground)] sm:text-4xl">Tell us about your game experience</h2>
               <form onSubmit={handleSubmit} className="mt-6 space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="block text-sm text-[color:var(--muted)]">

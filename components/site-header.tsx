@@ -20,11 +20,11 @@ export function SiteHeader() {
         <div className="flex items-center gap-3 min-w-0">
           <Link href="/" className="inline-flex items-center gap-3 truncate max-w-[220px] md:max-w-none">
             <img src="/kim-logo.svg" alt="KIM" width={36} height={36} className="h-9 w-9 rounded-lg object-cover" />
-            <span className="text-base font-semibold text-white sm:text-lg truncate">Klaten Minisoccer</span>
+            <span className="text-base font-semibold text-[color:var(--foreground)] sm:text-lg truncate">Klaten Minisoccer</span>
           </Link>
         </div>
 
-        <nav className="hidden items-center gap-6 text-sm text-[color:var(--muted)] md:flex">
+        <nav className="hidden items-center gap-6 text-sm text-[color:var(--foreground)] md:flex">
           {navItems.map((item) => (
             <Link key={item.href} href={item.href} className="transition hover:text-[color:var(--accent-strong)]">
               {item.label}
@@ -35,7 +35,7 @@ export function SiteHeader() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[color:var(--foreground)] transition hover:bg-white/10 md:hidden"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:rgba(15,23,42,0.04)] text-[color:var(--foreground)] transition hover:bg-[color:rgba(15,23,42,0.08)] md:hidden"
             aria-label="Toggle navigation"
             onClick={() => setMobileOpen((value) => !value)}
           >
@@ -50,7 +50,7 @@ export function SiteHeader() {
       </div>
 
       {mobileOpen ? (
-        <div className="border-t border-white/10 px-4 py-4 shadow-none md:hidden navbar-shell">
+        <div className="border-t border-[color:var(--border-strong)] px-4 py-4 shadow-none md:hidden navbar-shell">
           <div className="flex flex-col gap-3 text-sm text-[color:var(--foreground)]">
             {navItems.map((item) => (
               <Link

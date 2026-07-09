@@ -2,15 +2,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --surface: rgba(255,255,255,0.72);
-  --surface-strong: rgba(255,255,255,0.9);
-  --muted: #64748b;
+  --background: #eff4fb;
+  --foreground: #111827;
+  --surface: rgba(255,255,255,0.42);
+  --surface-strong: rgba(255,255,255,0.68);
+  --muted: #475569;
   --border-strong: rgba(15,23,42,0.08);
   --accent: #10b981;
   --accent-strong: #22c55e;
-  --background-image: radial-gradient(circle at 18% 12%, rgba(16,185,129,0.18), transparent 8%), radial-gradient(circle at 86% 18%, rgba(16,185,129,0.08), transparent 12%), radial-gradient(circle at 50% 68%, rgba(15,23,42,0.04), transparent 15%), linear-gradient(135deg, rgba(255,255,255,0.55), transparent 35%);
+  --background-image: radial-gradient(circle at 18% 18%, rgba(255,255,255,0.96), transparent 14%), radial-gradient(circle at 80% 16%, rgba(241,245,249,0.88), transparent 16%), radial-gradient(circle at 50% 70%, rgba(226,232,240,0.65), transparent 24%), linear-gradient(180deg, rgba(239,244,251,1), rgba(245,249,253,1));
 }
 
 [data-theme="dark"] {
@@ -58,14 +58,13 @@ body[data-theme="light"] .text-white {
 }
 
 body[data-theme="light"] .text-slate-200 {
-  color: #475569 !important;
+  color: #334155 !important;
 }
 
 body[data-theme="light"] .text-slate-300,
 body[data-theme="light"] .text-slate-400 {
-  color: #64748b !important;
+  color: #475569 !important;
 }
-
 
 body[data-theme="light"] .border-white\/10 {
   border-color: rgba(15,23,42,0.08) !important;
@@ -83,11 +82,11 @@ a {
 
 @layer components {
   .btn-primary {
-    @apply inline-flex w-full max-w-full items-center justify-center rounded-xl md:rounded-full bg-[color:var(--accent)] px-4 py-3 text-sm font-semibold text-slate-950 transition duration-200 hover:bg-[color:var(--accent-strong)] whitespace-nowrap;
+    @apply inline-flex items-center justify-center rounded-full border border-[color:rgba(148,163,184,0.24)] bg-gradient-to-r from-[rgba(187,247,208,0.96)] via-[rgba(219,234,254,0.88)] to-[rgba(255,255,255,0.96)] px-5 py-3 text-sm font-semibold text-[color:var(--foreground)] shadow-[0_18px_48px_rgba(148,163,184,0.08)] transition duration-200 hover:brightness-105 whitespace-nowrap;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-full border border-[color:rgba(16,185,129,0.18)] bg-[color:rgba(16,185,129,0.06)] px-5 py-2.5 text-sm font-semibold text-[color:var(--accent)] transition duration-200 hover:bg-[color:rgba(16,185,129,0.08)];
+    @apply inline-flex items-center justify-center rounded-full border border-[color:rgba(147,197,253,0.36)] bg-gradient-to-r from-[rgba(219,234,254,0.92)] to-[rgba(255,255,255,0.9)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition duration-200 hover:brightness-105;
   }
 
   .btn-ghost {
@@ -99,15 +98,15 @@ a {
   }
 
   .card-surface {
-    @apply rounded-3xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] backdrop-blur-md shadow-none;
+    @apply rounded-3xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] backdrop-blur-2xl shadow-[0_20px_60px_rgba(15,23,42,0.08)];
   }
 
   .card-glow {
-    @apply rounded-3xl border border-[color:rgba(16,185,129,0.16)] bg-[color:var(--surface)] shadow-[0_20px_80px_rgba(16,185,129,0.12)] backdrop-blur-md;
+    @apply rounded-3xl border border-[color:rgba(15,23,42,0.12)] bg-[color:var(--surface)] shadow-[0_20px_80px_rgba(15,23,42,0.08)] backdrop-blur-2xl;
   }
 
   .navbar-shell {
-    @apply border-b border-[color:var(--border-strong)] bg-[color:var(--surface)] backdrop-blur-lg;
+    @apply border-b border-[color:var(--border-strong)] bg-[color:var(--surface)] backdrop-blur-2xl;
   }
 
   .sidebar-shell {
@@ -119,7 +118,7 @@ a {
   }
 
   .modal-shell {
-    @apply rounded-[2rem] border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] p-6 shadow-[0_20px_80px_rgba(16,185,129,0.08)] backdrop-blur;
+    @apply rounded-[2rem] border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] p-6 shadow-[0_20px_80px_rgba(15,23,42,0.08)] backdrop-blur-2xl;
   }
 
   .toast-shell {
