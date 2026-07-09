@@ -195,6 +195,32 @@ a {
     @apply rounded-3xl border border-[color:var(--border-strong)] bg-[color:rgba(255,255,255,0.08)] backdrop-blur-xl shadow-[0_20px_60px_rgba(15,23,42,0.06)];
   }
 
+  /* Ambient rainbow accent for light mode cards */
+  html[data-theme="light"] .card-surface {
+    position: relative;
+    overflow: visible;
+    background-color: rgba(255,255,255,0.06);
+  }
+
+  html[data-theme="light"] .card-surface::before {
+    content: "";
+    position: absolute;
+    inset: -12px -18px -40px -18px;
+    z-index: 0;
+    border-radius: inherit;
+    background: radial-gradient(600px 200px at 10% 10%, rgba(255, 192, 203, 0.06), transparent 10%),
+                radial-gradient(500px 180px at 90% 20%, rgba(173, 216, 230, 0.04), transparent 14%),
+                linear-gradient(90deg, rgba(255, 99, 132, 0.02), rgba(255, 159, 64, 0.02), rgba(255, 205, 86, 0.02), rgba(75, 192, 192, 0.02), rgba(54, 162, 235, 0.02), rgba(153, 102, 255, 0.02));
+    filter: blur(20px) saturate(110%);
+    pointer-events: none;
+  }
+
+  /* Ensure inner content sits above the ambient */
+  html[data-theme="light"] .card-surface > * {
+    position: relative;
+    z-index: 1;
+  }
+
   .card-glow {
     @apply rounded-3xl border border-[color:rgba(15,23,42,0.1)] bg-[color:rgba(255,255,255,0.08)] shadow-[0_20px_80px_rgba(15,23,42,0.06)] backdrop-blur-xl;
   }
