@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { AuthPanel } from "@/components/auth-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -29,18 +30,16 @@ export default function RegisterPage() {
   return (
     <main className="flex-1 bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.2),_transparent_35%)] px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-        <section className="rounded-[2rem] border border-white/10 bg-[color:var(--surface-strong)] p-8 shadow-2xl shadow-[0_20px_80px_rgba(16,185,129,0.08)]">
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Join the platform</p>
-          <h1 className="mt-4 text-3xl font-semibold text-white sm:text-4xl">Create your account and start booking</h1>
-          <p className="mt-4 text-base text-[color:var(--muted)] sm:text-lg">
-            Unlock instant booking, secure payments, and personalized field recommendations.
-          </p>
-          <div className="mt-8 space-y-3 text-sm text-[color:var(--muted)]">
-            <div className="rounded-2xl border border-[color:rgba(16,185,129,0.12)] bg-[color:rgba(16,185,129,0.06)] p-4">✓ Fast booking in under 2 minutes</div>
-            <div className="rounded-2xl border border-[color:rgba(16,185,129,0.12)] bg-[color:rgba(16,185,129,0.06)] p-4">✓ Smart reminders and confirmations</div>
-            <div className="rounded-2xl border border-[color:rgba(16,185,129,0.12)] bg-[color:rgba(16,185,129,0.06)] p-4">✓ Live availability and secure checkout</div>
-          </div>
-        </section>
+        <AuthPanel
+          eyebrow="Join the platform"
+          title="Create your account and start booking"
+          description="Unlock instant booking, secure payments, and personalized field recommendations."
+          features={[
+            "Fast booking in under 2 minutes",
+            "Smart reminders and confirmations",
+            "Live availability and secure checkout",
+          ]}
+        />
 
         <section className="rounded-[2rem] border border-white/10 card-surface p-8 shadow-2xl shadow-[0_20px_80px_rgba(16,185,129,0.06)]">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -88,7 +87,7 @@ export default function RegisterPage() {
                 placeholder="••••••••"
               />
             </label>
-            <button className="btn-primary">
+            <button className="btn-primary w-full">
               Create account
             </button>
             {message ? <p className="text-sm text-rose-300">{message}</p> : null}

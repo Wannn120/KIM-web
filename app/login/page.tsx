@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { AuthPanel } from "@/components/auth-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -25,45 +27,59 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex-1 bg-[color:var(--background)] px-4 py-16 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-4xl rounded-3xl border border-white/10 card-surface p-8 shadow-2xl shadow-[0_20px_80px_rgba(16,185,129,0.08)]">
-        <div className="grid gap-8 lg:grid-cols-[1fr_0.9fr]">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Access portal</p>
-            <h1 className="mt-3 text-3xl font-semibold text-white sm:text-4xl">Login untuk melanjutkan booking</h1>
-            <p className="mt-4 text-base text-[color:var(--muted)] sm:text-lg">
-              Masuk cepat dengan email, lalu pesan slot lapangan dan kelola profil pengguna Anda.
-            </p>
+    <main className="flex-1 bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.16),_transparent_35%)] px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+        <AuthPanel
+          eyebrow="Access portal"
+          title="Masuk untuk lanjutkan booking"
+          description="Masuk dengan akun Anda agar bisa memesan lapangan, melihat riwayat booking, dan mengelola profil secara cepat."
+          features={[
+            "Akses booking lebih cepat",
+            "Lihat riwayat dan status pembayaran",
+            "Data akun tersimpan aman",
+          ]}
+        />
+
+        <section className="rounded-[2rem] border border-white/10 card-surface p-8 shadow-2xl shadow-[0_20px_80px_rgba(16,185,129,0.06)]">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-2xl font-semibold text-white">Sign in</h2>
+            <Link href="/register" className="text-sm text-[color:var(--accent)] hover:text-[color:var(--accent-strong)]">
+              Sign up instead
+            </Link>
           </div>
-          <div className="rounded-3xl border border-cyan-400/20 card-surface p-6">
-            <h2 className="text-xl font-semibold text-white">Customer portal</h2>
-            <form onSubmit={handleSubmit} className="mt-4 space-y-4 text-sm text-[color:var(--muted)]">
-              <label className="block">
-                <span className="mb-2 block">Email</span>
-                <input
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  className="w-full rounded-2xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-4 py-3 text-[color:var(--foreground)] outline-none"
-                  placeholder="you@example.com"
-                />
-              </label>
-              <label className="block">
-                <span className="mb-2 block">Password</span>
-                <input
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  className="w-full rounded-2xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-4 py-3 text-[color:var(--foreground)] outline-none"
-                  type="password"
-                  placeholder="••••••••"
-                />
-              </label>
-              <button className="btn-primary">
-                Sign in
-              </button>
-              {message ? <p className="text-sm text-rose-300">{message}</p> : null}
-            </form>
-          </div>
-        </div>
+
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4 text-sm text-[color:var(--muted)]">
+            <label className="block text-sm text-[color:var(--muted)]">
+              <span className="mb-2 block">Email</span>
+              <input
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                className="w-full rounded-2xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-4 py-3 text-[color:var(--foreground)] outline-none"
+                placeholder="you@example.com"
+              />
+            </label>
+            <label className="block text-sm text-[color:var(--muted)]">
+              <span className="mb-2 block">Password</span>
+              <input
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className="w-full rounded-2xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-4 py-3 text-[color:var(--foreground)] outline-none"
+                type="password"
+                placeholder="••••••••"
+              />
+            </label>
+            <button className="btn-primary w-full">
+              Sign in
+            </button>
+            <div className="flex items-center justify-between text-xs text-[color:var(--muted)]">
+              <span>Belum punya akun?</span>
+              <Link href="/register" className="text-[color:var(--accent)] hover:text-[color:var(--accent-strong)]">
+                Buat akun sekarang
+              </Link>
+            </div>
+            {message ? <p className="text-sm text-rose-300">{message}</p> : null}
+          </form>
+        </section>
       </div>
     </main>
   );
