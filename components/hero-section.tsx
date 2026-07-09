@@ -22,7 +22,7 @@ export function HeroSection() {
     <section
       className="relative overflow-hidden bg-[color:var(--background)]"
       style={{
-        backgroundImage: `linear-gradient(180deg, rgba(255,255,255,0.92), rgba(244,247,251,0.82)), url(${content.backgroundImageUrl})`,
+        backgroundImage: `url(${content.backgroundImageUrl})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
@@ -31,7 +31,7 @@ export function HeroSection() {
       <div className="pointer-events-none absolute -left-16 top-10 h-48 w-48 rounded-full bg-[color:rgba(255,255,255,0.92)] blur-3xl shadow-[0_0_120px_rgba(255,255,255,0.65)]" />
       <div className="pointer-events-none absolute right-0 top-24 h-72 w-72 rounded-full bg-[color:rgba(59,130,246,0.14)] blur-3xl" />
       <div className="pointer-events-none absolute -bottom-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-[color:rgba(14,165,233,0.08)] blur-3xl" />
-      <div className="absolute inset-0 bg-[color:rgba(255,255,255,0.55)] backdrop-blur-sm" />
+      <div className="absolute inset-0 hero-overlay" />
       <div className="relative px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
         <div className="mx-auto max-w-5xl text-center text-[color:var(--foreground)]">
           <p className="text-sm font-semibold uppercase tracking-[0.35em] text-[color:var(--accent-strong)]">
