@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default function ReportsPage() {
   return (
-    <main className="flex-1 bg-slate-950 px-6 py-16 lg:px-8">
+    <main className="flex-1 bg-[color:var(--background)] px-6 py-16 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <AnimatedCard className="p-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -24,7 +24,7 @@ export default function ReportsPage() {
 
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {metrics.map((metric) => (
-              <div key={metric.label} className="rounded-3xl border border-white/10 bg-slate-950/70 p-5">
+              <div key={metric.label} className="rounded-3xl border border-white/10 card-surface p-5">
                 <p className="text-sm text-slate-400">{metric.label}</p>
                 <p className="mt-2 text-3xl font-semibold text-white">{metric.value}</p>
               </div>

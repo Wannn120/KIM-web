@@ -16,7 +16,7 @@ export default function BookPage() {
 
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {bookingSteps.map((step) => (
-              <div key={step.title} className="rounded-3xl border border-white/10 bg-slate-950/70 p-6">
+              <div key={step.title} className="rounded-3xl border border-white/10 card-surface p-6">
                 <h2 className="font-semibold text-white">{step.title}</h2>
                 <p className="mt-2 text-sm text-slate-400">{step.description}</p>
               </div>
@@ -37,7 +37,7 @@ export default function BookPage() {
             </div>
 
             <div className="mt-8">
-              <div className="hidden md:block overflow-x-auto rounded-3xl border border-white/10 bg-slate-950/70">
+              <div className="hidden md:block overflow-x-auto rounded-3xl border border-white/10 card-surface">
                 <table className="min-w-[640px] w-full table-auto text-left text-sm text-slate-300">
                   <thead className="bg-slate-900/80 text-slate-400">
                     <tr>
@@ -49,7 +49,7 @@ export default function BookPage() {
                   </thead>
                   <tbody>
                     {bookedSlots.map((slot) => (
-                      <tr key={`${slot.date}-${slot.time}-${slot.field}`} className="border-t border-white/10 bg-slate-950/50">
+                      <tr key={`${slot.date}-${slot.time}-${slot.field}`} className="border-t border-white/10 card-surface">
                         <td className="px-4 py-3 text-white">{slot.date}</td>
                         <td className="px-4 py-3">{slot.time}</td>
                         <td className="px-4 py-3">{slot.field}</td>
@@ -62,7 +62,7 @@ export default function BookPage() {
 
               <div className="md:hidden space-y-3">
                 {bookedSlots.map((slot) => (
-                  <div key={`${slot.date}-${slot.time}-${slot.field}`} className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+                  <div key={`${slot.date}-${slot.time}-${slot.field}`} className="rounded-2xl border border-white/10 card-surface p-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-slate-400">Date</p>

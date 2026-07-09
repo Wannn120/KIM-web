@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default function BookingHistoryPage() {
   return (
-    <main className="flex-1 bg-slate-950 px-6 py-16 lg:px-8">
+    <main className="flex-1 bg-[color:var(--background)] px-6 py-16 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <AnimatedCard className="p-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -24,7 +24,7 @@ export default function BookingHistoryPage() {
           <div className="mt-8">
             <div className="hidden md:block overflow-x-auto rounded-2xl border border-white/10">
               <table className="min-w-[640px] w-full table-auto text-left text-sm text-slate-300">
-                <thead className="bg-slate-950/80 text-slate-400">
+                <thead className="bg-[color:rgba(0,0,0,0.28)] text-slate-400">
                   <tr>
                     <th className="px-4 py-3">Booking ID</th>
                     <th className="px-4 py-3">Field</th>
@@ -49,7 +49,7 @@ export default function BookingHistoryPage() {
 
             <div className="md:hidden space-y-3">
               {history.map((item) => (
-                <div key={item.id} className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+                <div key={item.id} className="rounded-2xl border border-white/10 card-surface p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs text-slate-400">Booking ID</p>

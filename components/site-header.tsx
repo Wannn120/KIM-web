@@ -15,7 +15,7 @@ export function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="navbar-shell sticky top-0 z-40 border-b border-white/10 bg-slate-950/90 backdrop-blur">
+    <header className="navbar-shell sticky top-0 z-40">
       <div className="mx-auto flex max-w-7xl flex-nowrap items-center justify-between gap-2 px-3 py-3 sm:px-4 lg:px-6">
         <div className="flex items-center gap-3 min-w-0">
           <Link href="/" className="inline-flex items-center gap-3 truncate max-w-[220px] md:max-w-none">
@@ -50,7 +50,7 @@ export function SiteHeader() {
       </div>
 
       {mobileOpen ? (
-        <div className="border-t border-white/10 bg-slate-950/95 px-4 py-4 shadow-2xl shadow-black/20 backdrop-blur md:hidden">
+        <div className="border-t border-white/10 px-4 py-4 shadow-none md:hidden navbar-shell">
           <div className="flex flex-col gap-3 text-sm text-slate-200">
             {navItems.map((item) => (
               <Link

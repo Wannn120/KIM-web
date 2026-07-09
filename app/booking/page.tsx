@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export default function BookingPage() {
   return (
-    <main className="flex-1 bg-slate-950 px-6 py-16 lg:px-8">
+    <main className="flex-1 bg-[color:var(--background)] px-6 py-16 lg:px-8">
       <div className="mx-auto grid max-w-7xl gap-8 xl:grid-cols-[1.2fr_0.8fr]">
         <AnimatedCard className="p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Book your slot</p>
@@ -21,7 +21,7 @@ export default function BookingPage() {
           <p className="mt-4 text-lg text-slate-400">Pick a field, choose your time, and enjoy a seamless experience.</p>
 
           <div className="mt-8 grid gap-4 md:grid-cols-2">
-            <div className="rounded-3xl border border-white/10 bg-slate-950/70 p-5">
+            <div className="rounded-3xl border border-white/10 card-surface p-5">
               <p className="text-sm text-slate-400">Selected venue</p>
               <h2 className="mt-2 text-2xl font-semibold text-white">Elite Turf 1</h2>
               <p className="mt-2 text-sm text-slate-400">Jakarta Selatan • 5v5 • Indoor</p>
@@ -42,7 +42,7 @@ export default function BookingPage() {
                 <button
                   key={slot.time}
                   disabled={!slot.available}
-                  className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${slot.available ? "border-[color:rgba(16,185,129,0.12)] bg-[color:rgba(16,185,129,0.06)] text-[color:var(--accent)] hover:bg-[color:rgba(16,185,129,0.08)]" : "cursor-not-allowed border-white/10 bg-slate-950/70 text-slate-500"}`}
+                  className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${slot.available ? "border-[color:rgba(16,185,129,0.12)] bg-[color:rgba(16,185,129,0.06)] text-[color:var(--accent)] hover:bg-[color:rgba(16,185,129,0.08)]" : "cursor-not-allowed border-white/10 card-surface text-slate-500"}`}
                 >
                   {slot.time}
                 </button>

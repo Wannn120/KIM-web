@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 export default function DesignSystemPage() {
   return (
-    <main className="flex-1 bg-slate-950 px-6 py-16 lg:px-8">
+    <main className="flex-1 bg-[color:var(--background)] px-6 py-16 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Design system</p>

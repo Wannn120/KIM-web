@@ -2,7 +2,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #06121a; /* deep navy for contrast */
+  --background: #000000; /* pure black background per user preference */
   --foreground: #f8fafc;
   --surface: rgba(6,10,18,0.6);
   --surface-strong: rgba(4,6,10,0.7);
@@ -28,7 +28,7 @@ html {
 
 body {
   margin: 0;
-  background: radial-gradient(ellipse at 10% 10%, rgba(16,185,129,0.04), transparent 20%), var(--background);
+  background: radial-gradient(ellipse at 10% 10%, rgba(16,185,129,0.03), transparent 18%), var(--background);
   color: var(--foreground);
   font-family: Poppins, Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   -webkit-font-smoothing: antialiased;
@@ -63,23 +63,23 @@ a {
   }
 
   .card-surface {
-    @apply rounded-3xl border border-white/12 bg-[color:rgba(8,12,18,0.5)] backdrop-blur shadow-2xl;
+    @apply rounded-3xl border border-white/12 bg-[color:rgba(0,0,0,0.38)] backdrop-blur-md shadow-none;
   }
 
   .card-glow {
-    @apply rounded-3xl border border-[color:rgba(16,185,129,0.12)] bg-[color:rgba(16,185,129,0.06)] shadow-[0_20px_80px_rgba(16,185,129,0.14)] backdrop-blur;
+    @apply rounded-3xl border border-[color:rgba(16,185,129,0.12)] bg-[color:rgba(0,0,0,0.35)] shadow-[0_20px_80px_rgba(16,185,129,0.12)] backdrop-blur-md;
   }
 
   .navbar-shell {
-    @apply border-b border-[color:rgba(255,255,255,0.06)] bg-[color:rgba(6,8,12,0.45)] backdrop-blur-md;
+    @apply border-b border-[color:rgba(255,255,255,0.06)] bg-[color:rgba(0,0,0,0.42)] backdrop-blur-lg;
   }
 
   .sidebar-shell {
-    @apply rounded-3xl border border-white/10 bg-slate-900/70 p-4 shadow-2xl shadow-black/30;
+    @apply rounded-3xl border border-white/8 bg-[color:rgba(0,0,0,0.34)] p-4 shadow-none;
   }
 
   .table-shell {
-    @apply overflow-auto rounded-2xl border border-white/8;
+    @apply overflow-auto rounded-2xl border border-white/8 bg-transparent;
   }
 
   .modal-shell {

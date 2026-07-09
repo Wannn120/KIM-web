@@ -68,7 +68,7 @@ export function ReviewSection() {
       <div className="mx-auto max-w-6xl">
         <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-6">
-            <div className="rounded-[2rem] border border-white/10 bg-slate-950/70 p-8 backdrop-blur">
+            <div className="rounded-[2rem] border border-white/10 card-surface p-8">
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Add a review</p>
               <h2 className="mt-2 text-3xl font-semibold text-white sm:text-4xl">Tell us about your game experience</h2>
               <form onSubmit={handleSubmit} className="mt-6 space-y-4">
@@ -117,7 +117,7 @@ export function ReviewSection() {
 
           <div className="space-y-4">
             {reviews.slice(0, 3).map((review) => (
-              <div key={review.id} className="rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 backdrop-blur">
+              <div key={review.id} className="rounded-[2rem] border border-white/10 card-surface p-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="font-semibold text-white">{review.customerName}</p>

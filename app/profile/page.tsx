@@ -39,7 +39,7 @@ export default function ProfilePage() {
   if (!user) {
     return (
       <main className="flex-1 px-6 py-16 lg:px-8">
-        <div className="mx-auto max-w-4xl rounded-[2rem] border border-white/10 bg-slate-950/70 p-10 text-center backdrop-blur">
+        <div className="mx-auto max-w-4xl rounded-[2rem] border border-white/10 card-surface p-10 text-center">
           <h1 className="text-3xl font-semibold text-white">Please login first</h1>
           <p className="mt-4 text-slate-400">Use the login or register button in the header to access your profile.</p>
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -53,7 +53,7 @@ export default function ProfilePage() {
 
   return (
     <main className="flex-1 px-6 py-16 lg:px-8">
-      <div className="mx-auto max-w-4xl rounded-[2rem] border border-white/10 bg-slate-950/70 p-10 backdrop-blur">
+      <div className="mx-auto max-w-4xl rounded-[2rem] border border-white/10 card-surface p-10">
         <h1 className="text-3xl font-semibold text-white">My Profile</h1>
         <p className="mt-3 text-slate-400">You can update your name, email, and WhatsApp number here.</p>
         <div className="mt-8 grid gap-6">

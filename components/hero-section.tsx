@@ -27,7 +27,7 @@ export function HeroSection() {
         backgroundPosition: "center",
       }}
     >
-      <div className="absolute inset-0 bg-slate-950/60" />
+      <div className="absolute inset-0 bg-[color:rgba(0,0,0,0.4)] backdrop-blur-sm" />
       <div className="relative px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
         <div className="mx-auto max-w-5xl text-center text-white">
           <p className="text-sm font-semibold uppercase tracking-[0.35em] text-[color:var(--accent-strong)]">
@@ -57,7 +57,7 @@ export function HeroSection() {
 
           <div className="mt-14 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {facilityImages.map((facility) => (
-              <div key={facility.title} className="rounded-[2rem] border border-white/10 bg-slate-950/70 p-4 backdrop-blur">
+              <div key={facility.title} className="rounded-[2rem] border border-white/10 card-surface p-4">
                 <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-slate-900 sm:aspect-[16/9]">
                   <img src={facility.imageUrl} alt={facility.title} className="h-full w-full object-cover" />
                 </div>

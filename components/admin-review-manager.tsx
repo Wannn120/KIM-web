@@ -54,7 +54,7 @@ export function AdminReviewManager() {
   };
 
   return (
-    <div className="rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 backdrop-blur">
+    <div className="rounded-[2rem] border border-white/10 card-surface p-6">
           <div className="mb-6 flex items-center justify-between gap-4">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Review management</p>
@@ -89,7 +89,7 @@ export function AdminReviewManager() {
               </div>
               <p className="mt-4 text-slate-300">{review.comment}</p>
               {editingId === review.id ? (
-                <div className="mt-4 space-y-3 rounded-2xl border border-white/10 bg-slate-950/80 p-4">
+                <div className="mt-4 space-y-3 rounded-2xl border border-white/10 card-surface p-4">
                   <label className="block text-sm text-slate-300">
                     <span className="mb-2 block">Rating</span>
                     <select

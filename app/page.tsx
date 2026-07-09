@@ -33,7 +33,7 @@ export default function Home() {
 
       <ReviewSection />
 
-      <section className="border-t border-white/10 bg-slate-950/80 px-6 py-16 lg:px-8">
+      <section className="border-t border-white/10 card-surface px-6 py-16 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
             <div>

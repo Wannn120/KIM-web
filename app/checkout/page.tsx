@@ -15,17 +15,17 @@ export default function CheckoutPage() {
           </p>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="rounded-3xl border border-white/10 bg-slate-950/70 p-6">
+            <div className="rounded-3xl border border-white/10 card-surface p-6">
               <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Field</p>
               <p className="mt-2 text-xl font-semibold text-white">Elite Turf 1</p>
               <p className="mt-2 text-sm text-slate-400">Indoor • 5v5</p>
             </div>
-            <div className="rounded-3xl border border-white/10 bg-slate-950/70 p-6">
+            <div className="rounded-3xl border border-white/10 card-surface p-6">
               <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Date</p>
               <p className="mt-2 text-xl font-semibold text-white">07 Jul 2026</p>
               <p className="mt-2 text-sm text-slate-400">19:00 - 20:00</p>
             </div>
-            <div className="rounded-3xl border border-white/10 bg-slate-950/70 p-6">
+            <div className="rounded-3xl border border-white/10 card-surface p-6">
               <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Total</p>
               <p className="mt-2 text-3xl font-semibold text-white">Rp 170.000</p>
               <p className="mt-2 text-sm text-slate-400">Per hour booking</p>

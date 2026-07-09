@@ -17,7 +17,7 @@ export default function PaymentPage() {
               <p className="mt-4 text-lg text-slate-400">Choose a secure payment option and complete your booking.</p>
               <div className="mt-8 grid gap-3">
                 {paymentMethods.map((method) => (
-                  <button key={method} className="flex items-center justify-between rounded-3xl border border-white/10 bg-slate-950/80 px-4 py-4 text-left text-sm text-slate-300 transition hover:border-[color:rgba(16,185,129,0.12)] hover:bg-[color:rgba(16,185,129,0.06)]">
+                  <button key={method} className="flex items-center justify-between rounded-3xl border border-white/10 card-surface px-4 py-4 text-left text-sm text-slate-300 transition hover:border-[color:rgba(16,185,129,0.12)] hover:bg-[color:rgba(16,185,129,0.06)]">
                     <div>
                       <p className="font-semibold text-white">{method}</p>
                       <p className="mt-1 text-slate-400">Secure and fast checkout using {method}.</p>
@@ -28,7 +28,7 @@ export default function PaymentPage() {
               </div>
             </div>
 
-            <div className="rounded-[2rem] border border-white/10 bg-slate-950/70 p-8">
+            <div className="rounded-[2rem] border border-white/10 card-surface p-8">
               <h2 className="text-2xl font-semibold text-white">Order summary</h2>
               <div className="mt-6 space-y-4 text-sm text-slate-300">
                 <div className="flex justify-between"><span>Order</span><span>#BK-1024</span></div>

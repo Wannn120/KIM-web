@@ -42,7 +42,7 @@ export default function RegisterPage() {
           </div>
         </section>
 
-        <section className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-8 shadow-2xl shadow-cyan-950/20">
+        <section className="rounded-[2rem] border border-white/10 card-surface p-8 shadow-2xl shadow-[0_20px_80px_rgba(16,185,129,0.06)]">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-2xl font-semibold text-white">Create account</h2>
             <Link href="/login" className="text-sm text-[color:var(--accent)] hover:text-[color:var(--accent-strong)]">Sign in instead</Link>

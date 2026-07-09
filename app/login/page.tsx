@@ -25,7 +25,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex-1 bg-slate-950 px-4 py-16 sm:px-6 lg:px-8">
+    <main className="flex-1 bg-[color:var(--background)] px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl rounded-3xl border border-white/10 bg-slate-900/70 p-8 shadow-2xl shadow-[0_20px_80px_rgba(16,185,129,0.08)]">
         <div className="grid gap-8 lg:grid-cols-[1fr_0.9fr]">
           <div>
@@ -35,7 +35,7 @@ export default function LoginPage() {
               Masuk cepat dengan email, lalu pesan slot lapangan dan kelola profil pengguna Anda.
             </p>
           </div>
-          <div className="rounded-3xl border border-cyan-400/20 bg-slate-950/70 p-6">
+          <div className="rounded-3xl border border-cyan-400/20 card-surface p-6">
             <h2 className="text-xl font-semibold text-white">Customer portal</h2>
             <form onSubmit={handleSubmit} className="mt-4 space-y-4 text-sm text-slate-300">
               <label className="block">

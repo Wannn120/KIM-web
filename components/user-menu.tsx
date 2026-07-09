@@ -44,7 +44,7 @@ export function UserMenu() {
       </button>
 
       {open ? (
-        <div className="absolute right-0 z-50 mt-3 min-w-[220px] rounded-3xl border border-white/10 bg-slate-950/95 p-3 text-sm text-slate-200 shadow-2xl shadow-black/40 backdrop-blur">
+        <div className="absolute right-0 z-50 mt-3 min-w-[220px] rounded-3xl border border-white/10 card-surface p-3 text-sm text-slate-200 shadow-none">
             <div className="rounded-3xl bg-slate-900/80 p-3 text-center">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-slate-800 text-2xl text-slate-200">
                 {user ? user.name.charAt(0).toUpperCase() : "?"}

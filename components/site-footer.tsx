@@ -1,6 +1,6 @@
 export function SiteFooter() {
   return (
-    <footer className="border-t border-white/10 bg-slate-950/90 backdrop-blur">
+    <footer className="border-t border-white/10 navbar-shell">
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-10 lg:grid-cols-[1.2fr_0.8fr] lg:px-8">
         <div className="space-y-4 text-sm text-slate-300">
           <p className="font-semibold text-white">MiniSoccer</p>

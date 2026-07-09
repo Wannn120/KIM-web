@@ -48,7 +48,7 @@ export default function DashboardPage() {
             </div>
             <div className="mt-6 space-y-4">
               {upcoming.map((item) => (
-                <div key={item.field} className="flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/70 p-4">
+                <div key={item.field} className="flex items-center justify-between rounded-2xl border border-white/10 card-surface p-4">
                   <div>
                     <h3 className="font-semibold text-white">{item.field}</h3>
                     <p className="text-sm text-slate-400">{item.time}</p>
@@ -68,7 +68,7 @@ export default function DashboardPage() {
                 "Checkout and pay",
                 "Get confirmation",
               ].map((step, index) => (
-                <div key={step} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/70 p-4">
+                <div key={step} className="flex items-center gap-3 rounded-2xl border border-white/10 card-surface p-4">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[color:rgba(16,185,129,0.12)] text-sm font-semibold text-[color:var(--accent)]">
                     {index + 1}
                   </div>

@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 
 export default function AdminCalendarPage() {
   return (
-    <main className="flex-1 bg-slate-950 px-6 py-16 lg:px-8">
+    <main className="flex-1 bg-[color:var(--background)] px-6 py-16 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <AnimatedCard className="p-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -28,7 +28,7 @@ export default function AdminCalendarPage() {
 
           <div className="mt-8 grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-7">
             {slots.map((slot) => (
-              <div key={slot.day} className="rounded-3xl border border-white/10 bg-slate-950/70 p-4">
+              <div key={slot.day} className="rounded-3xl border border-white/10 card-surface p-4">
                 <h3 className="text-lg font-semibold text-white">{slot.day}</h3>
                 <div className="mt-4 space-y-2">
                   {slot.items.map((item) => (
