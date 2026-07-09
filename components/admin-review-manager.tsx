@@ -64,14 +64,14 @@ export function AdminReviewManager() {
 
       <div className="space-y-4">
         {reviews.length === 0 ? (
-          <p className="text-sm text-slate-400">No reviews available.</p>
+          <p className="text-sm text-[color:var(--muted)]">No reviews available.</p>
         ) : (
           reviews.map((review) => (
-            <div key={review.id} className="rounded-3xl border border-white/10 bg-slate-900/70 p-4">
+            <div key={review.id} className="rounded-3xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="font-semibold text-white">{review.customerName}</p>
-                  <p className="text-sm text-slate-400">{review.date}</p>
+                  <p className="text-sm text-[color:var(--muted)]">{review.date}</p>
                   <p className="text-sm text-[color:var(--accent)]">{review.rating} ★</p>
                 </div>
                 <div className="flex gap-2">
@@ -87,27 +87,27 @@ export function AdminReviewManager() {
                   </button>
                 </div>
               </div>
-              <p className="mt-4 text-slate-300">{review.comment}</p>
+              <p className="mt-4 text-[color:var(--muted)]">{review.comment}</p>
               {editingId === review.id ? (
                 <div className="mt-4 space-y-3 rounded-2xl border border-white/10 card-surface p-4">
-                  <label className="block text-sm text-slate-300">
+                  <label className="block text-sm text-[color:var(--muted)]">
                     <span className="mb-2 block">Rating</span>
                     <select
                       value={draftRating}
                       onChange={(event) => setDraftRating(Number(event.target.value))}
-                      className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none"
+                      className="w-full rounded-2xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-4 py-3 text-[color:var(--foreground)] outline-none"
                     >
                       {[5, 4, 3, 2, 1].map((value) => (
                         <option key={value} value={value}>{`${value} stars`}</option>
                       ))}
                     </select>
                   </label>
-                  <label className="block text-sm text-slate-300">
+                  <label className="block text-sm text-[color:var(--muted)]">
                     <span className="mb-2 block">Comment</span>
                     <textarea
                       value={draftComment}
                       onChange={(event) => setDraftComment(event.target.value)}
-                      className="w-full rounded-3xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none min-h-[100px]"
+                      className="w-full rounded-3xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-4 py-3 text-[color:var(--foreground)] outline-none min-h-[100px]"
                     />
                   </label>
                   <div className="flex gap-3">

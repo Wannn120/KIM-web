@@ -73,21 +73,21 @@ export function ReviewSection() {
               <h2 className="mt-2 text-3xl font-semibold text-white sm:text-4xl">Tell us about your game experience</h2>
               <form onSubmit={handleSubmit} className="mt-6 space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
-                  <label className="block text-sm text-slate-300">
+                  <label className="block text-sm text-[color:var(--muted)]">
                     <span className="mb-2 block">Name</span>
                     <input
                       value={name}
                       onChange={(event) => setName(event.target.value)}
-                      className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none"
+                      className="w-full rounded-2xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-4 py-3 text-[color:var(--foreground)] outline-none"
                       placeholder="Your name"
                     />
                   </label>
-                  <label className="block text-sm text-slate-300">
+                  <label className="block text-sm text-[color:var(--muted)]">
                     <span className="mb-2 block">Rating</span>
                     <select
                       value={rating}
                       onChange={(event) => setRating(Number(event.target.value))}
-                      className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none"
+                      className="w-full rounded-2xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-4 py-3 text-[color:var(--foreground)] outline-none"
                     >
                       {[5, 4, 3, 2, 1].map((value) => (
                         <option key={value} value={value}>{`${value} stars`}</option>
@@ -95,17 +95,17 @@ export function ReviewSection() {
                     </select>
                   </label>
                 </div>
-                <label className="block text-sm text-slate-300">
+                <label className="block text-sm text-[color:var(--muted)]">
                   <span className="mb-2 block">Comment</span>
                   <textarea
                     value={comment}
                     onChange={(event) => setComment(event.target.value)}
-                    className="w-full rounded-3xl border border-white/10 bg-slate-900 px-4 py-4 text-white outline-none min-h-[180px]"
+                    className="w-full rounded-3xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-4 py-4 text-[color:var(--foreground)] outline-none min-h-[180px]"
                     placeholder="Share your experience at Klaten International Minisoccer"
                   />
                 </label>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-sm text-slate-400">Your review will appear on the homepage after submission.</p>
+                  <p className="text-sm text-[color:var(--muted)]">Your review will appear on the homepage after submission.</p>
                   <button type="submit" className="btn-primary">
                     Submit review
                   </button>
@@ -121,13 +121,13 @@ export function ReviewSection() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="font-semibold text-white">{review.customerName}</p>
-                    <p className="text-sm text-slate-400">{review.date}</p>
+                    <p className="text-sm text-[color:var(--muted)]">{review.date}</p>
                   </div>
                     <span className="rounded-full border border-[color:rgba(16,185,129,0.18)] bg-[color:rgba(16,185,129,0.06)] px-3 py-1 text-sm text-[color:var(--accent)]">
                       {review.rating} ★
                     </span>
                 </div>
-                <p className="mt-4 text-slate-300">{review.comment}</p>
+                <p className="mt-4 text-[color:var(--muted)]">{review.comment}</p>
               </div>
             ))}
           </div>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 interface UserProfile {
   name: string;
@@ -36,7 +37,7 @@ export function UserMenu() {
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-slate-900 text-sm font-semibold text-white transition hover:bg-slate-800"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface)] text-sm font-semibold text-[color:var(--foreground)] transition hover:bg-[color:rgba(255,255,255,0.88)]"
         aria-expanded={open}
         aria-label="Account menu"
       >
@@ -44,21 +45,24 @@ export function UserMenu() {
       </button>
 
       {open ? (
-        <div className="absolute right-0 z-50 mt-3 min-w-[220px] rounded-3xl border border-white/10 card-surface p-3 text-sm text-slate-200 shadow-none">
-            <div className="rounded-3xl bg-slate-900/80 p-3 text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-slate-800 text-2xl text-slate-200">
+        <div className="absolute right-0 z-50 mt-3 min-w-[220px] rounded-3xl border border-[color:var(--border-strong)] card-surface p-3 text-sm text-[color:var(--foreground)] shadow-none">
+            <div className="rounded-3xl bg-[color:var(--surface)] p-3 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface)] text-2xl text-[color:var(--foreground)]">
                 {user ? user.name.charAt(0).toUpperCase() : "?"}
               </div>
-              <p className="mt-2 text-sm font-semibold text-white">{user ? user.name : "Guest"}</p>
-              <p className="text-xs text-slate-400">{user ? user.email : "Sign in or sign up"}</p>
+              <p className="mt-2 text-sm font-semibold text-[color:var(--foreground)]">{user ? user.name : "Guest"}</p>
+              <p className="text-xs text-[color:var(--muted)]">{user ? user.email : "Sign in or sign up"}</p>
             </div>
 
           <div className="mt-4 space-y-2">
+            <div className="rounded-3xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] p-3">
+              <ThemeToggle />
+            </div>
             {user ? (
               <>
                 <Link
                   href="/profile"
-                  className="block rounded-2xl border border-white/10 bg-slate-900/80 px-3 py-2 text-sm transition hover:border-[color:rgba(16,185,129,0.12)] hover:bg-white/5"
+                  className="block rounded-2xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--foreground)] transition hover:border-[color:rgba(16,185,129,0.12)] hover:bg-[color:rgba(255,255,255,0.9)]"
                   onClick={() => setOpen(false)}
                 >
                   Edit profile
@@ -71,7 +75,7 @@ export function UserMenu() {
               <>
                 <Link
                   href="/login"
-                  className="block rounded-2xl border border-white/10 bg-slate-900/80 px-3 py-2 text-sm transition hover:border-[color:rgba(16,185,129,0.12)] hover:bg-white/5"
+                  className="block rounded-2xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--foreground)] transition hover:border-[color:rgba(16,185,129,0.12)] hover:bg-[color:rgba(255,255,255,0.9)]"
                   onClick={() => setOpen(false)}
                 >
                   Sign in

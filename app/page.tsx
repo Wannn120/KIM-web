@@ -39,11 +39,11 @@ export default function Home() {
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Lokasi lapangan</p>
               <h2 className="mt-2 text-3xl font-semibold text-white">Temukan lapangan kami di Klaten</h2>
-              <p className="mt-4 text-lg text-slate-400 max-w-2xl">
+              <p className="mt-4 text-lg text-[color:var(--muted)] max-w-2xl">
                 Lapangan terletak strategis, mudah dijangkau, dan didukung fasilitas pendukung untuk tim mini soccer.
               </p>
             </div>
-            <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-slate-900/70">
+            <div className="overflow-hidden rounded-[2rem] border border-[color:var(--border-strong)] bg-[color:var(--surface)]">
               <iframe
                 title="Klaten International Minisoccer location"
                 src="https://www.openstreetmap.org/export/embed.html?bbox=110.5950%2C-7.7210%2C110.6110%2C-7.7020&layer=mapnik"

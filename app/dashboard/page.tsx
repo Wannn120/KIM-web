@@ -31,7 +31,7 @@ export default function DashboardPage() {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {stats.map((stat) => (
             <AnimatedCard key={stat.label}>
-              <p className="text-sm text-slate-400">{stat.label}</p>
+              <p className="text-sm text-[color:var(--muted)]">{stat.label}</p>
               <p className="mt-2 text-3xl font-semibold text-white">{stat.value}</p>
             </AnimatedCard>
           ))}
@@ -42,7 +42,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-semibold text-white">Upcoming bookings</h2>
-                <p className="mt-2 text-sm text-slate-400">Keep track of your next matches and arrivals.</p>
+                <p className="mt-2 text-sm text-[color:var(--muted)]">Keep track of your next matches and arrivals.</p>
               </div>
               <a href="/booking-history" className="text-sm text-[color:var(--accent)]">View history →</a>
             </div>
@@ -51,7 +51,7 @@ export default function DashboardPage() {
                 <div key={item.field} className="flex items-center justify-between rounded-2xl border border-white/10 card-surface p-4">
                   <div>
                     <h3 className="font-semibold text-white">{item.field}</h3>
-                    <p className="text-sm text-slate-400">{item.time}</p>
+                    <p className="text-sm text-[color:var(--muted)]">{item.time}</p>
                   </div>
                   <span className="rounded-full bg-[color:rgba(16,185,129,0.12)] px-3 py-1 text-sm text-[color:var(--accent)]">{item.status}</span>
                 </div>
@@ -72,7 +72,7 @@ export default function DashboardPage() {
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[color:rgba(16,185,129,0.12)] text-sm font-semibold text-[color:var(--accent)]">
                     {index + 1}
                   </div>
-                  <span className="text-sm text-slate-300">{step}</span>
+                  <span className="text-sm text-[color:var(--muted)]">{step}</span>
                 </div>
               ))}
             </div>

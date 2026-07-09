@@ -7,7 +7,7 @@ export function DesignSystemPreview() {
           <h1 className="text-4xl font-semibold tracking-tight text-white">Heading 1</h1>
           <h2 className="text-3xl font-semibold tracking-tight text-white">Heading 2</h2>
           <h3 className="text-2xl font-semibold text-white">Heading 3</h3>
-          <p className="max-w-2xl text-base text-slate-400">Body copy with a clean SaaS-style rhythm and comfortable spacing for modern dashboards.</p>
+          <p className="max-w-2xl text-base text-[color:var(--muted)]">Body copy with a clean SaaS-style rhythm and comfortable spacing for modern dashboards.</p>
         </div>
       </section>
 
@@ -24,7 +24,7 @@ export function DesignSystemPreview() {
         <h2 className="text-2xl font-semibold text-white">Cards</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div className="card-surface p-6">
-            <p className="text-sm text-slate-400">Surface card</p>
+            <p className="text-sm text-[color:var(--muted)]">Surface card</p>
             <h3 className="mt-2 text-xl font-semibold text-white">Elevated content</h3>
           </div>
           <div className="card-glow p-6">

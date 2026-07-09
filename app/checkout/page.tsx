@@ -10,31 +10,31 @@ export default function CheckoutPage() {
         <div className="card-surface p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Secure checkout</p>
           <h1 className="mt-3 text-4xl font-semibold text-white">Review your booking details</h1>
-          <p className="mt-4 max-w-2xl text-lg text-slate-400">
+          <p className="mt-4 max-w-2xl text-lg text-[color:var(--muted)]">
             Confirm the field, date, and time before moving to the payment gateway.
           </p>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="rounded-3xl border border-white/10 card-surface p-6">
-              <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Field</p>
+              <p className="text-sm uppercase tracking-[0.25em] text-[color:var(--muted)]">Field</p>
               <p className="mt-2 text-xl font-semibold text-white">Elite Turf 1</p>
-              <p className="mt-2 text-sm text-slate-400">Indoor • 5v5</p>
+              <p className="mt-2 text-sm text-[color:var(--muted)]">Indoor • 5v5</p>
             </div>
             <div className="rounded-3xl border border-white/10 card-surface p-6">
-              <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Date</p>
+              <p className="text-sm uppercase tracking-[0.25em] text-[color:var(--muted)]">Date</p>
               <p className="mt-2 text-xl font-semibold text-white">07 Jul 2026</p>
-              <p className="mt-2 text-sm text-slate-400">19:00 - 20:00</p>
+              <p className="mt-2 text-sm text-[color:var(--muted)]">19:00 - 20:00</p>
             </div>
             <div className="rounded-3xl border border-white/10 card-surface p-6">
-              <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Total</p>
+              <p className="text-sm uppercase tracking-[0.25em] text-[color:var(--muted)]">Total</p>
               <p className="mt-2 text-3xl font-semibold text-white">Rp 170.000</p>
-              <p className="mt-2 text-sm text-slate-400">Per hour booking</p>
+              <p className="mt-2 text-sm text-[color:var(--muted)]">Per hour booking</p>
             </div>
           </div>        </div>
 
         <AnimatedCard className="p-8">
           <h2 className="text-2xl font-semibold text-white">Payment summary</h2>
-          <div className="mt-6 space-y-4 text-sm text-slate-300">
+          <div className="mt-6 space-y-4 text-sm text-[color:var(--muted)]">
             <div className="flex justify-between"><span>Base price</span><span>Rp 180.000</span></div>
             <div className="flex justify-between"><span>Service fee</span><span>Rp 10.000</span></div>
             <div className="flex justify-between"><span>Discount</span><span>- Rp 20.000</span></div>

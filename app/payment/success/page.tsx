@@ -12,7 +12,7 @@ export default function PaymentSuccessPage() {
             Payment successful
           </div>
           <h1 className="text-4xl font-semibold text-white">Thank you! Your booking is confirmed.</h1>
-          <p className="mt-4 text-lg text-slate-300">
+          <p className="mt-4 text-lg text-[color:var(--muted)]">
             We have received your payment and your mini soccer field booking is now secured. You can view it in your booking history.
           </p>
           <div className="mt-10 grid gap-4 sm:grid-cols-2">

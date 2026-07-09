@@ -33,7 +33,7 @@ export default function AdminPage() {
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Owner / admin</p>
             <h1 className="mt-3 text-3xl font-semibold text-white sm:text-4xl">Operations command center</h1>
-            <p className="mt-3 max-w-2xl text-sm text-slate-400 sm:text-base">
+            <p className="mt-3 max-w-2xl text-sm text-[color:var(--muted)] sm:text-base">
               Track revenue, demand patterns, field utilization, and customer activity from one place.
             </p>
           </div>
@@ -41,7 +41,7 @@ export default function AdminPage() {
             <a href="/api/admin/export/excel" className="rounded-full border border-[color:rgba(16,185,129,0.18)] bg-[color:rgba(16,185,129,0.06)] px-4 py-2 text-sm font-medium text-[color:var(--accent)] transition hover:bg-[color:rgba(16,185,129,0.08)]">
               Export Excel
             </a>
-            <a href="/api/admin/export/pdf" className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10">
+            <a href="/api/admin/export/pdf" className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-[color:var(--foreground)] transition hover:bg-white/10">
               Export PDF
             </a>
           </div>
@@ -49,19 +49,19 @@ export default function AdminPage() {
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <AnimatedCard>
-            <p className="text-sm text-slate-400">Revenue today</p>
+            <p className="text-sm text-[color:var(--muted)]">Revenue today</p>
             <p className="mt-2 text-3xl font-semibold text-white">{formatCurrency(summary.revenueToday)}</p>
           </AnimatedCard>
           <AnimatedCard>
-            <p className="text-sm text-slate-400">Revenue this month</p>
+            <p className="text-sm text-[color:var(--muted)]">Revenue this month</p>
             <p className="mt-2 text-3xl font-semibold text-white">{formatCurrency(summary.revenueThisMonth)}</p>
           </AnimatedCard>
           <AnimatedCard>
-            <p className="text-sm text-slate-400">Bookings today</p>
+            <p className="text-sm text-[color:var(--muted)]">Bookings today</p>
             <p className="mt-2 text-3xl font-semibold text-white">{summary.bookingsToday}</p>
           </AnimatedCard>
           <AnimatedCard>
-            <p className="text-sm text-slate-400">Bookings this month</p>
+            <p className="text-sm text-[color:var(--muted)]">Bookings this month</p>
             <p className="mt-2 text-3xl font-semibold text-white">{summary.bookingsThisMonth}</p>
           </AnimatedCard>
         </div>
@@ -79,25 +79,13 @@ export default function AdminPage() {
               <div className="min-w-[560px] flex h-48 items-end gap-3">
                 {chartSeries.map((point) => (
                   <div key={point.label} className="flex flex-1 flex-col items-center gap-3">
-                    <div className="flex h-32 w-full items-end rounded-xl bg-slate-900/80 p-1">
+                    <div className="flex h-32 w-full items-end rounded-xl bg-[color:var(--surface-strong)] p-1">
                       <div className="w-full rounded-lg bg-gradient-to-t from-[color:var(--accent)] to-[color:var(--accent-strong)]" style={{ height: `${Math.max(point.value, 20)}%` }} />
                     </div>
-                    <span className="text-xs text-slate-400">{point.label}</span>
+                    <span className="text-xs text-[color:var(--muted)]">{point.label}</span>
                   </div>
                 ))}
               </div>
-            </div>
-          </AnimatedCard>
-
-          <AnimatedCard className="p-8">
-            <h2 className="text-2xl font-semibold text-white">Peak hours</h2>
-            <div className="mt-6 space-y-3">
-              {summary.peakHours.map((slot) => (
-                <div key={slot.hour} className="flex items-center justify-between rounded-2xl border border-white/10 card-surface px-4 py-3 text-sm text-slate-300">
-                  <span>{slot.hour}</span>
-                  <span className="font-semibold text-[color:var(--accent)]">{slot.bookings} bookings</span>
-                </div>
-              ))}
             </div>
           </AnimatedCard>
         </div>
@@ -106,12 +94,12 @@ export default function AdminPage() {
           <AnimatedCard className="p-8">
             <h2 className="text-2xl font-semibold text-white">Most booked field</h2>
             <p className="mt-4 text-3xl font-semibold text-white">{summary.mostBookedField.name}</p>
-            <p className="mt-2 text-sm text-slate-400">{summary.mostBookedField.bookings} bookings this month</p>
+            <p className="mt-2 text-sm text-[color:var(--muted)]">{summary.mostBookedField.bookings} bookings this month</p>
           </AnimatedCard>
 
           <AnimatedCard className="p-8">
             <h2 className="text-2xl font-semibold text-white">Customer statistics</h2>
-            <div className="mt-6 space-y-3 text-sm text-slate-300">
+            <div className="mt-6 space-y-3 text-sm text-[color:var(--muted)]">
               <div className="flex items-center justify-between rounded-2xl border border-white/10 card-surface px-4 py-3">
                 <span>Total customers</span>
                 <span className="font-semibold text-white">{summary.customerStats.totalCustomers}</span>
@@ -134,10 +122,10 @@ export default function AdminPage() {
             </div>
             <div className="mt-6 space-y-3">
               {summary.calendarEvents.map((event) => (
-                <div key={event.title} className="rounded-2xl border border-white/10 card-surface px-4 py-3 text-sm text-slate-300">
+                <div key={event.title} className="rounded-2xl border border-white/10 card-surface px-4 py-3 text-sm text-[color:var(--muted)]">
                   <p className="font-semibold text-white">{event.title}</p>
                   <p className="mt-1 text-[color:var(--accent)]">{event.date}</p>
-                  <p className="mt-1 text-slate-400">{event.field}</p>
+                  <p className="mt-1 text-[color:var(--muted)]">{event.field}</p>
                 </div>
               ))}
             </div>

@@ -26,24 +26,24 @@ export default function LoginPage() {
 
   return (
     <main className="flex-1 bg-[color:var(--background)] px-4 py-16 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-4xl rounded-3xl border border-white/10 bg-slate-900/70 p-8 shadow-2xl shadow-[0_20px_80px_rgba(16,185,129,0.08)]">
+      <div className="mx-auto max-w-4xl rounded-3xl border border-white/10 card-surface p-8 shadow-2xl shadow-[0_20px_80px_rgba(16,185,129,0.08)]">
         <div className="grid gap-8 lg:grid-cols-[1fr_0.9fr]">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Access portal</p>
             <h1 className="mt-3 text-3xl font-semibold text-white sm:text-4xl">Login untuk melanjutkan booking</h1>
-            <p className="mt-4 text-base text-slate-400 sm:text-lg">
+            <p className="mt-4 text-base text-[color:var(--muted)] sm:text-lg">
               Masuk cepat dengan email, lalu pesan slot lapangan dan kelola profil pengguna Anda.
             </p>
           </div>
           <div className="rounded-3xl border border-cyan-400/20 card-surface p-6">
             <h2 className="text-xl font-semibold text-white">Customer portal</h2>
-            <form onSubmit={handleSubmit} className="mt-4 space-y-4 text-sm text-slate-300">
+            <form onSubmit={handleSubmit} className="mt-4 space-y-4 text-sm text-[color:var(--muted)]">
               <label className="block">
                 <span className="mb-2 block">Email</span>
                 <input
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
-                  className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none"
+                  className="w-full rounded-2xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-4 py-3 text-[color:var(--foreground)] outline-none"
                   placeholder="you@example.com"
                 />
               </label>
@@ -52,7 +52,7 @@ export default function LoginPage() {
                 <input
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none"
+                  className="w-full rounded-2xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-4 py-3 text-[color:var(--foreground)] outline-none"
                   type="password"
                   placeholder="••••••••"
                 />

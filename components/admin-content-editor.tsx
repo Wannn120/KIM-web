@@ -35,63 +35,63 @@ export function AdminContentEditor() {
         <h2 className="mt-2 text-2xl font-semibold text-white">Change hero text and images</h2>
       </div>
       <div className="grid gap-4">
-        <label className="block text-sm text-slate-300">
+        <label className="block text-sm text-[color:var(--muted)]">
           <span className="mb-2 block">Hero title</span>
           <input
             value={content.heroTitle}
             onChange={(event) => updateField("heroTitle", event.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none"
+            className="w-full rounded-2xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-4 py-3 text-[color:var(--foreground)] outline-none"
           />
         </label>
-        <label className="block text-sm text-slate-300">
+        <label className="block text-sm text-[color:var(--muted)]">
           <span className="mb-2 block">Hero subtitle</span>
           <textarea
             value={content.heroSubtitle}
             onChange={(event) => updateField("heroSubtitle", event.target.value)}
-            className="w-full rounded-3xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none min-h-[96px]"
+            className="w-full rounded-3xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-4 py-3 text-[color:var(--foreground)] outline-none min-h-[96px]"
           />
         </label>
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="block text-sm text-slate-300">
+          <label className="block text-sm text-[color:var(--muted)]">
             <span className="mb-2 block">Primary CTA text</span>
             <input
               value={content.ctaPrimary}
               onChange={(event) => updateField("ctaPrimary", event.target.value)}
-              className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none"
+              className="w-full rounded-2xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-4 py-3 text-[color:var(--foreground)] outline-none"
             />
           </label>
-          <label className="block text-sm text-slate-300">
+          <label className="block text-sm text-[color:var(--muted)]">
             <span className="mb-2 block">Secondary CTA text</span>
             <input
               value={content.ctaSecondary}
               onChange={(event) => updateField("ctaSecondary", event.target.value)}
-              className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none"
+              className="w-full rounded-2xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-4 py-3 text-[color:var(--foreground)] outline-none"
             />
           </label>
         </div>
-        <label className="block text-sm text-slate-300">
+        <label className="block text-sm text-[color:var(--muted)]">
           <span className="mb-2 block">Hero background image URL</span>
           <input
             value={content.backgroundImageUrl}
             onChange={(event) => updateField("backgroundImageUrl", event.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none"
+            className="w-full rounded-2xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-4 py-3 text-[color:var(--foreground)] outline-none"
           />
         </label>
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="block text-sm text-slate-300">
+          <label className="block text-sm text-[color:var(--muted)]">
             <span className="mb-2 block">Contact email</span>
             <input
               value={content.contactEmail}
               onChange={(event) => updateField("contactEmail", event.target.value)}
-              className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none"
+              className="w-full rounded-2xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-4 py-3 text-[color:var(--foreground)] outline-none"
             />
           </label>
-          <label className="block text-sm text-slate-300">
+          <label className="block text-sm text-[color:var(--muted)]">
             <span className="mb-2 block">Contact phone</span>
             <input
               value={content.contactPhone}
               onChange={(event) => updateField("contactPhone", event.target.value)}
-              className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none"
+              className="w-full rounded-2xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-4 py-3 text-[color:var(--foreground)] outline-none"
             />
           </label>
         </div>

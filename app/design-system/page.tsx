@@ -9,7 +9,7 @@ export default function DesignSystemPage() {
         <div className="mb-8">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Design system</p>
           <h1 className="mt-3 text-4xl font-semibold text-white">Reusable UI foundation</h1>
-          <p className="mt-3 max-w-2xl text-lg text-slate-400">
+          <p className="mt-3 max-w-2xl text-lg text-[color:var(--muted)]">
             Typography, color, spacing, buttons, cards, nav, tables, modals, toasts, loading states, and dark mode patterns are all defined here for fast product development.
           </p>
         </div>

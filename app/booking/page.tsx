@@ -18,13 +18,13 @@ export default function BookingPage() {
         <AnimatedCard className="p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Book your slot</p>
           <h1 className="mt-3 text-4xl font-semibold text-white">Reserve your next game</h1>
-          <p className="mt-4 text-lg text-slate-400">Pick a field, choose your time, and enjoy a seamless experience.</p>
+          <p className="mt-4 text-lg text-[color:var(--muted)]">Pick a field, choose your time, and enjoy a seamless experience.</p>
 
           <div className="mt-8 grid gap-4 md:grid-cols-2">
             <div className="rounded-3xl border border-white/10 card-surface p-5">
-              <p className="text-sm text-slate-400">Selected venue</p>
+              <p className="text-sm text-[color:var(--muted)]">Selected venue</p>
               <h2 className="mt-2 text-2xl font-semibold text-white">Elite Turf 1</h2>
-              <p className="mt-2 text-sm text-slate-400">Jakarta Selatan • 5v5 • Indoor</p>
+              <p className="mt-2 text-sm text-[color:var(--muted)]">Jakarta Selatan • 5v5 • Indoor</p>
             </div>
                 <div className="rounded-3xl border border-[color:rgba(16,185,129,0.12)] bg-[color:rgba(16,185,129,0.06)] p-5">
                   <p className="text-sm text-[color:var(--accent)]">Hourly rate</p>
@@ -35,7 +35,7 @@ export default function BookingPage() {
           <div className="mt-8">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-white">Availability</h2>
-              <span className="text-sm text-slate-400">Today</span>
+              <span className="text-sm text-[color:var(--muted)]">Today</span>
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
                 {availability.map((slot) => (
@@ -53,7 +53,7 @@ export default function BookingPage() {
 
         <AnimatedCard className="p-8">
           <h2 className="text-2xl font-semibold text-white">Booking summary</h2>
-          <div className="mt-6 space-y-4 text-sm text-slate-300">
+          <div className="mt-6 space-y-4 text-sm text-[color:var(--muted)]">
             <div className="flex justify-between"><span>Field</span><span>Elite Turf 1</span></div>
             <div className="flex justify-between"><span>Date</span><span>07 Jul 2026</span></div>
             <div className="flex justify-between"><span>Time</span><span>10:00 - 11:00</span></div>

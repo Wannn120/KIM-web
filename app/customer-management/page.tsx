@@ -26,7 +26,7 @@ export default function CustomerManagementPage() {
               <div key={customer.name} className="flex flex-col gap-3 rounded-2xl border border-white/10 card-surface p-4 md:flex-row md:items-center md:justify-between">
                 <div>
                   <h3 className="font-semibold text-white">{customer.name}</h3>
-                  <p className="text-sm text-slate-400">{customer.bookings} bookings</p>
+                  <p className="text-sm text-[color:var(--muted)]">{customer.bookings} bookings</p>
                 </div>
                 <span className="rounded-full bg-[color:rgba(16,185,129,0.12)] px-3 py-1 text-sm text-[color:var(--accent)]">{customer.status}</span>
               </div>

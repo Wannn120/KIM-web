@@ -10,7 +10,7 @@ export default function BookPage() {
         <section className="card-surface p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Booking flow</p>
           <h1 className="mt-3 text-4xl font-semibold text-white">Choose your date, time, and payment method</h1>
-          <p className="mt-4 max-w-2xl text-lg text-slate-400">
+          <p className="mt-4 max-w-2xl text-lg text-[color:var(--muted)]">
             The booking experience is designed for fast checkout with instant confirmation and a clean hourly schedule.
           </p>
 
@@ -18,7 +18,7 @@ export default function BookPage() {
             {bookingSteps.map((step) => (
               <div key={step.title} className="rounded-3xl border border-white/10 card-surface p-6">
                 <h2 className="font-semibold text-white">{step.title}</h2>
-                <p className="mt-2 text-sm text-slate-400">{step.description}</p>
+                <p className="mt-2 text-sm text-[color:var(--muted)]">{step.description}</p>
               </div>
             ))}
           </div>
@@ -31,15 +31,15 @@ export default function BookPage() {
                 <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Available schedule</p>
                 <h2 className="mt-2 text-3xl font-semibold text-white">One client per slot, selected by hour</h2>
               </div>
-              <p className="text-sm text-slate-400 max-w-xl">
+              <p className="text-sm text-[color:var(--muted)] max-w-xl">
                 Each booking is limited to one customer per field and time slot so schedules do not overlap.
               </p>
             </div>
 
             <div className="mt-8">
               <div className="hidden md:block overflow-x-auto rounded-3xl border border-white/10 card-surface">
-                <table className="min-w-[640px] w-full table-auto text-left text-sm text-slate-300">
-                  <thead className="bg-slate-900/80 text-slate-400">
+                <table className="min-w-[640px] w-full table-auto text-left text-sm text-[color:var(--muted)]">
+                  <thead className="bg-[color:var(--surface-strong)] text-[color:var(--muted)]">
                     <tr>
                       <th className="whitespace-nowrap px-4 py-3">Date</th>
                       <th className="whitespace-nowrap px-4 py-3">Time</th>
@@ -65,20 +65,20 @@ export default function BookPage() {
                   <div key={`${slot.date}-${slot.time}-${slot.field}`} className="rounded-2xl border border-white/10 card-surface p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-xs text-slate-400">Date</p>
+                        <p className="text-xs text-[color:var(--muted)]">Date</p>
                         <p className="font-semibold text-white">{slot.date}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-slate-400">Time</p>
+                        <p className="text-xs text-[color:var(--muted)]">Time</p>
                         <p className="text-sm text-white">{slot.time}</p>
                       </div>
                     </div>
                     <div className="mt-3">
-                      <p className="text-xs text-slate-400">Field</p>
+                      <p className="text-xs text-[color:var(--muted)]">Field</p>
                       <p className="text-sm text-white">{slot.field}</p>
                     </div>
                     <div className="mt-3 flex items-center justify-between">
-                      <p className="text-xs text-slate-400">Status</p>
+                      <p className="text-xs text-[color:var(--muted)]">Status</p>
                       <span className="rounded-full bg-[color:rgba(16,185,129,0.12)] px-3 py-1 text-[color:var(--accent)] text-sm">{slot.status}</span>
                     </div>
                   </div>
@@ -89,7 +89,7 @@ export default function BookPage() {
 
           <aside className="card-glow p-8">
             <h2 className="text-2xl font-semibold text-white">Checkout preview</h2>
-            <div className="mt-6 space-y-4 text-sm text-slate-300">
+            <div className="mt-6 space-y-4 text-sm text-[color:var(--muted)]">
               <div className="flex justify-between"><span>Field</span><span>Elite Turf 1</span></div>
               <div className="flex justify-between"><span>Date</span><span>07 Jul 2026</span></div>
               <div className="flex justify-between"><span>Time</span><span>19:00 - 20:00</span></div>

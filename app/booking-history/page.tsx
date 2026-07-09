@@ -23,8 +23,8 @@ export default function BookingHistoryPage() {
 
           <div className="mt-8">
             <div className="hidden md:block overflow-x-auto rounded-2xl border border-white/10">
-              <table className="min-w-[640px] w-full table-auto text-left text-sm text-slate-300">
-                <thead className="bg-[color:rgba(0,0,0,0.28)] text-slate-400">
+              <table className="min-w-[640px] w-full table-auto text-left text-sm text-[color:var(--muted)]">
+                <thead className="bg-[color:rgba(0,0,0,0.28)] text-[color:var(--muted)]">
                   <tr>
                     <th className="px-4 py-3">Booking ID</th>
                     <th className="px-4 py-3">Field</th>
@@ -35,8 +35,8 @@ export default function BookingHistoryPage() {
                 </thead>
                 <tbody>
                   {history.map((item) => (
-                    <tr key={item.id} className="border-t border-white/10 bg-slate-900/40">
-                      <td className="px-4 py-3 text-white">{item.id}</td>
+                    <tr key={item.id} className="border-t border-white/10 bg-[color:rgba(15,23,42,0.08)]">
+                      <td className="px-4 py-3 text-[color:var(--foreground)]">{item.id}</td>
                       <td className="px-4 py-3">{item.field}</td>
                       <td className="px-4 py-3">{item.date}</td>
                       <td className="px-4 py-3">{item.amount}</td>
@@ -52,22 +52,22 @@ export default function BookingHistoryPage() {
                 <div key={item.id} className="rounded-2xl border border-white/10 card-surface p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-slate-400">Booking ID</p>
+                      <p className="text-xs text-[color:var(--muted)]">Booking ID</p>
                       <p className="font-semibold text-white">{item.id}</p>
                     </div>
                     <span className="rounded-full bg-[color:rgba(16,185,129,0.12)] px-3 py-1 text-[color:var(--accent)] text-sm">{item.status}</span>
                   </div>
-                  <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-slate-300">
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-[color:var(--muted)]">
                     <div>
-                      <p className="text-xs text-slate-400">Field</p>
+                      <p className="text-xs text-[color:var(--muted)]">Field</p>
                       <p className="text-sm text-white">{item.field}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-400">Date</p>
+                      <p className="text-xs text-[color:var(--muted)]">Date</p>
                       <p className="text-sm text-white">{item.date}</p>
                     </div>
                     <div className="col-span-2">
-                      <p className="text-xs text-slate-400">Amount</p>
+                      <p className="text-xs text-[color:var(--muted)]">Amount</p>
                       <p className="text-sm text-white">{item.amount}</p>
                     </div>
                   </div>

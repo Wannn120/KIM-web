@@ -25,7 +25,7 @@ export default function ReportsPage() {
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {metrics.map((metric) => (
               <div key={metric.label} className="rounded-3xl border border-white/10 card-surface p-5">
-                <p className="text-sm text-slate-400">{metric.label}</p>
+                <p className="text-sm text-[color:var(--muted)]">{metric.label}</p>
                 <p className="mt-2 text-3xl font-semibold text-white">{metric.value}</p>
               </div>
             ))}

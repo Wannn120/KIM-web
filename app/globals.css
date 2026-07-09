@@ -2,13 +2,27 @@
 @import "tailwindcss";
 
 :root {
-  --background: #000000; /* pure black background per user preference */
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --surface: rgba(255,255,255,0.72);
+  --surface-strong: rgba(255,255,255,0.9);
+  --muted: #64748b;
+  --border-strong: rgba(15,23,42,0.08);
+  --accent: #10b981;
+  --accent-strong: #22c55e;
+  --background-image: radial-gradient(circle at 18% 12%, rgba(16,185,129,0.18), transparent 8%), radial-gradient(circle at 86% 18%, rgba(16,185,129,0.08), transparent 12%), radial-gradient(circle at 50% 68%, rgba(15,23,42,0.04), transparent 15%), linear-gradient(135deg, rgba(255,255,255,0.55), transparent 35%);
+}
+
+[data-theme="dark"] {
+  --background: #000000;
   --foreground: #f8fafc;
-  --surface: rgba(6,10,18,0.6);
-  --surface-strong: rgba(4,6,10,0.7);
-  --muted: #9aa6b2;
-  --accent: #10b981; /* brand green 500 */
-  --accent-strong: #34d399; /* brand green 400 */
+  --surface: rgba(0,0,0,0.38);
+  --surface-strong: rgba(0,0,0,0.55);
+  --muted: #94a3b8;
+  --border-strong: rgba(255,255,255,0.08);
+  --accent: #10b981;
+  --accent-strong: #34d399;
+  --background-image: radial-gradient(circle at 18% 12%, rgba(16,185,129,0.14), transparent 10%), radial-gradient(circle at 86% 18%, rgba(16,185,129,0.06), transparent 14%), radial-gradient(circle at 50% 68%, rgba(255,255,255,0.05), transparent 20%), linear-gradient(135deg, rgba(255,255,255,0.08), transparent 40%);
 }
 
 @theme inline {
@@ -28,11 +42,33 @@ html {
 
 body {
   margin: 0;
-  background: radial-gradient(ellipse at 10% 10%, rgba(16,185,129,0.03), transparent 18%), var(--background);
+  background-color: var(--background);
+  background-image: var(--background-image);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: cover;
   color: var(--foreground);
   font-family: Poppins, Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+body[data-theme="light"] .text-white {
+  color: var(--foreground) !important;
+}
+
+body[data-theme="light"] .text-slate-200 {
+  color: #475569 !important;
+}
+
+body[data-theme="light"] .text-slate-300,
+body[data-theme="light"] .text-slate-400 {
+  color: #64748b !important;
+}
+
+
+body[data-theme="light"] .border-white\/10 {
+  border-color: rgba(15,23,42,0.08) !important;
 }
 
 a {
@@ -41,8 +77,8 @@ a {
 }
 
 ::selection {
-  background: rgba(16,185,129,0.16);
-  color: white;
+  background: rgba(16,185,129,0.24);
+  color: var(--foreground);
 }
 
 @layer components {
@@ -55,7 +91,7 @@ a {
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-semibold text-slate-200 transition duration-200 hover:bg-white/10;
+    @apply inline-flex items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] transition duration-200 hover:bg-[color:rgba(255,255,255,0.14)];
   }
 
   .btn-primary-sm {
@@ -63,19 +99,19 @@ a {
   }
 
   .card-surface {
-    @apply rounded-3xl border border-white/12 bg-[color:rgba(0,0,0,0.38)] backdrop-blur-md shadow-none;
+    @apply rounded-3xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] backdrop-blur-md shadow-none;
   }
 
   .card-glow {
-    @apply rounded-3xl border border-[color:rgba(16,185,129,0.12)] bg-[color:rgba(0,0,0,0.35)] shadow-[0_20px_80px_rgba(16,185,129,0.12)] backdrop-blur-md;
+    @apply rounded-3xl border border-[color:rgba(16,185,129,0.16)] bg-[color:var(--surface)] shadow-[0_20px_80px_rgba(16,185,129,0.12)] backdrop-blur-md;
   }
 
   .navbar-shell {
-    @apply border-b border-[color:rgba(255,255,255,0.06)] bg-[color:rgba(0,0,0,0.42)] backdrop-blur-lg;
+    @apply border-b border-[color:var(--border-strong)] bg-[color:var(--surface)] backdrop-blur-lg;
   }
 
   .sidebar-shell {
-    @apply rounded-3xl border border-white/8 bg-[color:rgba(0,0,0,0.34)] p-4 shadow-none;
+    @apply rounded-3xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] p-4 shadow-none;
   }
 
   .table-shell {
@@ -83,14 +119,14 @@ a {
   }
 
   .modal-shell {
-    @apply rounded-[2rem] border border-white/10 bg-slate-900/90 p-6 shadow-[0_20px_80px_rgba(16,185,129,0.08)] backdrop-blur;
+    @apply rounded-[2rem] border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] p-6 shadow-[0_20px_80px_rgba(16,185,129,0.08)] backdrop-blur;
   }
 
   .toast-shell {
-    @apply rounded-2xl border border-[color:rgba(16,185,129,0.12)] bg-slate-900/90 px-4 py-3 text-sm text-slate-200 shadow-[0_20px_80px_rgba(16,185,129,0.08)];
+    @apply rounded-2xl border border-[color:rgba(16,185,129,0.12)] bg-[color:var(--surface-strong)] px-4 py-3 text-sm text-[color:var(--foreground)] shadow-[0_20px_80px_rgba(16,185,129,0.08)];
   }
 
   .loading-shell {
-    @apply animate-pulse rounded-2xl bg-slate-800/70;
+    @apply animate-pulse rounded-2xl bg-[color:var(--surface-strong)];
   }
 }
