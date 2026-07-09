@@ -25,13 +25,13 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex-1 bg-slate-950 px-6 py-16 lg:px-8">
-      <div className="mx-auto max-w-5xl rounded-3xl border border-white/10 bg-slate-900/70 p-8 shadow-2xl shadow-cyan-950/20">
+    <main className="flex-1 bg-slate-950 px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-4xl rounded-3xl border border-white/10 bg-slate-900/70 p-8 shadow-2xl shadow-cyan-950/20">
         <div className="grid gap-8 lg:grid-cols-[1fr_0.9fr]">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">Access portal</p>
-            <h1 className="mt-3 text-4xl font-semibold text-white">Login untuk melanjutkan booking</h1>
-            <p className="mt-4 text-lg text-slate-400">
+            <h1 className="mt-3 text-3xl font-semibold text-white sm:text-4xl">Login untuk melanjutkan booking</h1>
+            <p className="mt-4 text-base text-slate-400 sm:text-lg">
               Masuk cepat dengan email, lalu pesan slot lapangan dan kelola profil pengguna Anda.
             </p>
           </div>

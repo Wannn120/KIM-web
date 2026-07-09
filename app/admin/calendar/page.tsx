@@ -26,7 +26,7 @@ export default function AdminCalendarPage() {
             <button className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-300">+ Add availability</button>
           </div>
 
-          <div className="mt-8 grid gap-4 lg:grid-cols-7">
+          <div className="mt-8 grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-7">
             {slots.map((slot) => (
               <div key={slot.day} className="rounded-3xl border border-white/10 bg-slate-950/70 p-4">
                 <h3 className="text-lg font-semibold text-white">{slot.day}</h3>

@@ -27,13 +27,13 @@ export default function AdminPage() {
   const summary = getAdminSummary();
 
   return (
-    <main className="flex-1 bg-slate-950 px-6 py-16 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-8">
+    <main className="flex-1 bg-slate-950 px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl space-y-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">Owner / admin</p>
-            <h1 className="mt-3 text-4xl font-semibold text-white">Operations command center</h1>
-            <p className="mt-3 max-w-2xl text-sm text-slate-400">
+            <h1 className="mt-3 text-3xl font-semibold text-white sm:text-4xl">Operations command center</h1>
+            <p className="mt-3 max-w-2xl text-sm text-slate-400 sm:text-base">
               Track revenue, demand patterns, field utilization, and customer activity from one place.
             </p>
           </div>
@@ -68,22 +68,24 @@ export default function AdminPage() {
 
         <div className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
           <AnimatedCard className="p-8">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm uppercase tracking-[0.3em] text-cyan-400">Revenue chart</p>
                 <h2 className="mt-2 text-2xl font-semibold text-white">Weekly demand snapshot</h2>
               </div>
               <a href="/reports" className="text-sm text-cyan-300">Open reports →</a>
             </div>
-            <div className="mt-8 flex h-48 items-end gap-3 rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-              {chartSeries.map((point) => (
-                <div key={point.label} className="flex flex-1 flex-col items-center gap-3">
-                  <div className="flex h-32 w-full items-end rounded-xl bg-slate-900/80 p-1">
-                    <div className="w-full rounded-lg bg-gradient-to-t from-cyan-500 to-cyan-300" style={{ height: `${Math.max(point.value, 20)}%` }} />
+            <div className="mt-8 overflow-x-auto rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+              <div className="min-w-[560px] flex h-48 items-end gap-3">
+                {chartSeries.map((point) => (
+                  <div key={point.label} className="flex flex-1 flex-col items-center gap-3">
+                    <div className="flex h-32 w-full items-end rounded-xl bg-slate-900/80 p-1">
+                      <div className="w-full rounded-lg bg-gradient-to-t from-cyan-500 to-cyan-300" style={{ height: `${Math.max(point.value, 20)}%` }} />
+                    </div>
+                    <span className="text-xs text-slate-400">{point.label}</span>
                   </div>
-                  <span className="text-xs text-slate-400">{point.label}</span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </AnimatedCard>
 

@@ -11,19 +11,19 @@ export default function Home() {
     <main className="flex-1">
       <HeroSection />
 
-      <section className="px-6 py-16 lg:px-8">
-        <div className="mx-auto max-w-7xl">
+      <section className="px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl">
           <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">Lapangan unggulan</p>
-              <h2 className="mt-2 text-3xl font-semibold text-white">Satu lapangan terbaik untuk setiap laga</h2>
+              <h2 className="mt-2 text-3xl font-semibold text-white sm:text-4xl">Satu lapangan terbaik untuk setiap laga</h2>
             </div>
             <Link href="/book" className="text-sm font-medium text-cyan-300 transition hover:text-cyan-200">
               Booking sekarang →
             </Link>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
             {fields.map((field) => (
               <FieldCard key={field.id} field={field} />
             ))}

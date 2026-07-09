@@ -36,14 +36,14 @@ export default function BookPage() {
               </p>
             </div>
 
-            <div className="mt-8 overflow-hidden rounded-3xl border border-white/10 bg-slate-950/70">
-              <table className="min-w-full text-left text-sm text-slate-300">
+            <div className="mt-8 overflow-x-auto rounded-3xl border border-white/10 bg-slate-950/70">
+              <table className="min-w-[640px] w-full table-auto text-left text-sm text-slate-300">
                 <thead className="bg-slate-900/80 text-slate-400">
                   <tr>
-                    <th className="px-4 py-3">Date</th>
-                    <th className="px-4 py-3">Time</th>
-                    <th className="px-4 py-3">Field</th>
-                    <th className="px-4 py-3">Status</th>
+                    <th className="whitespace-nowrap px-4 py-3">Date</th>
+                    <th className="whitespace-nowrap px-4 py-3">Time</th>
+                    <th className="whitespace-nowrap px-4 py-3">Field</th>
+                    <th className="whitespace-nowrap px-4 py-3">Status</th>
                   </tr>
                 </thead>
                 <tbody>

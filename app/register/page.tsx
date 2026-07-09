@@ -27,12 +27,12 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="flex-1 bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.2),_transparent_35%)] px-6 py-16 lg:px-8">
-      <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+    <main className="flex-1 bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.2),_transparent_35%)] px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
         <section className="rounded-[2rem] border border-white/10 bg-slate-900/70 p-8 shadow-2xl shadow-cyan-950/20">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">Join the platform</p>
-          <h1 className="mt-4 text-4xl font-semibold text-white">Create your account and start booking</h1>
-          <p className="mt-4 text-lg text-slate-400">
+          <h1 className="mt-4 text-3xl font-semibold text-white sm:text-4xl">Create your account and start booking</h1>
+          <p className="mt-4 text-base text-slate-400 sm:text-lg">
             Unlock instant booking, secure payments, and personalized field recommendations.
           </p>
           <div className="mt-8 space-y-3 text-sm text-slate-300">
@@ -43,7 +43,7 @@ export default function RegisterPage() {
         </section>
 
         <section className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-8 shadow-2xl shadow-cyan-950/20">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-2xl font-semibold text-white">Create account</h2>
             <Link href="/login" className="text-sm text-cyan-300 hover:text-cyan-200">Sign in instead</Link>
           </div>

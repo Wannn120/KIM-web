@@ -6,7 +6,7 @@ export function FieldCard({ field }: { field: Field }) {
   return (
     <article className="card-surface overflow-hidden">
       {field.imageUrl ? (
-        <div className="relative h-56 w-full overflow-hidden bg-slate-800">
+        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[1.5rem] bg-slate-800 sm:aspect-[16/9]">
           <img src={field.imageUrl} alt={field.name} className="h-full w-full object-cover transition duration-300 hover:scale-105" />
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/90 to-transparent px-5 py-4">
             <p className="text-sm font-semibold uppercase tracking-[0.25em] text-cyan-300">{field.type}</p>

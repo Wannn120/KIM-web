@@ -16,12 +16,12 @@ export const dynamic = "force-dynamic";
 
 export default function DashboardPage() {
   return (
-    <main className="flex-1 bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.14),_transparent_35%)] px-6 py-16 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-8">
+    <main className="flex-1 bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.14),_transparent_35%)] px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl space-y-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">Customer dashboard</p>
-            <h1 className="mt-3 text-4xl font-semibold text-white">Your match-day control center</h1>
+            <h1 className="mt-3 text-3xl font-semibold text-white sm:text-4xl">Your match-day control center</h1>
           </div>
           <div className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-300">
             Welcome back, Ari

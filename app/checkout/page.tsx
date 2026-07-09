@@ -14,7 +14,7 @@ export default function CheckoutPage() {
             Confirm the field, date, and time before moving to the payment gateway.
           </p>
 
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="rounded-3xl border border-white/10 bg-slate-950/70 p-6">
               <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Field</p>
               <p className="mt-2 text-xl font-semibold text-white">Elite Turf 1</p>
@@ -30,8 +30,7 @@ export default function CheckoutPage() {
               <p className="mt-2 text-3xl font-semibold text-white">Rp 170.000</p>
               <p className="mt-2 text-sm text-slate-400">Per hour booking</p>
             </div>
-          </div>
-        </div>
+          </div>        </div>
 
         <AnimatedCard className="p-8">
           <h2 className="text-2xl font-semibold text-white">Payment summary</h2>

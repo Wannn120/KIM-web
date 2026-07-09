@@ -64,13 +64,13 @@ export function ReviewSection() {
   };
 
   return (
-    <section className="px-6 py-16 lg:px-8">
-      <div className="mx-auto max-w-7xl">
+    <section className="px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl">
         <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-6">
             <div className="rounded-[2rem] border border-white/10 bg-slate-950/70 p-8 backdrop-blur">
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">Add a review</p>
-              <h2 className="mt-2 text-3xl font-semibold text-white">Tell us about your game experience</h2>
+              <h2 className="mt-2 text-3xl font-semibold text-white sm:text-4xl">Tell us about your game experience</h2>
               <form onSubmit={handleSubmit} className="mt-6 space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="block text-sm text-slate-300">
@@ -100,7 +100,7 @@ export function ReviewSection() {
                   <textarea
                     value={comment}
                     onChange={(event) => setComment(event.target.value)}
-                    className="w-full rounded-3xl border border-white/10 bg-slate-900 px-4 py-4 text-white outline-none min-h-[140px]"
+                    className="w-full rounded-3xl border border-white/10 bg-slate-900 px-4 py-4 text-white outline-none min-h-[180px]"
                     placeholder="Share your experience at Klaten International Minisoccer"
                   />
                 </label>
@@ -118,7 +118,7 @@ export function ReviewSection() {
           <div className="space-y-4">
             {reviews.slice(0, 3).map((review) => (
               <div key={review.id} className="rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 backdrop-blur">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="font-semibold text-white">{review.customerName}</p>
                     <p className="text-sm text-slate-400">{review.date}</p>

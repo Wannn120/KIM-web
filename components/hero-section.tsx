@@ -28,15 +28,15 @@ export function HeroSection() {
       }}
     >
       <div className="absolute inset-0 bg-slate-950/60" />
-      <div className="relative px-6 py-24 lg:px-8">
-        <div className="mx-auto max-w-7xl text-center text-white">
+      <div className="relative px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
+        <div className="mx-auto max-w-5xl text-center text-white">
           <p className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-300">
             {content.locationLabel}
           </p>
-          <h1 className="mt-5 text-5xl font-semibold leading-tight sm:text-6xl lg:text-7xl">
+          <h1 className="mt-5 text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
             {content.heroTitle}
           </h1>
-          <p className="mx-auto mt-8 max-w-3xl text-lg leading-8 text-slate-200 sm:text-xl">
+          <p className="mx-auto mt-8 max-w-3xl text-base leading-7 text-slate-200 sm:text-lg sm:leading-8">
             {content.heroSubtitle}
           </p>
 
@@ -58,7 +58,7 @@ export function HeroSection() {
           <div className="mt-14 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {facilityImages.map((facility) => (
               <div key={facility.title} className="rounded-[2rem] border border-white/10 bg-slate-950/70 p-4 backdrop-blur">
-                <div className="relative h-40 overflow-hidden rounded-3xl bg-slate-900">
+                <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-slate-900 sm:aspect-[16/9]">
                   <img src={facility.imageUrl} alt={facility.title} className="h-full w-full object-cover" />
                 </div>
                 <h3 className="mt-4 text-lg font-semibold text-white">{facility.title}</h3>
