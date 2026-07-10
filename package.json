@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "cross-env NEXT_DISABLE_ESLINT=1 next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev --name init",
+    "prisma:deploy": "prisma migrate deploy",
+    "prisma:studio": "prisma studio",
+    "prisma:seed": "node prisma/seed.js"
   },
   "dependencies": {
     "next": "^15.5.20",
@@ -14,6 +19,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@prisma/client": "^4.16.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^18.3.12",
@@ -21,6 +27,7 @@
     "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "^15.5.20",
+    "prisma": "^4.16.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
