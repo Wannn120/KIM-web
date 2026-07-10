@@ -19,13 +19,21 @@ postgresql://postgres.gaoqisykccpipessewis:YOUR_ENCODED_PASSWORD@aws-0-ap-southe
 
    - If your password contains special characters (e.g. `@`, `/`, `:`), percent-encode them.
 
-4. Set the `DATABASE_URL` environment variable:
+4. Set the `DATABASE_URL` and `DIRECT_URL` environment variables:
    - Locally: create `.env.local` with:
 
 ```bash
-DATABASE_URL="postgresql://postgres.gaoqisykccpipessewis:YOUR_ENCODED_PASSWORD@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=no-verify"
+# Connect via shared transaction-mode pooler (used by the app)
+DATABASE_URL="postgresql://postgres.gaoqisykccpipessewis:YOUR_ENCODED_PASSWORD@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
 
-5. Initialize and run Prisma migrations (once `DATABASE_URL` is set):
+# Connect via shared session-mode pooler (used for migrations)
+DIRECT_URL="postgresql://postgres.gaoqisykccpipessewis:YOUR_ENCODED_PASSWORD@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"
+```
+
+   - In Vercel: Project → Settings → Environment Variables → Add both `DATABASE_URL` and `DIRECT_URL` (set for Preview & Production).
+   - In GitHub Actions: add both `DATABASE_URL` and `DIRECT_URL` to repository Secrets (used by `.github/workflows/prisma-deploy.yml`).
+
+5. Initialize and run Prisma migrations (once `DATABASE_URL` and `DIRECT_URL` are set):
 
 ```bash
 # install prisma if not present
