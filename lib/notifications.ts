@@ -35,6 +35,15 @@ export interface NotificationResult {
 
 const notificationHistory: NotificationResult[] = [];
 
+function getResendClient() {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    return null;
+  }
+
+  return new Resend(apiKey);
+}
+
 function buildMessage(event: NotificationEvent, payload: NotificationPayload) {
   const customerName = payload.customerName ?? "Guest";
   const bookingId = payload.bookingId ?? payload.orderId ?? "N/A";
@@ -78,8 +87,6 @@ function buildMessage(event: NotificationEvent, payload: NotificationPayload) {
   }
 }
 
-const resendClient = new Resend(process.env.RESEND_API_KEY ?? "");
-
 function getEmailSubject(event: NotificationEvent) {
   switch (event) {
     case "email-confirmation":
@@ -96,9 +103,14 @@ function getEmailSubject(event: NotificationEvent) {
 async function sendEmail(event: NotificationEvent, payload: NotificationPayload) {
   const to = payload.email;
   const from = process.env.RESEND_FROM_EMAIL;
+  const resendClient = getResendClient();
 
   if (!to || !from) {
     throw new Error("Missing email recipient or sender configuration.");
+  }
+
+  if (!resendClient) {
+    throw new Error("Resend API key is not configured.");
   }
 
   const { message } = buildMessage(event, payload);
