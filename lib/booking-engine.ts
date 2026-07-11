@@ -1,15 +1,15 @@
-export type BookingStatus = "pending" | "confirmed" | "cancelled" | "expired";
+import { prisma } from "@/lib/prisma";
+
+export type BookingStatus = "pending" | "confirmed" | "completed" | "cancelled" | "expired" | "refunded";
 
 export interface BookingRecord {
   id: string;
   fieldId: string;
-  customerId: string;
+  customer: string;
   startAt: string;
   endAt: string;
-  timezone: string;
   status: BookingStatus;
   createdAt: string;
-  expiresAt: string;
 }
 
 interface CreateBookingInput {
@@ -27,8 +27,6 @@ interface BookingResult {
   statusCode: number;
 }
 
-const bookingStore: BookingRecord[] = [];
-const bookingLocks = new Map<string, Promise<void>>();
 const holidayDates = ["2026-07-17", "2026-12-25"];
 const maintenanceSchedules = [
   {
@@ -65,42 +63,30 @@ function isMaintenanceConflict(fieldId: string, startAt: Date, endAt: Date) {
   });
 }
 
-function purgeExpiredReservations(now: Date = new Date()) {
-  for (const booking of bookingStore) {
-    if (booking.status === "pending" && new Date(booking.expiresAt) <= now) {
-      booking.status = "expired";
-    }
-  }
-}
-
-function hasOverlap(fieldId: string, startAt: Date, endAt: Date) {
-  purgeExpiredReservations();
-  return bookingStore.some((booking) => {
-    if (booking.fieldId !== fieldId) return false;
-    if (booking.status === "cancelled" || booking.status === "expired") return false;
-    const existingStart = new Date(booking.startAt);
-    const existingEnd = new Date(booking.endAt);
-    return existingStart < endAt && existingEnd > startAt;
+async function purgeExpiredReservations(now: Date = new Date()) {
+  const expirationCutoff = new Date(now.getTime() - 15 * 60 * 1000);
+  await prisma.booking.updateMany({
+    where: {
+      status: "pending",
+      createdAt: { lt: expirationCutoff },
+    },
+    data: { status: "expired" },
   });
 }
 
-async function withFieldLock<T>(fieldId: string, operation: () => Promise<T>) {
-  const previous = bookingLocks.get(fieldId) ?? Promise.resolve();
-  let release: (() => void) | undefined;
-  const current = new Promise<void>((resolve) => {
-    release = resolve;
+async function hasOverlap(fieldId: string, startAt: Date, endAt: Date) {
+  const overlapping = await prisma.booking.findFirst({
+    where: {
+      fieldId,
+      status: {
+        notIn: ["cancelled", "expired"],
+      },
+      startAt: { lt: endAt },
+      endAt: { gt: startAt },
+    },
   });
-  bookingLocks.set(fieldId, current);
 
-  await previous;
-  try {
-    return await operation();
-  } finally {
-    release?.();
-    if (bookingLocks.get(fieldId) === current) {
-      bookingLocks.delete(fieldId);
-    }
-  }
+  return overlapping !== null;
 }
 
 export async function createBooking(input: CreateBookingInput): Promise<BookingResult> {
@@ -140,38 +126,40 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingR
     };
   }
 
-  return withFieldLock(input.fieldId, async () => {
-    const now = new Date();
-    purgeExpiredReservations(now);
+  await purgeExpiredReservations(new Date());
 
-    if (hasOverlap(input.fieldId, startAt, endAt)) {
-      return {
-        success: false,
-        message: "The selected slot is no longer available.",
-        statusCode: 409,
-      };
-    }
-
-    const expiresAt = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
-    const booking: BookingRecord = {
-      id: `booking-${Date.now()}`,
-      fieldId: input.fieldId,
-      customerId: input.customerId,
-      startAt: startAt.toISOString(),
-      endAt: endAt.toISOString(),
-      timezone,
-      status: "pending",
-      createdAt: now.toISOString(),
-      expiresAt,
-    };
-
-    bookingStore.push(booking);
-
+  if (await hasOverlap(input.fieldId, startAt, endAt)) {
     return {
-      success: true,
-      message: "Booking reserved successfully.",
-      booking,
-      statusCode: 201,
+      success: false,
+      message: "The selected slot is no longer available.",
+      statusCode: 409,
     };
+  }
+
+  const now = new Date();
+  const record = await prisma.booking.create({
+    data: {
+      customer: input.customerId || "anonymous",
+      fieldId: input.fieldId,
+      startAt,
+      endAt,
+      status: "pending",
+      createdAt: now,
+    },
   });
+
+  return {
+    success: true,
+    message: "Booking reserved successfully.",
+    booking: {
+      id: record.id,
+      fieldId: record.fieldId,
+      customer: record.customer,
+      startAt: record.startAt.toISOString(),
+      endAt: record.endAt.toISOString(),
+      status: record.status as BookingStatus,
+      createdAt: record.createdAt.toISOString(),
+    },
+    statusCode: 201,
+  };
 }

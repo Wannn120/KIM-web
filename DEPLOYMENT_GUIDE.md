@@ -24,10 +24,10 @@ postgresql://postgres.gaoqisykccpipessewis:YOUR_ENCODED_PASSWORD@aws-0-ap-southe
 
 ```bash
 # Connect via shared transaction-mode pooler (used by the app)
-DATABASE_URL="postgresql://postgres.gaoqisykccpipessewis:YOUR_ENCODED_PASSWORD@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+DATABASE_URL="postgresql://postgres.gaoqisykccpipessewis:YOUR_ENCODED_PASSWORD@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=no-verify&pgbouncer=true"
 
 # Connect via shared session-mode pooler (used for migrations)
-DIRECT_URL="postgresql://postgres.gaoqisykccpipessewis:YOUR_ENCODED_PASSWORD@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"
+DIRECT_URL="postgresql://postgres.gaoqisykccpipessewis:YOUR_ENCODED_PASSWORD@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=no-verify"
 ```
 
    - In Vercel: Project → Settings → Environment Variables → Add both `DATABASE_URL` and `DIRECT_URL` (set for Preview & Production).
@@ -67,13 +67,38 @@ Notes:
 
 ## 3. Media Storage (Cloudinary)
 1. Create a Cloudinary account.
-2. Copy the cloud name, API key, and secret into the environment variables.
-3. Use signed uploads for image handling.
+2. Set the `CLOUDINARY_URL` environment variable using the format from Cloudinary:
+
+```bash
+CLOUDINARY_URL=cloudinary://<your_api_key>:<your_api_secret>@ljbxjpox
+```
+
+3. The app automatically parses `CLOUDINARY_URL` and does not require separate `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` entries.
+
+4. If you want, you may also provide explicit values:
+
+```bash
+CLOUDINARY_CLOUD_NAME=ljbxjpox
+CLOUDINARY_API_KEY=<your_api_key>
+CLOUDINARY_API_SECRET=<your_api_secret>
+```
+
+5. Use the server upload route at `/api/cloudinary/upload` to securely upload images from the backend.
 
 ## 4. Email (Resend)
 1. Create a Resend account.
-2. Add RESEND_API_KEY and RESEND_FROM_EMAIL.
-3. Use the email notification service for order confirmations and reminders.
+2. Go to the Resend dashboard and create an API key.
+3. Add the key to your environment as `RESEND_API_KEY`.
+4. Set `RESEND_FROM_EMAIL` to a verified sender address configured in Resend.
+5. The app uses Resend for email confirmation and payment notification messages.
+
+> Note: store `RESEND_API_KEY` only in `.env.local` or your hosting provider's secret store. Do not commit it to source control.
+1. Create a Resend account.
+2. Create an API key in the Resend dashboard and set it as `RESEND_API_KEY`.
+3. Set `RESEND_FROM_EMAIL` to a verified sender email address in your Resend account.
+4. The app sends booking confirmation and payment notification emails through Resend automatically.
+
+> Note: Do not commit your real API key or sender email to the repository. Use `.env.local` for local development and your hosting provider's secret store for production.
 
 ## 5. Payments (Midtrans)
 1. Create a Midtrans account and obtain server/client keys.

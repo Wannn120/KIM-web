@@ -1,3 +1,5 @@
+import { Resend } from "resend";
+
 export type NotificationEvent =
   | "email-confirmation"
   | "whatsapp-confirmation"
@@ -76,6 +78,40 @@ function buildMessage(event: NotificationEvent, payload: NotificationPayload) {
   }
 }
 
+const resendClient = new Resend(process.env.RESEND_API_KEY ?? "");
+
+function getEmailSubject(event: NotificationEvent) {
+  switch (event) {
+    case "email-confirmation":
+      return "Booking confirmed";
+    case "payment-reminder":
+      return "Payment reminder";
+    case "booking-cancelled":
+      return "Booking cancelled";
+    default:
+      return "Notification from MiniSoccer";
+  }
+}
+
+async function sendEmail(event: NotificationEvent, payload: NotificationPayload) {
+  const to = payload.email;
+  const from = process.env.RESEND_FROM_EMAIL;
+
+  if (!to || !from) {
+    throw new Error("Missing email recipient or sender configuration.");
+  }
+
+  const { message } = buildMessage(event, payload);
+  const subject = getEmailSubject(event);
+
+  await resendClient.emails.send({
+    from,
+    to,
+    subject,
+    html: `<p>${message}</p>`,
+  });
+}
+
 export async function sendNotification(event: NotificationEvent, payload: NotificationPayload): Promise<NotificationResult> {
   const { channel, message } = buildMessage(event, payload);
   const result: NotificationResult = {
@@ -87,6 +123,19 @@ export async function sendNotification(event: NotificationEvent, payload: Notifi
     provider: "demo-notifier",
     queuedAt: new Date().toISOString(),
   };
+
+  if (channel === "email") {
+    try {
+      await sendEmail(event, payload);
+      result.provider = "resend";
+    } catch (error) {
+      return {
+        ...result,
+        success: false,
+        message: `Resend email failed: ${(error as Error).message}`,
+      };
+    }
+  }
 
   notificationHistory.push(result);
   return result;

@@ -1,9 +1,17 @@
 import Link from "next/link";
-import { bookingSteps, bookedSlots } from "@/lib/mock-data";
+import { bookingSteps } from "@/lib/mock-data";
+import { getUpcomingBookings, mapBookingsToSlots } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
-export default function BookPage() {
+async function loadBookedSlots() {
+  const bookings = await getUpcomingBookings(5);
+  return mapBookingsToSlots(bookings);
+}
+
+export default async function BookPage() {
+  const bookedSlots = await loadBookedSlots();
+
   return (
     <main className="flex-1 px-6 py-16 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-10">

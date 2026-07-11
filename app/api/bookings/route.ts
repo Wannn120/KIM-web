@@ -39,21 +39,6 @@ export async function POST(request: Request) {
     });
 
     if (result.success && result.booking) {
-      await sendNotification("email-confirmation", {
-        customerName,
-        email,
-        bookingId: result.booking.id,
-        fieldName: fieldId,
-        startAt: result.booking.startAt,
-        endAt: result.booking.endAt,
-      });
-
-      await sendNotification("whatsapp-confirmation", {
-        customerName,
-        phone,
-        bookingId: result.booking.id,
-        fieldName: fieldId,
-      });
       auditLog("booking-created", `Booking ${result.booking.id} created`, customerId, clientIp);
     }
 

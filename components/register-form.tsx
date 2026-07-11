@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AuthPanel } from "@/components/auth-panel";
 
 export function RegisterForm() {
@@ -12,17 +12,76 @@ export function RegisterForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [csrfToken, setCsrfToken] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadCsrfToken = async () => {
+      try {
+        const response = await fetch("/api/security/csrf", { credentials: "include" });
+        const result = await response.json();
+        if (isMounted && result?.data?.csrfToken) {
+          setCsrfToken(result.data.csrfToken);
+        }
+      } catch {
+        if (isMounted) {
+          setMessage("Tidak bisa memuat token keamanan awal.");
+        }
+      }
+    };
+
+    loadCsrfToken();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!name.trim() || !email.trim() || !password.trim()) {
       setMessage("Nama, email, dan password wajib diisi.");
       return;
     }
 
-    const user = { name, email, phone };
-    window.localStorage.setItem("minisoccer-user", JSON.stringify(user));
-    router.push("/profile");
+    setIsSubmitting(true);
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ name, phone, email, password, csrfToken }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result?.success) {
+        setMessage(result?.message || "Pendaftaran gagal. Silakan coba lagi.");
+        return;
+      }
+
+      const user = {
+        id: result?.user?.id || email,
+        name: result?.user?.name || name,
+        email: result?.user?.email || email,
+        phone: result?.user?.phone || phone,
+        role: result?.user?.role || "customer",
+      };
+
+      window.localStorage.setItem("minisoccer-user", JSON.stringify(user));
+      if (typeof result?.token === "string") {
+        window.localStorage.setItem("minisoccer-auth-token", result.token);
+      }
+      router.push("/profile");
+    } catch {
+      setMessage("Tidak dapat terhubung ke server saat ini.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -85,7 +144,9 @@ export function RegisterForm() {
                 placeholder="••••••••"
               />
             </label>
-            <button className="btn-primary w-full">Create account</button>
+            <button className="btn-primary w-full" disabled={isSubmitting}>
+              {isSubmitting ? "Creating account..." : "Create account"}
+            </button>
             {message ? <p className="text-sm text-rose-300">{message}</p> : null}
           </form>
         </section>

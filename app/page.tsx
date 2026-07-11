@@ -4,7 +4,7 @@ import { HeroSection } from "@/components/hero-section";
 import { ReviewSection } from "@/components/review-section";
 import { FieldCard } from "@/components/field-card";
 import { SectionHeading } from "@/components/section-heading";
-import { fields } from "@/lib/mock-data";
+import { getFields } from "@/lib/data";
 import { siteConfig } from "@/lib/site-config";
 
 export const metadata: Metadata = {
@@ -18,7 +18,12 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default function Home() {
+async function loadFields() {
+  return await getFields();
+}
+
+export default async function Home() {
+  const fields = await loadFields();
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "SportsActivityLocation",

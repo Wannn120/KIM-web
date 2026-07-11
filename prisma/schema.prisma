@@ -35,6 +35,22 @@ model Booking {
   endAt     DateTime
   status    String
   createdAt DateTime @default(now())
+  payments  Payment[]
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  booking       Booking  @relation(fields: [bookingId], references: [id])
+  bookingId     String
+  transactionId String   @unique
+  paymentMethod String
+  amount        Int
+  status        String
+  provider      String
+  paidAt        DateTime?
+  expiredAt     DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Review {

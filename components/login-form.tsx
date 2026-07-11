@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AuthPanel } from "@/components/auth-panel";
 
 export function LoginForm() {
@@ -10,18 +10,77 @@ export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [csrfToken, setCsrfToken] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadCsrfToken = async () => {
+      try {
+        const response = await fetch("/api/security/csrf", { credentials: "include" });
+        const result = await response.json();
+        if (isMounted && result?.data?.csrfToken) {
+          setCsrfToken(result.data.csrfToken);
+        }
+      } catch {
+        if (isMounted) {
+          setMessage("Tidak bisa memuat token keamanan awal.");
+        }
+      }
+    };
+
+    loadCsrfToken();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
     if (!email.trim() || !password.trim()) {
       setMessage("Email dan password wajib diisi.");
       return;
     }
 
-    const name = email.split("@")[0] || "Player";
-    const user = { name, email, phone: "" };
-    window.localStorage.setItem("minisoccer-user", JSON.stringify(user));
-    router.push("/profile");
+    setIsSubmitting(true);
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password, csrfToken }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result?.success) {
+        setMessage(result?.message || "Login gagal. Silakan coba lagi.");
+        return;
+      }
+
+      const user = {
+        id: result?.user?.id || email,
+        name: result?.user?.name || email.split("@")[0] || "Player",
+        email: result?.user?.email || email,
+        phone: result?.user?.phone || "",
+        role: result?.user?.role || "customer",
+      };
+
+      window.localStorage.setItem("minisoccer-user", JSON.stringify(user));
+      if (typeof result?.token === "string") {
+        window.localStorage.setItem("minisoccer-auth-token", result.token);
+      }
+      router.push("/profile");
+    } catch {
+      setMessage("Tidak dapat terhubung ke server saat ini.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -66,7 +125,9 @@ export function LoginForm() {
                 placeholder="••••••••"
               />
             </label>
-            <button className="btn-primary w-full">Sign in</button>
+            <button className="btn-primary w-full" disabled={isSubmitting}>
+              {isSubmitting ? "Signing in..." : "Sign in"}
+            </button>
             <div className="flex items-center justify-between text-xs text-[color:var(--muted)]">
               <span>Belum punya akun?</span>
               <Link href="/register" className="text-[color:var(--accent)] hover:text-[color:var(--accent-strong)]">

@@ -1,10 +1,16 @@
 import Link from "next/link";
 import { FieldCard } from "@/components/field-card";
-import { fields } from "@/lib/mock-data";
+import { getFields } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
-export default function FieldsPage() {
+async function loadFields() {
+  return await getFields();
+}
+
+export default async function FieldsPage() {
+  const fields = await loadFields();
+
   return (
     <main className="flex-1 bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.16),_transparent_40%)] px-6 py-16 lg:px-8">
       <div className="mx-auto max-w-7xl">
