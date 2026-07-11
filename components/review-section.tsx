@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import type { Review } from "@/types";
 import { reviews as defaultReviews } from "@/lib/mock-data";
 
-export function ReviewSection() {
-  const [reviews, setReviews] = useState<Review[]>(defaultReviews);
+export function ReviewSection({ initialReviews = defaultReviews }: { initialReviews?: Review[] }) {
+  const [reviews, setReviews] = useState<Review[]>(initialReviews);
   const [name, setName] = useState("");
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
@@ -49,18 +49,35 @@ export function ReviewSection() {
       return;
     }
 
-    const newReview: Review = {
-      id: `review-${Date.now()}`,
-      customerName: name,
-      rating,
-      comment,
-      date: new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
-    };
+    setStatus("Sending review...");
 
-    const nextReviews = [newReview, ...reviews];
-    saveReviews(nextReviews);
-    setComment("");
-    setStatus("Review submitted successfully.");
+    fetch("/api/reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ customerName: name, rating, comment }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to save review");
+        return res.json();
+      })
+      .then((created: Review) => {
+        const nextReviews = [created, ...reviews];
+        saveReviews(nextReviews);
+        setComment("");
+        setStatus("Review submitted successfully.");
+      })
+      .catch(() => {
+        setStatus("Failed to submit review; saved locally instead.");
+        const newReview: Review = {
+          id: `review-${Date.now()}`,
+          customerName: name,
+          rating,
+          comment,
+          date: new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
+        };
+        const nextReviews = [newReview, ...reviews];
+        saveReviews(nextReviews);
+      });
   };
 
   return (

@@ -37,6 +37,22 @@ export async function getUpcomingBookings(limit = 5) {
   });
 }
 
+export async function getReviews(): Promise<import("@/types").Review[]> {
+  const records = await prisma.review.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return records.map((r) => ({
+    id: r.id,
+    customerName: r.customerName,
+    rating: Number(r.rating),
+    comment: r.comment,
+    date: r.date ?? r.createdAt.toISOString().slice(0, 10),
+  }));
+}
+
 export type BookedSlot = {
   date: string;
   time: string;

@@ -12,18 +12,19 @@ async function main() {
     },
   });
 
-  await prisma.field.upsert({
-    where: { name: 'Lapangan Klaten International' },
-    update: {},
-    create: {
-      name: 'Lapangan Klaten International',
-      location: 'Klaten',
-      price: 110000,
-      type: 'Mini Soccer',
-      size: '5v5',
-      rating: 4.9,
-      imageUrl: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1200&q=80',
-    },
+  await prisma.field.createMany({
+    data: [
+      {
+        name: 'Lapangan Klaten International',
+        location: 'Klaten',
+        price: 110000,
+        type: 'Mini Soccer',
+        size: '5v5',
+        rating: 4.9,
+        imageUrl: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1200&q=80',
+      },
+    ],
+    skipDuplicates: true,
   });
 }
 

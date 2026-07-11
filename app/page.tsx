@@ -4,7 +4,7 @@ import { HeroSection } from "@/components/hero-section";
 import { ReviewSection } from "@/components/review-section";
 import { FieldCard } from "@/components/field-card";
 import { SectionHeading } from "@/components/section-heading";
-import { getFields } from "@/lib/data";
+import { getFields, getReviews } from "@/lib/data";
 import { siteConfig } from "@/lib/site-config";
 
 export const metadata: Metadata = {
@@ -22,8 +22,13 @@ async function loadFields() {
   return await getFields();
 }
 
+async function loadReviews() {
+  return await getReviews();
+}
+
 export default async function Home() {
   const fields = await loadFields();
+  const reviews = await loadReviews();
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "SportsActivityLocation",
@@ -68,7 +73,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <ReviewSection />
+      <ReviewSection initialReviews={reviews} />
 
       <section aria-labelledby="location-heading" className="rounded-[3rem] border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-6 py-16 shadow-[0_24px_80px_rgba(15,23,42,0.06)] lg:px-8">
         <div className="mx-auto max-w-7xl">
