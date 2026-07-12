@@ -41,6 +41,14 @@ jobs:
           fi
 
           if [[ "$POOLER_URL" == *"pooler.supabase.com"* ]] || [[ "$POOLER_URL" == *"pgbouncer=true"* ]]; then
+            if [[ "$POOLER_URL" != *"connect_timeout="* ]]; then
+              if [[ "$POOLER_URL" == *"?"* ]]; then
+                POOLER_URL="$POOLER_URL&connect_timeout=10"
+              else
+                POOLER_URL="$POOLER_URL?connect_timeout=10"
+              fi
+            fi
+
             echo "Using Supabase pooler URL for Prisma migrations"
             echo "DATABASE_URL=$POOLER_URL" >> "$GITHUB_ENV"
             echo "DIRECT_URL=$POOLER_URL" >> "$GITHUB_ENV"
@@ -60,6 +68,12 @@ jobs:
           else
             echo "Connection type: non-pooler"
           fi
+          if [[ "$DATABASE_URL" == *"connect_timeout="* ]]; then
+            echo "Using connect_timeout on the database URL"
+          else
+            echo "No connect_timeout found on the database URL"
+          fi
       - name: Run migrations
         if: env.DATABASE_URL != ''
+        timeout-minutes: 10
         run: npx prisma migrate deploy

@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import type { Review } from "@/types";
-import { reviews as defaultReviews } from "@/lib/mock-data";
 
-export function ReviewSection({ initialReviews = defaultReviews }: { initialReviews?: Review[] }) {
+export function ReviewSection({ initialReviews }: { initialReviews: Review[] }) {
   const [reviews, setReviews] = useState<Review[]>(initialReviews);
   const [name, setName] = useState("");
   const [rating, setRating] = useState(5);
@@ -14,6 +13,21 @@ export function ReviewSection({ initialReviews = defaultReviews }: { initialRevi
   useEffect(() => {
     setReviews(initialReviews);
   }, [initialReviews]);
+
+  useEffect(() => {
+    async function fetchReviews() {
+      try {
+        const res = await fetch("/api/reviews");
+        if (!res.ok) return;
+        const latestReviews: Review[] = await res.json();
+        setReviews(latestReviews);
+      } catch {
+        // keep server-provided reviews if fetch fails
+      }
+    }
+
+    fetchReviews();
+  }, []);
 
   useEffect(() => {
     const rawUser = window.localStorage.getItem("minisoccer-user");
