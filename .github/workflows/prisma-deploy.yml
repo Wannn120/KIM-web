@@ -17,8 +17,24 @@ jobs:
         run: npm ci
       - name: Generate Prisma client
         run: npx prisma generate
-      - name: Run migrations
+      - name: Prepare Prisma database URLs
+        shell: bash
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL || secrets.POSTGRES_PRISMA_URL || secrets.POSTGRES_URL_NON_POOLING }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL || secrets.DATABASE_URL || secrets.POSTGRES_PRISMA_URL || secrets.POSTGRES_URL_NON_POOLING }}
+          DATABASE_URL_SECRET: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL_SECRET: ${{ secrets.DIRECT_URL }}
+          POSTGRES_PRISMA_URL_SECRET: ${{ secrets.POSTGRES_PRISMA_URL }}
+          POSTGRES_URL_SECRET: ${{ secrets.POSTGRES_URL }}
+          POSTGRES_URL_NON_POOLING_SECRET: ${{ secrets.POSTGRES_URL_NON_POOLING }}
+        run: |
+          POOLER_URL="${POSTGRES_PRISMA_URL_SECRET:-$DATABASE_URL_SECRET:-$POSTGRES_URL_SECRET}"
+          DIRECT_URL="${DIRECT_URL_SECRET:-$POSTGRES_URL_NON_POOLING_SECRET:-$POSTGRES_URL_SECRET:-$DATABASE_URL_SECRET}"
+          if [ -n "$POOLER_URL" ]; then
+            echo "Using Supabase pooler URL for Prisma migrations"
+            echo "DATABASE_URL=$POOLER_URL" >> "$GITHUB_ENV"
+            echo "DIRECT_URL=$DIRECT_URL" >> "$GITHUB_ENV"
+          else
+            echo "No usable Prisma database URL found; skipping migrations." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Run migrations
+        if: env.DATABASE_URL != ''
         run: npx prisma migrate deploy
