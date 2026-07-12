@@ -35,3 +35,21 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 # KIM-web
+
+## Payment gateway bypass (local / testing)
+
+This project supports bypassing the external payment gateway for development or testing so bookings can be created and immediately confirmed without using Midtrans or another provider.
+
+Environment variables:
+
+- `SKIP_PAYMENT_GATEWAY` (recommended for testing): when set to `true`, the server will create an offline payment transaction with status `success` and set the associated booking to `confirmed` automatically.
+- `MIDTRANS_IS_PRODUCTION`: if set to `false` the code will also treat the environment as non-production and allow offline payments. Keep this `true` in real production deployments.
+
+Example `.env.local` snippet for local testing:
+
+```env
+SKIP_PAYMENT_GATEWAY=true
+MIDTRANS_IS_PRODUCTION=false
+```
+
+Security note: never commit your `.env.local` to source control. Only enable `SKIP_PAYMENT_GATEWAY` in trusted development or testing environments.
