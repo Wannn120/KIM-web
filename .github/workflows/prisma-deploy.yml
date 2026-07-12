@@ -26,14 +26,39 @@ jobs:
           POSTGRES_URL_SECRET: ${{ secrets.POSTGRES_URL }}
           POSTGRES_URL_NON_POOLING_SECRET: ${{ secrets.POSTGRES_URL_NON_POOLING }}
         run: |
-          POOLER_URL="${POSTGRES_PRISMA_URL_SECRET:-$DATABASE_URL_SECRET:-$POSTGRES_URL_SECRET}"
-          DIRECT_URL="${DIRECT_URL_SECRET:-$POSTGRES_URL_NON_POOLING_SECRET:-$POSTGRES_URL_SECRET:-$DATABASE_URL_SECRET}"
-          if [ -n "$POOLER_URL" ]; then
+          POOLER_URL=""
+          POOLER_URL_SOURCE=""
+
+          if [[ -n "$POSTGRES_PRISMA_URL_SECRET" ]]; then
+            POOLER_URL="$POSTGRES_PRISMA_URL_SECRET"
+            POOLER_URL_SOURCE="POSTGRES_PRISMA_URL"
+          elif [[ -n "$DATABASE_URL_SECRET" ]]; then
+            POOLER_URL="$DATABASE_URL_SECRET"
+            POOLER_URL_SOURCE="DATABASE_URL"
+          elif [[ -n "$POSTGRES_URL_SECRET" ]]; then
+            POOLER_URL="$POSTGRES_URL_SECRET"
+            POOLER_URL_SOURCE="POSTGRES_URL"
+          fi
+
+          if [[ "$POOLER_URL" == *"pooler.supabase.com"* ]] || [[ "$POOLER_URL" == *"pgbouncer=true"* ]]; then
             echo "Using Supabase pooler URL for Prisma migrations"
             echo "DATABASE_URL=$POOLER_URL" >> "$GITHUB_ENV"
-            echo "DIRECT_URL=$DIRECT_URL" >> "$GITHUB_ENV"
+            echo "DIRECT_URL=$POOLER_URL" >> "$GITHUB_ENV"
+            echo "POOLER_URL_SOURCE=$POOLER_URL_SOURCE" >> "$GITHUB_ENV"
           else
-            echo "No usable Prisma database URL found; skipping migrations." >> "$GITHUB_STEP_SUMMARY"
+            echo "No Supabase pooler URL found; skipping migrations." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Debug Prisma database URL selection
+        shell: bash
+        if: env.DATABASE_URL != ''
+        run: |
+          echo "Prisma database URL detected."
+          echo "Selected source: ${POOLER_URL_SOURCE:-unknown}"
+          echo "Host: $(echo "$DATABASE_URL" | sed -E 's#^postgres(ql)?://[^@]+@([^/]+)(/.*)?$#\2#')"
+          if [[ "$DATABASE_URL" == *"pooler.supabase.com"* ]]; then
+            echo "Connection type: Supabase pooler"
+          else
+            echo "Connection type: non-pooler"
           fi
       - name: Run migrations
         if: env.DATABASE_URL != ''
