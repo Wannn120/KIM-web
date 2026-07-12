@@ -12,16 +12,8 @@ export function ReviewSection({ initialReviews = defaultReviews }: { initialRevi
   const [status, setStatus] = useState("");
 
   useEffect(() => {
-    const stored = window.localStorage.getItem("minisoccer-reviews");
-    if (stored) {
-      try {
-        const saved = JSON.parse(stored) as Review[];
-        setReviews([...saved]);
-      } catch {
-        setReviews(defaultReviews);
-      }
-    }
-  }, []);
+    setReviews(initialReviews);
+  }, [initialReviews]);
 
   useEffect(() => {
     const rawUser = window.localStorage.getItem("minisoccer-user");
@@ -39,7 +31,6 @@ export function ReviewSection({ initialReviews = defaultReviews }: { initialRevi
 
   const saveReviews = (nextReviews: Review[]) => {
     setReviews(nextReviews);
-    window.localStorage.setItem("minisoccer-reviews", JSON.stringify(nextReviews));
   };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -67,16 +58,7 @@ export function ReviewSection({ initialReviews = defaultReviews }: { initialRevi
         setStatus("Review submitted successfully.");
       })
       .catch(() => {
-        setStatus("Failed to submit review; saved locally instead.");
-        const newReview: Review = {
-          id: `review-${Date.now()}`,
-          customerName: name,
-          rating,
-          comment,
-          date: new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
-        };
-        const nextReviews = [newReview, ...reviews];
-        saveReviews(nextReviews);
+        setStatus("Failed to submit review. Please try again.");
       });
   };
 

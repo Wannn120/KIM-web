@@ -19,6 +19,6 @@ jobs:
         run: npx prisma generate
       - name: Run migrations
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL || secrets.POSTGRES_PRISMA_URL || secrets.POSTGRES_URL_NON_POOLING }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || secrets.DATABASE_URL || secrets.POSTGRES_PRISMA_URL || secrets.POSTGRES_URL_NON_POOLING }}
         run: npx prisma migrate deploy

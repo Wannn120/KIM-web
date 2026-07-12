@@ -14,6 +14,8 @@ jobs:
       RATE_LIMIT_MAX: 60
       RATE_LIMIT_WINDOW_MS: 60000
       COOKIE_SECURE: false
+      DATABASE_URL: ${{ secrets.DATABASE_URL || secrets.POSTGRES_PRISMA_URL || secrets.POSTGRES_URL_NON_POOLING }}
+      DIRECT_URL: ${{ secrets.DIRECT_URL || secrets.DATABASE_URL || secrets.POSTGRES_PRISMA_URL || secrets.POSTGRES_URL_NON_POOLING }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

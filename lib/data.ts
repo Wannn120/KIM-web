@@ -40,7 +40,7 @@ export async function getUpcomingBookings(limit = 5) {
 export async function getReviews(): Promise<import("@/types").Review[]> {
   const records = await prisma.review.findMany({
     orderBy: {
-      createdAt: "desc",
+      date: "desc",
     },
   });
 
@@ -49,7 +49,7 @@ export async function getReviews(): Promise<import("@/types").Review[]> {
     customerName: r.customerName,
     rating: Number(r.rating),
     comment: r.comment,
-    date: r.date ?? r.createdAt.toISOString().slice(0, 10),
+    date: r.date,
   }));
 }
 
