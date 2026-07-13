@@ -67,18 +67,40 @@ export default function CheckoutPage() {
         throw new Error(result.message || "Unable to create booking.");
       }
 
-      const bookingDate = formatDate(result.booking.startAt);
-      const bookingTime = formatTimeRange(result.booking.startAt, result.booking.endAt);
-      const query = new URLSearchParams({
-        bookingId: result.booking.id,
-        amount: bookingDetails.amount.toString(),
-        fieldName: bookingDetails.fieldName,
-        bookingDate,
-        bookingTime,
-        customerName: bookingDetails.customerName,
-      }).toString();
+      // create payment immediately (server will auto-approve when gateway is disabled)
+      const paymentResp = await fetch("/api/payments/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookingId: result.booking.id,
+          amount: bookingDetails.amount,
+          paymentMethod: "Offline",
+          customerName: bookingDetails.customerName,
+          email: "demo@minisoccer.id",
+          phone: "+628123456789",
+        }),
+      });
 
-      router.push(`/payment?${query}`);
+      const paymentResult = await paymentResp.json();
+      if (!paymentResp.ok || !paymentResult.success) {
+        // If payment creation failed, navigate to payment page for manual retry
+        const bookingDate = formatDate(result.booking.startAt);
+        const bookingTime = formatTimeRange(result.booking.startAt, result.booking.endAt);
+        const query = new URLSearchParams({
+          bookingId: result.booking.id,
+          amount: bookingDetails.amount.toString(),
+          fieldName: bookingDetails.fieldName,
+          bookingDate,
+          bookingTime,
+          customerName: bookingDetails.customerName,
+        }).toString();
+
+        router.push(`/payment?${query}`);
+        return;
+      }
+
+      // success: redirect to booking history (booking should now be confirmed)
+      router.push(`/booking-history`);
     } catch (error) {
       setError((error as Error).message);
       setSaving(false);

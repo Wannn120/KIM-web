@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { auditLog } from "@/lib/audit-log";
 import { createJwt, getRateLimitResult, setSecureCookie, sanitizeObject, verifyCsrfToken } from "@/lib/security";
 import { isValidEmail, isStrongPassword } from "@/lib/validation";
+import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
 export async function POST(request: Request) {
   try {
@@ -36,13 +38,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: "Password must contain uppercase, number, and symbol." }, { status: 400 });
     }
 
-    const token = createJwt({ sub: "demo-user", email, role: "customer" });
+    // find user by email
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      auditLog("login-failed", "User not found", email, clientIp);
+      return NextResponse.json({ success: false, message: "Invalid email or password." }, { status: 401 });
+    }
+
+    const match = bcrypt.compareSync(password, user.passwordHash);
+    if (!match) {
+      auditLog("login-failed", "Invalid password", email, clientIp);
+      return NextResponse.json({ success: false, message: "Invalid email or password." }, { status: 401 });
+    }
+
+    const token = createJwt({ sub: user.id, email: user.email, role: "customer" });
     const response = NextResponse.json({
       success: true,
       message: "Login successful.",
       user: {
-        id: "demo-user",
-        email,
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        phone: user.phone,
         role: "customer",
       },
       token,

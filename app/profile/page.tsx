@@ -17,16 +17,31 @@ export default function ProfilePage() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    const stored = window.localStorage.getItem("minisoccer-user");
-    if (stored) {
+    let isMounted = true;
+
+    async function loadUser() {
       try {
-        const parsed = JSON.parse(stored) as UserProfile;
-        setUser(parsed);
-        setForm(parsed);
+        const response = await fetch("/api/auth/me", { credentials: "include" });
+        const result = await response.json();
+        if (!isMounted) return;
+
+        if (response.ok && result?.success && result?.user) {
+          setUser(result.user);
+          setForm(result.user);
+          window.localStorage.setItem("minisoccer-user", JSON.stringify(result.user));
+        } else {
+          setUser(null);
+        }
       } catch {
         setUser(null);
       }
     }
+
+    loadUser();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const saveProfile = () => {

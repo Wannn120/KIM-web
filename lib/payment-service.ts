@@ -19,19 +19,66 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
     throw new Error("Booking not found.");
   }
 
-  const transaction = await paymentProvider.createTransaction(input);
+  // Allow bypassing external gateway in non-production or when explicitly configured
+  const skipGateway = process.env.SKIP_PAYMENT_GATEWAY === "true" || process.env.MIDTRANS_IS_PRODUCTION === "false";
 
-  await prisma.payment.create({
-    data: {
-      bookingId: input.bookingId,
-      transactionId: transaction.transactionId,
-      paymentMethod: transaction.paymentMethod,
+  let transaction: {
+    transactionId: string;
+    expiresAt: string;
+    paymentMethod: string;
+    amount: number;
+    status: string;
+    providerName: string;
+  };
+
+  if (skipGateway) {
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
+    const id = `OFFLINE-${now.getUTCFullYear()}${String(now.getUTCMonth() + 1).padStart(2, "0")}${String(now.getUTCDate()).padStart(2, "0")}-${Math.floor(Math.random() * 90000) + 10000}`;
+
+    transaction = {
+      transactionId: id,
+      expiresAt,
+      paymentMethod: input.paymentMethod,
       amount: input.amount,
-      status: transaction.status,
-      provider: transaction.providerName,
-      expiredAt: new Date(transaction.expiresAt),
-    },
-  });
+      status: "success",
+      providerName: "Offline",
+    };
+  } else {
+    transaction = await paymentProvider.createTransaction(input);
+  }
+
+  const createData: any = {
+    bookingId: input.bookingId,
+    transactionId: transaction.transactionId,
+    paymentMethod: transaction.paymentMethod,
+    amount: input.amount,
+    status: transaction.status as any,
+    provider: transaction.providerName,
+    expiredAt: new Date(transaction.expiresAt),
+  };
+
+  if (transaction.status === "success") {
+    createData.paidAt = new Date();
+  }
+
+  await prisma.payment.create({ data: createData });
+
+  // If transaction is already successful, update booking status immediately
+  if (transaction.status === "success") {
+    const booking = await prisma.booking.findUnique({ where: { id: input.bookingId } });
+    if (booking) {
+      await prisma.booking.update({ where: { id: input.bookingId }, data: { status: "confirmed" } });
+      await sendNotification("email-confirmation", {
+        bookingId: booking.id,
+        amount: createData.amount,
+        customerName: booking.customer,
+        fieldName: booking.fieldId,
+        startAt: booking.startAt.toISOString(),
+        endAt: booking.endAt.toISOString(),
+      });
+    }
+  }
 
   return transaction;
 }

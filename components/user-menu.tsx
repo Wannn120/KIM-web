@@ -15,14 +15,30 @@ export function UserMenu() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const raw = window.localStorage.getItem("minisoccer-user");
-    if (raw) {
+    let isMounted = true;
+
+    async function loadUser() {
       try {
-        setUser(JSON.parse(raw));
+        const response = await fetch("/api/auth/me", { credentials: "include" });
+        const result = await response.json();
+        if (!isMounted) return;
+
+        if (response.ok && result?.success && result?.user) {
+          setUser(result.user);
+          window.localStorage.setItem("minisoccer-user", JSON.stringify(result.user));
+        } else {
+          setUser(null);
+        }
       } catch {
         setUser(null);
       }
     }
+
+    loadUser();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const logout = () => {
