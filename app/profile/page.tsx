@@ -1,24 +1,19 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { requireAuth } from "@/lib/auth";
+import { verifyJwt } from "@/lib/security";
 import ProfilePage from "@/components/profile-page";
 import { prisma } from "@/lib/prisma";
 
 export default async function ProfileRoute() {
-  const request = {
-    headers: new Headers({
-      cookie: cookies().toString(),
-    }),
-    cookies: cookies(),
-  } as Parameters<typeof requireAuth>[0];
+  const token = cookies().get("auth-token")?.value;
+  const payload = token ? verifyJwt(token) : null;
 
-  const auth = requireAuth(request);
-  if (!auth.ok) {
+  if (!payload || typeof payload !== "object" || !("sub" in payload)) {
     redirect("/login");
   }
 
   const user = await prisma.user.findUnique({
-    where: { id: auth.user.sub },
+    where: { id: payload.sub as string },
     select: {
       id: true,
       name: true,
