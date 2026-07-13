@@ -5,7 +5,8 @@ import ProfilePage from "@/components/profile-page";
 import { prisma } from "@/lib/prisma";
 
 export default async function ProfileRoute() {
-  const token = cookies().get("auth-token")?.value;
+  const requestCookies = await cookies();
+  const token = requestCookies.get("auth-token")?.value;
   const payload = token ? verifyJwt(token) : null;
 
   if (!payload || typeof payload !== "object" || !("sub" in payload)) {

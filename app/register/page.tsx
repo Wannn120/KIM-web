@@ -5,8 +5,9 @@ import { RegisterForm } from "@/components/register-form";
 
 export const dynamic = "force-dynamic";
 
-export default function RegisterPage() {
-  const token = cookies().get("auth-token")?.value;
+export default async function RegisterPage() {
+  const requestCookies = await cookies();
+  const token = requestCookies.get("auth-token")?.value;
   const payload = token ? verifyJwt(token) : null;
 
   if (payload && typeof payload === "object" && "sub" in payload) {
