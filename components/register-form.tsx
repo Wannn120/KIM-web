@@ -64,18 +64,6 @@ export function RegisterForm() {
         return;
       }
 
-      const user = {
-        id: result?.user?.id || email,
-        name: result?.user?.name || name,
-        email: result?.user?.email || email,
-        phone: result?.user?.phone || phone,
-        role: result?.user?.role || "customer",
-      };
-
-      window.localStorage.setItem("minisoccer-user", JSON.stringify(user));
-      if (typeof result?.token === "string") {
-        window.localStorage.setItem("minisoccer-auth-token", result.token);
-      }
       router.push("/profile");
     } catch {
       setMessage("Tidak dapat terhubung ke server saat ini.");

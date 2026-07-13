@@ -30,17 +30,29 @@ export function ReviewSection({ initialReviews }: { initialReviews: Review[] }) 
   }, []);
 
   useEffect(() => {
-    const rawUser = window.localStorage.getItem("minisoccer-user");
-    if (rawUser) {
+    let isMounted = true;
+
+    async function loadUser() {
       try {
-        const currentUser = JSON.parse(rawUser);
-        if (currentUser.name) {
-          setName(currentUser.name);
+        const res = await fetch("/api/auth/me", { credentials: "include" });
+        if (!res.ok) return;
+
+        const result = await res.json();
+        if (!isMounted) return;
+
+        if (result?.success && result?.user?.name) {
+          setName(result.user.name);
         }
       } catch {
-        // ignore
+        // ignore if not logged in or request fails
       }
     }
+
+    loadUser();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const saveReviews = (nextReviews: Review[]) => {

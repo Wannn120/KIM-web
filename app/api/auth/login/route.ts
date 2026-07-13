@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auditLog } from "@/lib/audit-log";
 import { createJwt, getRateLimitResult, setSecureCookie, sanitizeObject, verifyCsrfToken } from "@/lib/security";
-import { isValidEmail, isStrongPassword } from "@/lib/validation";
+import { isValidEmail } from "@/lib/validation";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
@@ -31,11 +31,6 @@ export async function POST(request: Request) {
     if (!isValidEmail(email)) {
       auditLog("login-failed", "Invalid email format", email, clientIp);
       return NextResponse.json({ success: false, message: "Please provide a valid email address." }, { status: 400 });
-    }
-
-    if (!isStrongPassword(password)) {
-      auditLog("login-failed", "Weak password", email, clientIp);
-      return NextResponse.json({ success: false, message: "Password must contain uppercase, number, and symbol." }, { status: 400 });
     }
 
     // find user by email
@@ -69,6 +64,7 @@ export async function POST(request: Request) {
     auditLog("login-success", "User authenticated successfully", email, clientIp);
     return response;
   } catch (error) {
+    console.error("Login error:", error);
     return NextResponse.json({ success: false, message: "Unable to process login request." }, { status: 500 });
   }
 }

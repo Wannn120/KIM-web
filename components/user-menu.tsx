@@ -25,7 +25,6 @@ export function UserMenu() {
 
         if (response.ok && result?.success && result?.user) {
           setUser(result.user);
-          window.localStorage.setItem("minisoccer-user", JSON.stringify(result.user));
         } else {
           setUser(null);
         }
@@ -41,11 +40,14 @@ export function UserMenu() {
     };
   }, []);
 
-  const logout = () => {
-    window.localStorage.removeItem("minisoccer-user");
-    setUser(null);
-    setOpen(false);
-    window.location.href = "/";
+  const logout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    } finally {
+      setUser(null);
+      setOpen(false);
+      window.location.href = "/";
+    }
   };
 
   return (

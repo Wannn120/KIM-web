@@ -22,14 +22,16 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
   // Allow bypassing external gateway in non-production or when explicitly configured
   const skipGateway = process.env.SKIP_PAYMENT_GATEWAY === "true" || process.env.MIDTRANS_IS_PRODUCTION === "false";
 
-  let transaction: {
-    transactionId: string;
-    expiresAt: string;
-    paymentMethod: string;
-    amount: number;
-    status: string;
-    providerName: string;
-  };
+  let transaction:
+    | {
+        transactionId: string;
+        expiresAt: string;
+        paymentMethod: PaymentMethod;
+        amount: number;
+        status: PaymentStatus;
+        providerName: string;
+      }
+    | Awaited<ReturnType<typeof paymentProvider.createTransaction>>;
 
   if (skipGateway) {
     const now = new Date();
@@ -48,12 +50,21 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
     transaction = await paymentProvider.createTransaction(input);
   }
 
-  const createData: any = {
+  const createData: {
+    bookingId: string;
+    transactionId: string;
+    paymentMethod: PaymentMethod;
+    amount: number;
+    status: PaymentStatus;
+    provider: string;
+    expiredAt: Date;
+    paidAt?: Date;
+  } = {
     bookingId: input.bookingId,
     transactionId: transaction.transactionId,
     paymentMethod: transaction.paymentMethod,
     amount: input.amount,
-    status: transaction.status as any,
+    status: transaction.status,
     provider: transaction.providerName,
     expiredAt: new Date(transaction.expiresAt),
   };

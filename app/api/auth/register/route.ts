@@ -70,15 +70,17 @@ export async function POST(request: Request) {
       setSecureCookie(response, "auth-token", token, { maxAge: 60 * 60 * 8 });
       auditLog("register-success", "User registered successfully", email, clientIp);
       return response;
-    } catch (err: any) {
+    } catch (err: unknown) {
       // handle unique constraint on email
-      if (err?.code === "P2002") {
+      const prismaError = err && typeof err === "object" && "code" in err ? err : null;
+      if (prismaError && (prismaError as { code?: string }).code === "P2002") {
         auditLog("register-failed", "Email already in use", email, clientIp);
         return NextResponse.json({ success: false, message: "Email already registered." }, { status: 409 });
       }
       throw err;
     }
   } catch (error) {
+    console.error("Registration error:", error);
     return NextResponse.json({ success: false, message: "Unable to process registration request." }, { status: 500 });
   }
 }
