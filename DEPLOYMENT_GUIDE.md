@@ -50,6 +50,25 @@ npm run prisma:seed
 
 6. Production (CI / deploy): use the provided GitHub Actions workflow `./github/workflows/prisma-deploy.yml` or run on your server:
 
+### Troubleshooting failed Prisma migrations
+If `npx prisma migrate deploy` fails with `P3009` and reports a failed migration such as `20260712_add_password_hash`, the database may already contain the intended schema change but still record the migration as failed.
+
+To inspect the current state:
+
+```bash
+npx prisma migrate status --schema prisma/schema.prisma
+```
+
+If the database already has the `passwordHash` column, resolve the failed migration by marking it as applied:
+
+```bash
+npx prisma migrate resolve --applied 20260712_add_password_hash --schema prisma/schema.prisma
+```
+
+Then rerun deployments or `npx prisma migrate deploy`.
+
+The repository now includes a safer migration SQL statement for `20260712_add_password_hash` that uses `ADD COLUMN IF NOT EXISTS`.
+
 ```bash
 npx prisma migrate deploy
 npx prisma generate

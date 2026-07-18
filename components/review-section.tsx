@@ -19,8 +19,11 @@ export function ReviewSection({ initialReviews }: { initialReviews: Review[] }) 
       try {
         const res = await fetch("/api/reviews");
         if (!res.ok) return;
-        const latestReviews: Review[] = await res.json();
-        setReviews(latestReviews);
+
+        const result = await res.json();
+        if (result?.success && Array.isArray(result.data)) {
+          setReviews(result.data);
+        }
       } catch {
         // keep server-provided reviews if fetch fails
       }

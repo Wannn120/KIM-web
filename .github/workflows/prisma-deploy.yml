@@ -17,6 +17,11 @@ jobs:
         run: npm ci
       - name: Generate Prisma client
         run: npx prisma generate
+      - name: Check Prisma migration status
+        shell: bash
+        run: |
+          echo "Checking Prisma migration status..."
+          npx prisma migrate status --schema prisma/schema.prisma
       - name: Prepare Prisma database URLs
         shell: bash
         env:
