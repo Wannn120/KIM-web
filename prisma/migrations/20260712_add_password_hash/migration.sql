@@ -1,3 +1,3 @@
 -- Add passwordHash to User model
 ALTER TABLE "User"
-ADD COLUMN "passwordHash" TEXT NOT NULL DEFAULT '';
+ADD COLUMN IF NOT EXISTS "passwordHash" TEXT NOT NULL DEFAULT '';
