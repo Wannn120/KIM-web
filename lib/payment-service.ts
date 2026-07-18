@@ -43,8 +43,8 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
       expiresAt,
       paymentMethod: input.paymentMethod,
       amount: input.amount,
-      status: "success",
-      providerName: "Offline",
+      status: "pending",
+      providerName: "OfflineSimulator",
     };
   } else {
     transaction = await paymentProvider.createTransaction(input);
@@ -85,8 +85,10 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
       amount: createData.amount,
       customerName: booking.customerName,
       fieldName: booking.fieldId,
-      startAt: booking.bookingDate.toISOString(),
-      endAt: booking.bookingDate.toISOString(),
+      startAt: `${booking.bookingDate.toISOString().slice(0, 10)} ${booking.startTime}`,
+      endAt: `${booking.bookingDate.toISOString().slice(0, 10)} ${booking.endTime}`,
+      email: booking.customerEmail ?? undefined,
+      phone: booking.customerPhone,
     });
   }
 
@@ -168,10 +170,12 @@ export async function processWebhookEvent(transactionId: string, status: Payment
     await sendNotification("email-confirmation", {
       bookingId: booking.id,
       amount: payment.amount,
-      customerName: booking.customer,
+      customerName: booking.customerName,
       fieldName: booking.fieldId,
-      startAt: booking.startAt.toISOString(),
-      endAt: booking.endAt.toISOString(),
+      startAt: `${booking.bookingDate.toISOString().slice(0, 10)} ${booking.startTime}`,
+      endAt: `${booking.bookingDate.toISOString().slice(0, 10)} ${booking.endTime}`,
+      email: booking.customerEmail ?? undefined,
+      phone: booking.customerPhone,
     });
   }
 

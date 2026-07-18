@@ -26,13 +26,21 @@ export async function getUpcomingBookings(limit = 5) {
       status: {
         notIn: ["cancelled", "expired"],
       },
-      startAt: {
+      bookingDate: {
         gte: new Date(),
       },
     },
-    orderBy: {
-      startAt: "asc",
+    include: {
+      field: {
+        select: {
+          name: true,
+        },
+      },
     },
+    orderBy: [
+      { bookingDate: "asc" },
+      { startTime: "asc" },
+    ],
     take: limit,
   });
 }
@@ -40,16 +48,23 @@ export async function getUpcomingBookings(limit = 5) {
 export async function getReviews(): Promise<import("@/types").Review[]> {
   const records = await prisma.review.findMany({
     orderBy: {
-      date: "desc",
+      createdAt: "desc",
+    },
+    include: {
+      user: {
+        select: {
+          name: true,
+        },
+      },
     },
   });
 
   return records.map((r) => ({
     id: r.id,
-    customerName: r.customerName,
+    customerName: r.user?.name ?? "Guest",
     rating: Number(r.rating),
     comment: r.comment,
-    date: r.date,
+    date: r.createdAt.toISOString(),
   }));
 }
 
@@ -60,11 +75,11 @@ export type BookedSlot = {
   status: string;
 };
 
-export function mapBookingsToSlots(bookings: Array<{ startAt: Date; endAt: Date; fieldId: string; status: string }>): BookedSlot[] {
+export function mapBookingsToSlots(bookings: Array<{ bookingDate: Date; startTime: string; endTime: string; fieldId: string; field?: { name?: string } | null; status: string }>): BookedSlot[] {
   return bookings.map((booking) => ({
-    date: booking.startAt.toISOString().slice(0, 10),
-    time: `${booking.startAt.toISOString().slice(11, 16)} - ${booking.endAt.toISOString().slice(11, 16)}`,
-    field: booking.fieldId,
+    date: booking.bookingDate.toISOString().slice(0, 10),
+    time: `${booking.startTime} - ${booking.endTime}`,
+    field: booking.field?.name ?? booking.fieldId,
     status: booking.status === "pending" ? "Booked" : booking.status,
   }));
 }

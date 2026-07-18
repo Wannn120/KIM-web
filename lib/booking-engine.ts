@@ -5,18 +5,23 @@ export type BookingStatus = "pending" | "confirmed" | "completed" | "cancelled" 
 export interface BookingRecord {
   id: string;
   fieldId: string;
-  customer: string;
-  startAt: string;
-  endAt: string;
+  bookingDate: string;
+  startTime: string;
+  endTime: string;
   status: BookingStatus;
   createdAt: string;
 }
 
 interface CreateBookingInput {
+  userId: string;
   fieldId: string;
-  customerId: string;
-  startAt: string;
-  endAt: string;
+  bookingDate: string;
+  startTime: string;
+  endTime: string;
+  pricePerHour: number;
+  customerName: string;
+  customerPhone: string;
+  customerEmail?: string;
   timezone?: string;
 }
 
@@ -31,8 +36,9 @@ const holidayDates = ["2026-07-17", "2026-12-25"];
 const maintenanceSchedules = [
   {
     fieldId: "field-1",
-    startAt: "2026-07-07T10:00:00.000Z",
-    endAt: "2026-07-07T11:00:00.000Z",
+    bookingDate: "2026-07-07",
+    startTime: "10:00",
+    endTime: "11:00",
   },
 ];
 
@@ -54,12 +60,10 @@ function isHoliday(date: Date, timezone: string) {
   return holidayDates.includes(key);
 }
 
-function isMaintenanceConflict(fieldId: string, startAt: Date, endAt: Date) {
+function isMaintenanceConflict(fieldId: string, bookingDate: string, startTime: string, endTime: string) {
   return maintenanceSchedules.some((schedule) => {
-    if (schedule.fieldId !== fieldId) return false;
-    const scheduleStart = new Date(schedule.startAt);
-    const scheduleEnd = new Date(schedule.endAt);
-    return startAt < scheduleEnd && endAt > scheduleStart;
+    if (schedule.fieldId !== fieldId || schedule.bookingDate !== bookingDate) return false;
+    return startTime < schedule.endTime && endTime > schedule.startTime;
   });
 }
 
@@ -74,15 +78,16 @@ async function purgeExpiredReservations(now: Date = new Date()) {
   });
 }
 
-async function hasOverlap(fieldId: string, startAt: Date, endAt: Date) {
+async function hasOverlap(fieldId: string, bookingDate: string, startTime: string, endTime: string) {
   const overlapping = await prisma.booking.findFirst({
     where: {
       fieldId,
+      bookingDate: new Date(bookingDate),
       status: {
         notIn: ["cancelled", "expired"],
       },
-      startAt: { lt: endAt },
-      endAt: { gt: startAt },
+      startTime: { lt: endTime },
+      endTime: { gt: startTime },
     },
   });
 
@@ -90,19 +95,28 @@ async function hasOverlap(fieldId: string, startAt: Date, endAt: Date) {
 }
 
 export async function createBooking(input: CreateBookingInput): Promise<BookingResult> {
-  const startAt = new Date(input.startAt);
-  const endAt = new Date(input.endAt);
+  const bookingDate = new Date(input.bookingDate);
+  const startTime = input.startTime;
+  const endTime = input.endTime;
   const timezone = input.timezone ?? "UTC";
 
-  if (Number.isNaN(startAt.getTime()) || Number.isNaN(endAt.getTime())) {
+  if (!input.userId) {
     return {
       success: false,
-      message: "Invalid booking time range.",
+      message: "Missing customer identifier.",
       statusCode: 400,
     };
   }
 
-  if (endAt <= startAt) {
+  if (Number.isNaN(bookingDate.getTime())) {
+    return {
+      success: false,
+      message: "Invalid booking date.",
+      statusCode: 400,
+    };
+  }
+
+  if (endTime <= startTime) {
     return {
       success: false,
       message: "Booking end time must be after start time.",
@@ -110,7 +124,7 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingR
     };
   }
 
-  if (isHoliday(startAt, timezone)) {
+  if (isHoliday(bookingDate, timezone)) {
     return {
       success: false,
       message: "The selected date is not available because it is marked as a holiday.",
@@ -118,7 +132,7 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingR
     };
   }
 
-  if (isMaintenanceConflict(input.fieldId, startAt, endAt)) {
+  if (isMaintenanceConflict(input.fieldId, input.bookingDate, startTime, endTime)) {
     return {
       success: false,
       message: "The selected slot overlaps a maintenance window.",
@@ -128,7 +142,7 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingR
 
   await purgeExpiredReservations(new Date());
 
-  if (await hasOverlap(input.fieldId, startAt, endAt)) {
+  if (await hasOverlap(input.fieldId, input.bookingDate, startTime, endTime)) {
     return {
       success: false,
       message: "The selected slot is no longer available.",
@@ -136,15 +150,22 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingR
     };
   }
 
-  const now = new Date();
+  const durationHours = Number(endTime.split(":")[0]) - Number(startTime.split(":")[0]);
+  const totalPrice = input.pricePerHour * Math.max(durationHours, 1);
+
   const record = await prisma.booking.create({
     data: {
-      customer: input.customerId || "anonymous",
+      userId: input.userId,
       fieldId: input.fieldId,
-      startAt,
-      endAt,
+      bookingDate,
+      startTime,
+      endTime,
+      durationHours: Math.max(durationHours, 1),
+      totalPrice,
+      customerName: input.customerName,
+      customerPhone: input.customerPhone,
+      customerEmail: input.customerEmail,
       status: "pending",
-      createdAt: now,
     },
   });
 
@@ -154,9 +175,9 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingR
     booking: {
       id: record.id,
       fieldId: record.fieldId,
-      customer: record.customer,
-      startAt: record.startAt.toISOString(),
-      endAt: record.endAt.toISOString(),
+      bookingDate: record.bookingDate.toISOString(),
+      startTime: record.startTime,
+      endTime: record.endTime,
       status: record.status as BookingStatus,
       createdAt: record.createdAt.toISOString(),
     },

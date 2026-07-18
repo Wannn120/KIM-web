@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { bookingSteps } from "@/lib/mock-data";
-import { getUpcomingBookings, mapBookingsToSlots } from "@/lib/data";
+import { getUpcomingBookings, getFields, mapBookingsToSlots } from "@/lib/data";
+import { BookingForm } from "@/components/booking-form";
 
 export const dynamic = "force-dynamic";
 
@@ -9,8 +10,13 @@ async function loadBookedSlots() {
   return mapBookingsToSlots(bookings);
 }
 
+async function loadFields() {
+  return await getFields();
+}
+
 export default async function BookPage() {
   const bookedSlots = await loadBookedSlots();
+  const fields = await loadFields();
 
   return (
     <main className="flex-1 px-6 py-16 lg:px-8">
@@ -96,16 +102,7 @@ export default async function BookPage() {
           </div>
 
           <aside className="card-glow p-8">
-            <h2 className="text-2xl font-semibold text-white">Checkout preview</h2>
-            <div className="mt-6 space-y-4 text-sm text-[color:var(--muted)]">
-              <div className="flex justify-between"><span>Field</span><span>Elite Turf 1</span></div>
-              <div className="flex justify-between"><span>Date</span><span>07 Jul 2026</span></div>
-              <div className="flex justify-between"><span>Time</span><span>19:00 - 20:00</span></div>
-              <div className="flex justify-between border-t border-white/10 pt-4 text-base font-semibold text-white"><span>Total</span><span>Rp 180.000</span></div>
-            </div>
-            <Link href="/checkout" className="mt-8 btn-primary">
-              Continue to checkout
-            </Link>
+            <BookingForm fields={fields} />
           </aside>
         </section>
       </div>

@@ -1,23 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatedCard } from "@/components/animated-card";
-
-const bookingDetails = {
-  fieldId: "field-1",
-  fieldName: "Elite Turf 1",
-  customerName: "Demo Customer",
-  startAt: "2026-07-07T19:00:00.000Z",
-  endAt: "2026-07-07T20:00:00.000Z",
-  timezone: "Asia/Jakarta",
-  amount: 170000,
-};
 
 export const dynamic = "force-dynamic";
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", {
+  const date = new Date(iso);
+  return date.toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -25,11 +16,11 @@ function formatDate(iso: string) {
 }
 
 function formatTimeRange(start: string, end: string) {
-  const startTime = new Date(start).toLocaleTimeString("en-GB", {
+  const startTime = new Date(`${start}`).toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
   });
-  const endTime = new Date(end).toLocaleTimeString("en-GB", {
+  const endTime = new Date(`${end}`).toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -37,12 +28,67 @@ function formatTimeRange(start: string, end: string) {
   return `${startTime} - ${endTime}`;
 }
 
+function getSearchParam(value: string | null, fallback = "") {
+  return value ?? fallback;
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [profile, setProfile] = useState<{ name?: string; email?: string; phone?: string } | null>(null);
+
+  const fieldId = getSearchParam(searchParams.get("fieldId"));
+  const fieldName = getSearchParam(searchParams.get("fieldName"));
+  const bookingDate = getSearchParam(searchParams.get("bookingDate"));
+  const startTime = getSearchParam(searchParams.get("startTime"));
+  const endTime = getSearchParam(searchParams.get("endTime"));
+  const amount = Number(getSearchParam(searchParams.get("amount"), "0"));
+  const customerNameFromQuery = getSearchParam(searchParams.get("customerName"));
+
+  useEffect(() => {
+    let active = true;
+
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) {
+          return null;
+        }
+
+        const data = await response.json();
+        return data?.user ?? null;
+      })
+      .then((user) => {
+        if (!active) {
+          return;
+        }
+
+        if (user) {
+          setProfile(user);
+        }
+      })
+      .catch(() => {
+        // ignore profile load failures; booking API will still use auth info
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const customerName = customerNameFromQuery || profile?.name || "Guest";
+  const customerEmail = profile?.email ?? "";
+  const customerPhone = profile?.phone ?? "";
+
+  const hasValidBookingDetails = Boolean(fieldId && fieldName && bookingDate && startTime && endTime && amount > 0);
 
   const handleCheckout = async () => {
+    if (!hasValidBookingDetails) {
+      setError("Booking details are incomplete. Please return to the booking page and select a slot.");
+      return;
+    }
+
     setSaving(true);
     setError(null);
 
@@ -51,14 +97,13 @@ export default function CheckoutPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fieldId: bookingDetails.fieldId,
-          customerId: "demo-user",
-          startAt: bookingDetails.startAt,
-          endAt: bookingDetails.endAt,
-          timezone: bookingDetails.timezone,
-          customerName: bookingDetails.customerName,
-          email: "demo@minisoccer.id",
-          phone: "+628123456789",
+          fieldId,
+          bookingDate,
+          startTime,
+          endTime,
+          customerName,
+          customerEmail,
+          customerPhone,
         }),
       });
 
@@ -67,39 +112,35 @@ export default function CheckoutPage() {
         throw new Error(result.message || "Unable to create booking.");
       }
 
-      // create payment immediately (server will auto-approve when gateway is disabled)
       const paymentResp = await fetch("/api/payments/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           bookingId: result.booking.id,
-          amount: bookingDetails.amount,
+          amount,
           paymentMethod: "Offline",
-          customerName: bookingDetails.customerName,
-          email: "demo@minisoccer.id",
-          phone: "+628123456789",
+          customerName,
+          email: customerEmail,
+          phone: customerPhone,
         }),
       });
 
       const paymentResult = await paymentResp.json();
       if (!paymentResp.ok || !paymentResult.success) {
-        // If payment creation failed, navigate to payment page for manual retry
-        const bookingDate = formatDate(result.booking.startAt);
-        const bookingTime = formatTimeRange(result.booking.startAt, result.booking.endAt);
+        const bookingTime = `${startTime} - ${endTime}`;
         const query = new URLSearchParams({
           bookingId: result.booking.id,
-          amount: bookingDetails.amount.toString(),
-          fieldName: bookingDetails.fieldName,
-          bookingDate,
+          amount: amount.toString(),
+          fieldName,
+          bookingDate: formatDate(bookingDate),
           bookingTime,
-          customerName: bookingDetails.customerName,
+          customerName,
         }).toString();
 
         router.push(`/payment?${query}`);
         return;
       }
 
-      // success: redirect to booking history (booking should now be confirmed)
       router.push(`/booking-history`);
     } catch (error) {
       setError((error as Error).message);
@@ -120,18 +161,18 @@ export default function CheckoutPage() {
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="rounded-3xl border border-white/10 card-surface p-6">
               <p className="text-sm uppercase tracking-[0.25em] text-[color:var(--muted)]">Field</p>
-              <p className="mt-2 text-xl font-semibold text-white">{bookingDetails.fieldName}</p>
-              <p className="mt-2 text-sm text-[color:var(--muted)]">Indoor • 5v5</p>
+              <p className="mt-2 text-xl font-semibold text-white">{fieldName || "Field not selected"}</p>
+              <p className="mt-2 text-sm text-[color:var(--muted)]">Review the selected slot before continuing.</p>
             </div>
             <div className="rounded-3xl border border-white/10 card-surface p-6">
               <p className="text-sm uppercase tracking-[0.25em] text-[color:var(--muted)]">Date</p>
-              <p className="mt-2 text-xl font-semibold text-white">{formatDate(bookingDetails.startAt)}</p>
-              <p className="mt-2 text-sm text-[color:var(--muted)]">{formatTimeRange(bookingDetails.startAt, bookingDetails.endAt)}</p>
+              <p className="mt-2 text-xl font-semibold text-white">{bookingDate || "—"}</p>
+              <p className="mt-2 text-sm text-[color:var(--muted)]">{startTime && endTime ? formatTimeRange(startTime, endTime) : "—"}</p>
             </div>
             <div className="rounded-3xl border border-white/10 card-surface p-6">
               <p className="text-sm uppercase tracking-[0.25em] text-[color:var(--muted)]">Total</p>
-              <p className="mt-2 text-3xl font-semibold text-white">Rp {bookingDetails.amount.toLocaleString("id-ID")}</p>
-              <p className="mt-2 text-sm text-[color:var(--muted)]">Per hour booking</p>
+              <p className="mt-2 text-3xl font-semibold text-white">Rp {amount.toLocaleString("id-ID")}</p>
+              <p className="mt-2 text-sm text-[color:var(--muted)]">Estimated charge</p>
             </div>
           </div>
         </div>
@@ -139,10 +180,7 @@ export default function CheckoutPage() {
         <AnimatedCard className="p-8">
           <h2 className="text-2xl font-semibold text-white">Payment summary</h2>
           <div className="mt-6 space-y-4 text-sm text-[color:var(--muted)]">
-            <div className="flex justify-between"><span>Base price</span><span>Rp 180.000</span></div>
-            <div className="flex justify-between"><span>Service fee</span><span>Rp 10.000</span></div>
-            <div className="flex justify-between"><span>Discount</span><span>- Rp 20.000</span></div>
-            <div className="flex justify-between border-t border-white/10 pt-4 text-base font-semibold text-white"><span>Total</span><span>Rp 170.000</span></div>
+            <div className="flex justify-between"><span>Base price</span><span>Rp {amount.toLocaleString("id-ID")}</span></div>
           </div>
 
           {error ? (
@@ -153,7 +191,7 @@ export default function CheckoutPage() {
 
           <button
             onClick={handleCheckout}
-            disabled={saving}
+            disabled={saving || !hasValidBookingDetails}
             className="mt-8 btn-primary w-full py-4 text-lg"
           >
             {saving ? "Reserving booking…" : "Confirm and pay"}

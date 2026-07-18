@@ -17,15 +17,24 @@ export async function POST(request: NextRequest) {
     const bookingDate = typeof safeBody?.bookingDate === "string" ? safeBody.bookingDate : "";
     const startTime = typeof safeBody?.startTime === "string" ? safeBody.startTime : "";
     const endTime = typeof safeBody?.endTime === "string" ? safeBody.endTime : "";
-    const customerName = typeof safeBody?.customerName === "string" ? safeBody.customerName : "";
-    const customerPhone = typeof safeBody?.customerPhone === "string" ? safeBody.customerPhone : "";
-    const customerEmail = typeof safeBody?.customerEmail === "string" ? safeBody.customerEmail : "";
+    const bodyCustomerName = typeof safeBody?.customerName === "string" ? safeBody.customerName.trim() : "";
+    const bodyCustomerPhone = typeof safeBody?.customerPhone === "string" ? safeBody.customerPhone.trim() : "";
+    const bodyCustomerEmail = typeof safeBody?.customerEmail === "string" ? safeBody.customerEmail.trim() : "";
     const clientIp = request.headers.get("x-forwarded-for") ?? "unknown";
 
     const rateLimit = getRateLimitResult(`booking:${clientIp}`);
     if (!rateLimit.allowed) {
       return NextResponse.json({ success: false, message: "Too many booking attempts. Please try again later." }, { status: 429 });
     }
+
+    const userRecord = await prisma.user.findUnique({
+      where: { id: auth.user.sub },
+      select: { name: true, email: true, phone: true },
+    });
+
+    const customerName = bodyCustomerName || userRecord?.name || "";
+    const customerPhone = bodyCustomerPhone || userRecord?.phone || "";
+    const customerEmail = bodyCustomerEmail || userRecord?.email || "";
 
     if (!fieldId || !bookingDate || !startTime || !endTime || !customerName) {
       return NextResponse.json({ success: false, message: "Missing required booking details." }, { status: 400 });
@@ -132,6 +141,22 @@ export async function GET(request: NextRequest) {
             name: true,
             location: true,
             imageUrl: true,
+          },
+        },
+        payments: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: {
+            id: true,
+            transactionId: true,
+            status: true,
+            amount: true,
+            provider: true,
+            paymentMethod: true,
+            createdAt: true,
+            updatedAt: true,
+            paidAt: true,
+            expiredAt: true,
           },
         },
       },

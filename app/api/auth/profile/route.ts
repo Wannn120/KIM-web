@@ -30,7 +30,7 @@ export async function PATCH(request: NextRequest) {
       data: {
         name,
         email,
-        phone: phone || null,
+        phone: phone || undefined,
       },
       select: {
         id: true,

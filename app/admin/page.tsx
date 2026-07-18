@@ -44,6 +44,9 @@ export default function AdminPage() {
             <a href="/api/admin/export/pdf" className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-[color:var(--foreground)] transition hover:bg-white/10">
               Export PDF
             </a>
+            <a href="/admin/payments" className="rounded-full border border-[color:rgba(16,185,129,0.18)] bg-[color:rgba(16,185,129,0.06)] px-4 py-2 text-sm font-medium text-[color:var(--accent)] transition hover:bg-[color:rgba(16,185,129,0.08)]">
+              Payment dashboard
+            </a>
           </div>
         </div>
 

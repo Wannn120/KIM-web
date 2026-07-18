@@ -6,7 +6,15 @@ export type PaymentMethod =
   | "OVO"
   | "BCA"
   | "BNI"
-  | "Mandiri";
+  | "Mandiri"
+  | "Offline";
+
+export function isPaymentMethod(value: unknown): value is PaymentMethod {
+  return (
+    typeof value === "string" &&
+    ["QRIS", "GoPay", "Dana", "ShopeePay", "OVO", "BCA", "BNI", "Mandiri", "Offline"].includes(value)
+  );
+}
 
 export type PaymentStatus =
   | "pending"

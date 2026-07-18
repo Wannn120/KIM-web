@@ -26,35 +26,41 @@ jobs:
           POSTGRES_URL_SECRET: ${{ secrets.POSTGRES_URL }}
           POSTGRES_URL_NON_POOLING_SECRET: ${{ secrets.POSTGRES_URL_NON_POOLING }}
         run: |
-          POOLER_URL=""
-          POOLER_URL_SOURCE=""
+          MIGRATION_URL=""
+          MIGRATION_URL_SOURCE=""
 
-          if [[ -n "$POSTGRES_PRISMA_URL_SECRET" ]]; then
-            POOLER_URL="$POSTGRES_PRISMA_URL_SECRET"
-            POOLER_URL_SOURCE="POSTGRES_PRISMA_URL"
+          if [[ -n "$POSTGRES_URL_NON_POOLING_SECRET" ]]; then
+            MIGRATION_URL="$POSTGRES_URL_NON_POOLING_SECRET"
+            MIGRATION_URL_SOURCE="POSTGRES_URL_NON_POOLING"
+          elif [[ -n "$DIRECT_URL_SECRET" ]]; then
+            MIGRATION_URL="$DIRECT_URL_SECRET"
+            MIGRATION_URL_SOURCE="DIRECT_URL"
           elif [[ -n "$DATABASE_URL_SECRET" ]]; then
-            POOLER_URL="$DATABASE_URL_SECRET"
-            POOLER_URL_SOURCE="DATABASE_URL"
+            MIGRATION_URL="$DATABASE_URL_SECRET"
+            MIGRATION_URL_SOURCE="DATABASE_URL"
+          elif [[ -n "$POSTGRES_PRISMA_URL_SECRET" ]]; then
+            MIGRATION_URL="$POSTGRES_PRISMA_URL_SECRET"
+            MIGRATION_URL_SOURCE="POSTGRES_PRISMA_URL"
           elif [[ -n "$POSTGRES_URL_SECRET" ]]; then
-            POOLER_URL="$POSTGRES_URL_SECRET"
-            POOLER_URL_SOURCE="POSTGRES_URL"
+            MIGRATION_URL="$POSTGRES_URL_SECRET"
+            MIGRATION_URL_SOURCE="POSTGRES_URL"
           fi
 
-          if [[ "$POOLER_URL" == *"pooler.supabase.com"* ]] || [[ "$POOLER_URL" == *"pgbouncer=true"* ]]; then
-            if [[ "$POOLER_URL" != *"connect_timeout="* ]]; then
-              if [[ "$POOLER_URL" == *"?"* ]]; then
-                POOLER_URL="$POOLER_URL&connect_timeout=10"
+          if [[ -n "$MIGRATION_URL" ]]; then
+            if [[ "$MIGRATION_URL" != *"connect_timeout="* ]]; then
+              if [[ "$MIGRATION_URL" == *"?"* ]]; then
+                MIGRATION_URL="$MIGRATION_URL&connect_timeout=10"
               else
-                POOLER_URL="$POOLER_URL?connect_timeout=10"
+                MIGRATION_URL="$MIGRATION_URL?connect_timeout=10"
               fi
             fi
 
-            echo "Using Supabase pooler URL for Prisma migrations"
-            echo "DATABASE_URL=$POOLER_URL" >> "$GITHUB_ENV"
-            echo "DIRECT_URL=$POOLER_URL" >> "$GITHUB_ENV"
-            echo "POOLER_URL_SOURCE=$POOLER_URL_SOURCE" >> "$GITHUB_ENV"
+            echo "Using direct database URL for Prisma migrations"
+            echo "DATABASE_URL=$MIGRATION_URL" >> "$GITHUB_ENV"
+            echo "DIRECT_URL=$MIGRATION_URL" >> "$GITHUB_ENV"
+            echo "POOLER_URL_SOURCE=$MIGRATION_URL_SOURCE" >> "$GITHUB_ENV"
           else
-            echo "No Supabase pooler URL found; skipping migrations." >> "$GITHUB_STEP_SUMMARY"
+            echo "No database URL found; skipping migrations." >> "$GITHUB_STEP_SUMMARY"
           fi
       - name: Debug Prisma database URL selection
         shell: bash

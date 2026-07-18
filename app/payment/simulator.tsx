@@ -19,12 +19,21 @@ type PaymentMethod = (typeof paymentOptions)[number];
 type PaymentStatus = "pending" | "success" | "failed" | "expired" | "cancelled";
 
 type PaymentRecord = {
+  id?: string;
+  bookingId?: string;
   status?: PaymentStatus;
   paymentMethod?: PaymentMethod;
   transactionId?: string;
   amount?: number;
   provider?: string;
   expiredAt?: string | Date | null;
+  createdAt?: string | Date | null;
+  updatedAt?: string | Date | null;
+  paidAt?: string | Date | null;
+  booking?: {
+    id?: string;
+    fieldId?: string;
+  } | null;
 };
 
 const fakeQrCode = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=MINISOCCER-DEMO";
@@ -107,8 +116,11 @@ export function PaymentSimulator({ bookingId, amount, fieldName, bookingDate, bo
   const visibleAmount = paymentRecord?.amount ?? amount;
   const visibleProvider = paymentRecord?.provider ?? "DemoPaymentProvider";
   const visibleExpiredAt = paymentRecord?.expiredAt
-    ? new Date(paymentRecord.expiredAt as string | Date).toLocaleTimeString()
-    : new Date(Date.now() + 15 * 60 * 1000).toLocaleTimeString();
+    ? new Date(paymentRecord.expiredAt as string | Date).toLocaleString("en-GB")
+    : new Date(Date.now() + 15 * 60 * 1000).toLocaleString("en-GB");
+  const visibleCreatedAt = paymentRecord?.createdAt ? new Date(paymentRecord.createdAt as string | Date).toLocaleString("en-GB") : "—";
+  const visibleUpdatedAt = paymentRecord?.updatedAt ? new Date(paymentRecord.updatedAt as string | Date).toLocaleString("en-GB") : "—";
+  const visiblePaidAt = paymentRecord?.paidAt ? new Date(paymentRecord.paidAt as string | Date).toLocaleString("en-GB") : "—";
 
   const statusClassName = visibleStatus === "pending"
     ? "bg-yellow-500/10 text-yellow-300"
@@ -124,7 +136,7 @@ export function PaymentSimulator({ bookingId, amount, fieldName, bookingDate, bo
     });
   };
 
-  const simulate = async () => {
+  const startDemoPayment = async () => {
     setProcessing(true);
     setErrorMessage(null);
 
@@ -135,21 +147,35 @@ export function PaymentSimulator({ bookingId, amount, fieldName, bookingDate, bo
         const transaction = await createTransaction(paymentMethod);
         currentTransactionId = transaction.transactionId;
         setTransactionId(currentTransactionId);
-        await refreshPaymentRecord(currentTransactionId);
       }
-
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      const outcomes: PaymentStatus[] = ["success", "failed", "expired"];
-      const nextStatus = outcomes[Math.floor(Math.random() * outcomes.length)];
-      setStatus(nextStatus);
 
       if (currentTransactionId) {
-        await settleTransaction(currentTransactionId, nextStatus);
         await refreshPaymentRecord(currentTransactionId);
       }
 
-      if (nextStatus === "success" && currentTransactionId) {
-        router.push(`/payment/success?transactionId=${encodeURIComponent(currentTransactionId)}`);
+      setStatus("pending");
+    } catch (error) {
+      setErrorMessage((error as Error).message);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const settlePendingTransaction = async (nextStatus: PaymentStatus) => {
+    if (!transactionId) {
+      setErrorMessage("Create a transaction before settling it.");
+      return;
+    }
+
+    setProcessing(true);
+    setErrorMessage(null);
+
+    try {
+      await settleTransaction(transactionId, nextStatus);
+      await refreshPaymentRecord(transactionId);
+
+      if (nextStatus === "success") {
+        router.push(`/payment/success?transactionId=${encodeURIComponent(transactionId)}`);
       }
     } catch (error) {
       setErrorMessage((error as Error).message);
@@ -233,12 +259,33 @@ export function PaymentSimulator({ bookingId, amount, fieldName, bookingDate, bo
             )}
           </div>
 
-          <button
-            onClick={simulate}
-            disabled={processing}
-            className="btn-primary w-full py-4 text-lg">
-            {processing ? "Processing…" : "Simulate Demo Payment"}
-          </button>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={startDemoPayment}
+              disabled={processing}
+              className="btn-primary w-full py-4 text-lg">
+              {processing ? "Creating transaction…" : visibleStatus === "pending" ? "Create / Refresh Payment" : "Start Demo Payment"}
+            </button>
+
+            {visibleStatus === "pending" ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  onClick={() => settlePendingTransaction("success")}
+                  disabled={processing}
+                  className="rounded-3xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 font-semibold text-emerald-200 transition hover:bg-emerald-500/20"
+                >
+                  {processing ? "Processing…" : "Selesai / Bayar"}
+                </button>
+                <button
+                  onClick={() => settlePendingTransaction("cancelled")}
+                  disabled={processing}
+                  className="rounded-3xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 font-semibold text-rose-200 transition hover:bg-rose-500/20"
+                >
+                  {processing ? "Processing…" : "Batal"}
+                </button>
+              </div>
+            ) : null}
+          </div>
 
           {errorMessage ? (
             <p className="rounded-3xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">
@@ -257,13 +304,18 @@ export function PaymentSimulator({ bookingId, amount, fieldName, bookingDate, bo
           </div>
 
           <div className="space-y-4 rounded-3xl border border-white/10 p-6">
-            <h3 className="text-lg font-semibold text-white">Transaction details</h3>
+            <h3 className="text-lg font-semibold text-white">Persisted payment record</h3>
             <div className="grid gap-3 text-sm text-[color:var(--muted)]">
-              <div className="flex justify-between"><span>ID</span><span>{visibleTransactionId || "TBD"}</span></div>
-              <div className="flex justify-between"><span>Method</span><span>{visibleMethod}</span></div>
-              <div className="flex justify-between"><span>Amount</span><span>Rp {visibleAmount.toLocaleString("id-ID")}</span></div>
-              <div className="flex justify-between"><span>Provider</span><span>{visibleProvider}</span></div>
-              <div className="flex justify-between"><span>Expires</span><span>{visibleExpiredAt}</span></div>
+              <div className="flex justify-between"><span>DB transaction</span><span className="text-right text-white">{visibleTransactionId || "TBD"}</span></div>
+              <div className="flex justify-between"><span>Status</span><span className={`rounded-full px-3 py-1 text-sm ${statusClassName}`}>{visibleStatus}</span></div>
+              <div className="flex justify-between"><span>Method</span><span className="text-white">{visibleMethod}</span></div>
+              <div className="flex justify-between"><span>Amount</span><span className="text-white">Rp {visibleAmount.toLocaleString("id-ID")}</span></div>
+              <div className="flex justify-between"><span>Provider</span><span className="text-white">{visibleProvider}</span></div>
+              <div className="flex justify-between"><span>Booking</span><span className="text-white">{paymentRecord?.booking?.id ?? bookingId}</span></div>
+              <div className="flex justify-between"><span>Created</span><span className="text-white">{visibleCreatedAt}</span></div>
+              <div className="flex justify-between"><span>Updated</span><span className="text-white">{visibleUpdatedAt}</span></div>
+              <div className="flex justify-between"><span>Paid at</span><span className="text-white">{visiblePaidAt}</span></div>
+              <div className="flex justify-between"><span>Expires</span><span className="text-white">{visibleExpiredAt}</span></div>
             </div>
           </div>
         </aside>
