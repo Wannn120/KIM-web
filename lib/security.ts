@@ -93,8 +93,8 @@ export function createJwt(payload: Record<string, unknown>, secret = getSecret()
   const encodedHeader = toBase64Url(Buffer.from(JSON.stringify(header)));
   const encodedBody = toBase64Url(Buffer.from(JSON.stringify(body)));
   const signingInput = `${encodedHeader}.${encodedBody}`;
-  const signature = createHmac("sha256", secret).update(signingInput).digest("base64");
-  return `${signingInput}.${toBase64Url(Buffer.from(signature))}`;
+  const signature = createHmac("sha256", secret).update(signingInput).digest();
+  return `${signingInput}.${toBase64Url(signature)}`;
 }
 
 export function verifyJwt(token: string, secret = getSecret()) {
@@ -105,10 +105,17 @@ export function verifyJwt(token: string, secret = getSecret()) {
 
   const [headerSegment, payloadSegment, signatureSegment] = parts;
   const signingInput = `${headerSegment}.${payloadSegment}`;
-  const expectedSignature = createHmac("sha256", secret).update(signingInput).digest("base64");
-  const providedSignature = fromBase64Url(signatureSegment).toString("base64");
+  const expectedSignatureBuffer = createHmac("sha256", secret).update(signingInput).digest();
+  const providedSignatureBuffer = fromBase64Url(signatureSegment);
+  if (!providedSignatureBuffer || providedSignatureBuffer.length === 0) {
+    return null;
+  }
 
-  const isValid = timingSafeEqual(Buffer.from(expectedSignature), Buffer.from(providedSignature));
+  if (expectedSignatureBuffer.length !== providedSignatureBuffer.length) {
+    return null;
+  }
+
+  const isValid = timingSafeEqual(expectedSignatureBuffer, providedSignatureBuffer);
   if (!isValid) {
     return null;
   }
