@@ -52,7 +52,7 @@ export default function BookingHistoryPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/bookings", { cache: "no-store" })
+    fetch("/api/bookings", { cache: "no-store", credentials: "include" })
       .then(async (response) => {
         const data = await response.json();
         if (!response.ok || !data.success) {

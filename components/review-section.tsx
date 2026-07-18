@@ -22,7 +22,13 @@ export function ReviewSection({ initialReviews }: { initialReviews: Review[] }) 
 
         const result = await res.json();
         if (result?.success && Array.isArray(result.data)) {
-          setReviews(result.data);
+          setReviews(
+            result.data.map((review: any) => ({
+              ...review,
+              customerName: review.customerName ?? review.userName ?? "Guest",
+              date: review.date ?? review.createdAt ?? "",
+            }))
+          );
         }
       } catch {
         // keep server-provided reviews if fetch fails
@@ -80,8 +86,20 @@ export function ReviewSection({ initialReviews }: { initialReviews: Review[] }) 
         if (!res.ok) throw new Error("Failed to save review");
         return res.json();
       })
-      .then((created: Review) => {
-        const nextReviews = [created, ...reviews];
+      .then((payload) => {
+        const createdReview = payload?.review;
+        if (!createdReview) {
+          throw new Error("Failed to parse review response.");
+        }
+
+        const nextReviews = [
+          {
+            ...createdReview,
+            customerName: createdReview.customerName ?? createdReview.userName ?? "Guest",
+            date: createdReview.date ?? createdReview.createdAt ?? "",
+          },
+          ...reviews,
+        ];
         saveReviews(nextReviews);
         setComment("");
         setStatus("Review submitted successfully.");

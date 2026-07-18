@@ -29,11 +29,12 @@ export async function GET() {
       success: true,
       data: reviews.map((review) => ({
         id: review.id,
+        customerName: review.user.name,
         userName: review.user.name,
         fieldName: review.field.name,
         rating: review.rating,
         comment: review.comment,
-        createdAt: review.createdAt,
+        date: review.createdAt.toISOString(),
       })),
     });
   } catch (error) {
@@ -127,11 +128,12 @@ export async function POST(request: NextRequest) {
       message: "Review created successfully.",
       review: {
         id: review.id,
+        customerName: review.user.name,
         userName: review.user.name,
         fieldName: review.field.name,
         rating: review.rating,
         comment: review.comment,
-        createdAt: review.createdAt,
+        date: review.createdAt.toISOString(),
       },
     });
   } catch (error) {

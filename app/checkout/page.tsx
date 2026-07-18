@@ -50,7 +50,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     let active = true;
 
-    fetch("/api/auth/me", { cache: "no-store" })
+    fetch("/api/auth/me", { cache: "no-store", credentials: "include" })
       .then(async (response) => {
         if (!response.ok) {
           return null;
@@ -96,6 +96,7 @@ export default function CheckoutPage() {
       const response = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           fieldId,
           bookingDate,
@@ -115,6 +116,7 @@ export default function CheckoutPage() {
       const paymentResp = await fetch("/api/payments/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           bookingId: result.booking.id,
           amount,
