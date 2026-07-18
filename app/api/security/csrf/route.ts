@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ success: true, message: "CSRF token validated." });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, message: "Unable to validate CSRF token." }, { status: 500 });
   }
 }

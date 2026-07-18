@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     const result = await uploadImageFromBuffer(buffer, file.type || "image/jpeg");
 
     return NextResponse.json({ success: true, data: result });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, message: "Unable to upload file." }, { status: 500 });
   }
 }

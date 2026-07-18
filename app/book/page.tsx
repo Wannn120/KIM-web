@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { bookingSteps } from "@/lib/mock-data";
 import { getUpcomingBookings, getFields, mapBookingsToSlots } from "@/lib/data";
 import { BookingForm } from "@/components/booking-form";

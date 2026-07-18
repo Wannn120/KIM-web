@@ -3,6 +3,16 @@
 import { useEffect, useState } from "react";
 import type { Review } from "@/types";
 
+type RawReview = {
+  id?: string;
+  customerName?: string;
+  userName?: string;
+  rating?: number;
+  comment?: string;
+  date?: string;
+  createdAt?: string;
+};
+
 export function ReviewSection({ initialReviews }: { initialReviews: Review[] }) {
   const [reviews, setReviews] = useState<Review[]>(initialReviews);
   const [name, setName] = useState("");
@@ -23,11 +33,13 @@ export function ReviewSection({ initialReviews }: { initialReviews: Review[] }) 
         const result = await res.json();
         if (result?.success && Array.isArray(result.data)) {
           setReviews(
-            result.data.map((review: any) => ({
+            result.data.map((review: RawReview) => ({
               ...review,
               customerName: review.customerName ?? review.userName ?? "Guest",
+              rating: review.rating ?? 5,
+              comment: review.comment ?? "",
               date: review.date ?? review.createdAt ?? "",
-            }))
+            })) as Review[]
           );
         }
       } catch {
