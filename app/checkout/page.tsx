@@ -38,6 +38,8 @@ export default function CheckoutPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<{ name?: string; email?: string; phone?: string } | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [requiresLogin, setRequiresLogin] = useState(false);
 
   const fieldId = getSearchParam(searchParams.get("fieldId"));
   const fieldName = getSearchParam(searchParams.get("fieldName"));
@@ -66,10 +68,19 @@ export default function CheckoutPage() {
 
         if (user) {
           setProfile(user);
+        } else {
+          setRequiresLogin(true);
         }
       })
       .catch(() => {
-        // ignore profile load failures; booking API will still use auth info
+        if (active) {
+          setRequiresLogin(true);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setAuthChecked(true);
+        }
       });
 
     return () => {
@@ -93,6 +104,33 @@ export default function CheckoutPage() {
     setError(null);
 
     try {
+      if (requiresLogin) {
+        setError("Please sign in before confirming your booking.");
+        setSaving(false);
+        return;
+      }
+
+      // Validate slot again with backend to surface exact server reason before creating booking
+      try {
+        const validateResp = await fetch("/api/bookings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ fieldId, bookingDate, startTime, endTime, validateOnly: true }),
+        });
+
+        const validateResult = await validateResp.json().catch(() => null);
+        if (!validateResp.ok || !validateResult?.success) {
+          setError(validateResult?.message || "Slot no longer available.");
+          setSaving(false);
+          return;
+        }
+      } catch {
+        setError("Unable to validate booking. Please try again.");
+        setSaving(false);
+        return;
+      }
+
       const response = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -191,13 +229,23 @@ export default function CheckoutPage() {
             </p>
           ) : null}
 
-          <button
-            onClick={handleCheckout}
-            disabled={saving || !hasValidBookingDetails}
-            className="mt-8 btn-primary w-full py-4 text-lg"
-          >
-            {saving ? "Reserving booking…" : "Confirm and pay"}
-          </button>
+          {requiresLogin ? (
+            <button
+              type="button"
+              onClick={() => router.push("/login")}
+              className="mt-8 btn-primary w-full py-4 text-lg"
+            >
+              Sign in to continue
+            </button>
+          ) : (
+            <button
+              onClick={handleCheckout}
+              disabled={saving || !hasValidBookingDetails || !authChecked}
+              className="mt-8 btn-primary w-full py-4 text-lg"
+            >
+              {saving ? "Reserving booking…" : "Confirm and pay"}
+            </button>
+          )}
         </AnimatedCard>
       </div>
     </main>

@@ -1,6 +1,17 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+function getDateRange(dateString: string) {
+  const start = new Date(`${dateString}T00:00:00.000Z`);
+  if (Number.isNaN(start.getTime())) {
+    return null;
+  }
+
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 1);
+  return { start, end };
+}
+
 export async function GET(request: Request, props: { params: Promise<{ fieldId: string }> }) {
   const params = await props.params;
   const fieldId = params.fieldId;
@@ -34,10 +45,21 @@ export async function GET(request: Request, props: { params: Promise<{ fieldId: 
       );
     }
 
+    const range = getDateRange(date);
+    if (!range) {
+      return NextResponse.json(
+        { success: false, message: "Invalid date format." },
+        { status: 400 }
+      );
+    }
+
     const schedules = await prisma.fieldSchedule.findMany({
       where: {
         fieldId,
-        date: new Date(date),
+        date: {
+          gte: range.start,
+          lt: range.end,
+        },
       },
       orderBy: { startTime: "asc" },
       select: {

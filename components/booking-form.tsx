@@ -29,6 +29,7 @@ export function BookingForm({ fields }: { fields: Field[] }) {
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<AvailabilitySlot | null>(null);
   const [loading, setLoading] = useState(false);
+  const [validating, setValidating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -84,7 +85,7 @@ export function BookingForm({ fields }: { fields: Field[] }) {
     ? selectedField.price * getDurationHours(selectedSlot.startTime, selectedSlot.endTime)
     : selectedField?.price ?? 0;
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!selectedSlot) {
       setSubmitError("Please choose a time slot before continuing.");
       return;
@@ -105,6 +106,36 @@ export function BookingForm({ fields }: { fields: Field[] }) {
       endTime: selectedSlot.endTime,
       amount: selectedAmount.toString(),
     }).toString();
+
+    // Validate slot with backend before redirecting so we can show exact error
+    setValidating(true);
+    try {
+      const resp = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          fieldId: selectedField.id,
+          bookingDate: selectedDate,
+          startTime: selectedSlot.startTime,
+          endTime: selectedSlot.endTime,
+          validateOnly: true,
+        }),
+      });
+
+      const data = await resp.json().catch(() => null);
+      if (!resp.ok || !data?.success) {
+        setSubmitError(data?.message || "Unable to validate booking.");
+        setValidating(false);
+        return;
+      }
+    } catch {
+      setSubmitError("Unable to validate booking. Please try again.");
+      setValidating(false);
+      return;
+    } finally {
+      setValidating(false);
+    }
 
     router.push(`/checkout?${query}`);
   };
@@ -232,9 +263,21 @@ export function BookingForm({ fields }: { fields: Field[] }) {
         <button
           type="button"
           onClick={handleContinue}
-          className="mt-6 w-full rounded-3xl bg-[color:var(--accent)] px-6 py-4 text-base font-semibold text-black transition hover:bg-[color:var(--accent-strong)]"
+          disabled={validating}
+          aria-busy={validating}
+          aria-label={validating ? "Checking availability" : "Continue to checkout"}
+          className="mt-6 w-full rounded-3xl bg-[color:var(--accent)] px-6 py-4 text-base font-semibold text-black transition hover:bg-[color:var(--accent-strong)] disabled:opacity-60"
         >
-          Continue to checkout
+          <span className={`flex items-center justify-center transform transition-opacity transition-transform duration-200 ease-in-out ${validating ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"}`}>
+            <svg className="h-5 w-5 animate-spin text-black" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+            </svg>
+            <span className="sr-only">Checking availability</span>
+          </span>
+          <span className={`transform transition-opacity transition-transform duration-200 ease-in-out ${validating ? "opacity-0 scale-95 pointer-events-none" : "opacity-100 scale-100"}`}>
+            Continue to checkout
+          </span>
         </button>
       </div>
     </div>

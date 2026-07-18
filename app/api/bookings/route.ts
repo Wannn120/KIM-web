@@ -1,4 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
+function getDateRange(dateString: string) {
+  const start = new Date(`${dateString}T00:00:00.000Z`);
+  if (Number.isNaN(start.getTime())) {
+    return null;
+  }
+
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 1);
+  return { start, end };
+}
 import { auditLog } from "@/lib/audit-log";
 import { getRateLimitResult, sanitizeObject, applySecurityHeaders } from "@/lib/security";
 import { prisma } from "@/lib/prisma";
@@ -6,11 +16,6 @@ import { requireAuth } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
-    const auth = requireAuth(request);
-    if (!auth.ok) {
-      return auth.response;
-    }
-
     const body = await request.json();
     const safeBody = sanitizeObject(body as Record<string, unknown>);
     const fieldId = typeof safeBody?.fieldId === "string" ? safeBody.fieldId : "";
@@ -20,6 +25,7 @@ export async function POST(request: NextRequest) {
     const bodyCustomerName = typeof safeBody?.customerName === "string" ? safeBody.customerName.trim() : "";
     const bodyCustomerPhone = typeof safeBody?.customerPhone === "string" ? safeBody.customerPhone.trim() : "";
     const bodyCustomerEmail = typeof safeBody?.customerEmail === "string" ? safeBody.customerEmail.trim() : "";
+    const validateOnly = safeBody?.validateOnly === true;
     const clientIp = request.headers.get("x-forwarded-for") ?? "unknown";
 
     const rateLimit = getRateLimitResult(`booking:${clientIp}`);
@@ -27,17 +33,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: "Too many booking attempts. Please try again later." }, { status: 429 });
     }
 
-    const userRecord = await prisma.user.findUnique({
-      where: { id: auth.user.sub },
-      select: { name: true, email: true, phone: true },
-    });
-
-    const customerName = bodyCustomerName || userRecord?.name || "";
-    const customerPhone = bodyCustomerPhone || userRecord?.phone || "";
-    const customerEmail = bodyCustomerEmail || userRecord?.email || "";
-
-    if (!fieldId || !bookingDate || !startTime || !endTime || !customerName) {
+    if (!fieldId || !bookingDate || !startTime || !endTime) {
       return NextResponse.json({ success: false, message: "Missing required booking details." }, { status: 400 });
+    }
+
+    const range = getDateRange(bookingDate);
+    if (!range) {
+      return NextResponse.json({ success: false, message: "Invalid booking date." }, { status: 400 });
     }
 
     // Get field details for pricing
@@ -54,7 +56,10 @@ export async function POST(request: NextRequest) {
     const schedule = await prisma.fieldSchedule.findFirst({
       where: {
         fieldId,
-        date: new Date(bookingDate),
+        date: {
+          gte: range.start,
+          lt: range.end,
+        },
         startTime,
         endTime,
       },
@@ -63,6 +68,25 @@ export async function POST(request: NextRequest) {
     if (!schedule || !schedule.isAvailable) {
       return NextResponse.json({ success: false, message: "This time slot is not available." }, { status: 409 });
     }
+
+    if (validateOnly) {
+      return NextResponse.json({ success: true, message: "Slot available." });
+    }
+
+    // Require authentication for actual booking creation
+    const auth = requireAuth(request);
+    if (!auth.ok) {
+      return auth.response;
+    }
+
+    const userRecord = await prisma.user.findUnique({
+      where: { id: auth.user.sub },
+      select: { name: true, email: true, phone: true },
+    });
+
+    const customerName = bodyCustomerName || userRecord?.name || "";
+    const customerPhone = bodyCustomerPhone || userRecord?.phone || "";
+    const customerEmail = bodyCustomerEmail || userRecord?.email || "";
 
     // Calculate duration and total price
     const startHour = parseInt(startTime.split(":")[0]);
@@ -76,7 +100,7 @@ export async function POST(request: NextRequest) {
         data: {
           userId: auth.user.sub,
           fieldId,
-          bookingDate: new Date(bookingDate),
+          bookingDate: range.start,
           startTime,
           endTime,
           durationHours,
