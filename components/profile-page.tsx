@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 interface UserProfile {
+  id?: string;
+  username?: string;
   name: string;
   email: string;
   phone: string;
@@ -90,6 +92,15 @@ export default function ProfilePage() {
         <h1 className="text-3xl font-semibold text-white">My Profile</h1>
         <p className="mt-3 text-[color:var(--muted)]">You can update your name, email, and WhatsApp number here.</p>
         <div className="mt-8 grid gap-6">
+          <label className="block text-sm text-[color:var(--muted)]">
+            <span className="mb-2 block">Username</span>
+            <input
+              value={form.username || ""}
+              disabled
+              className="w-full rounded-3xl border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-4 py-3 text-[color:var(--muted)] outline-none cursor-not-allowed"
+            />
+            <p className="mt-1 text-xs text-[color:var(--muted)]">Username cannot be changed after creation</p>
+          </label>
           <label className="block text-sm text-[color:var(--muted)]">
             <span className="mb-2 block">Full name</span>
             <input

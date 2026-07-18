@@ -34,6 +34,7 @@ export async function PATCH(request: NextRequest) {
       },
       select: {
         id: true,
+        username: true,
         name: true,
         email: true,
         phone: true,

@@ -7,6 +7,7 @@ import { AuthPanel } from "@/components/auth-panel";
 
 export function RegisterForm() {
   const router = useRouter();
+  const [username, setUsername] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -41,8 +42,8 @@ export function RegisterForm() {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!name.trim() || !email.trim() || !password.trim()) {
-      setMessage("Nama, email, dan password wajib diisi.");
+    if (!username.trim() || !name.trim() || !email.trim() || !password.trim()) {
+      setMessage("Username, nama, email, dan password wajib diisi.");
       return;
     }
 
@@ -54,7 +55,7 @@ export function RegisterForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ name, phone, email, password, csrfToken }),
+        body: JSON.stringify({ username, name, phone, email, password, csrfToken }),
       });
 
       const result = await response.json();
@@ -93,6 +94,15 @@ export function RegisterForm() {
           </div>
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4 text-sm text-[color:var(--muted)]">
+            <label className="block text-sm text-[color:var(--muted)]">
+              <span className="mb-2 block">Username</span>
+              <input
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                className="w-full rounded-2xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-4 py-3 text-[color:var(--foreground)] outline-none"
+                placeholder="ari_putra"
+              />
+            </label>
             <div className="grid gap-4 md:grid-cols-2">
               <label className="text-sm text-[color:var(--muted)]">
                 <span className="mb-2 block">Full name</span>

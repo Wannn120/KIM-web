@@ -1,64 +1,144 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-
-function normalizeText(value: unknown): string | null {
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
+import { requireAuth } from "@/lib/auth";
 
 export async function GET() {
-  const reviews = await prisma.review.findMany({
-    orderBy: {
-      date: "desc",
-    },
-  });
+  try {
+    const reviews = await prisma.review.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        field: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 10,
+    });
 
-  return NextResponse.json(
-    reviews.map((review) => ({
-      id: review.id,
-      customerName: review.customerName,
-      rating: review.rating,
-      comment: review.comment,
-      date: review.date,
-    })),
-  );
+    return NextResponse.json({
+      success: true,
+      data: reviews.map((review) => ({
+        id: review.id,
+        userName: review.user.name,
+        fieldName: review.field.name,
+        rating: review.rating,
+        comment: review.comment,
+        createdAt: review.createdAt,
+      })),
+    });
+  } catch (error) {
+    console.error("Error fetching reviews:", error);
+    return NextResponse.json(
+      { success: false, message: "Unable to fetch reviews." },
+      { status: 500 }
+    );
+  }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const customerName = normalizeText(body?.customerName);
-    const comment = normalizeText(body?.comment);
-    const rating = Number(body?.rating ?? 5);
+    const auth = requireAuth(request);
+    if (!auth.ok) {
+      return auth.response;
+    }
 
-    if (!customerName || !comment) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    const body = await request.json();
+    const fieldId = typeof body?.fieldId === "string" ? body.fieldId : "";
+    const rating = Number(body?.rating ?? 5);
+    const comment = typeof body?.comment === "string" ? body.comment.trim() : "";
+
+    if (!fieldId || !comment) {
+      return NextResponse.json(
+        { success: false, message: "Field ID and comment are required." },
+        { status: 400 }
+      );
     }
 
     if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
-      return NextResponse.json({ error: "Rating must be between 1 and 5" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "Rating must be between 1 and 5." },
+        { status: 400 }
+      );
     }
 
-    const date = new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+    // Check if field exists
+    const field = await prisma.field.findUnique({
+      where: { id: fieldId },
+      select: { id: true, name: true },
+    });
 
-    const created = await prisma.review.create({
+    if (!field) {
+      return NextResponse.json(
+        { success: false, message: "Field not found." },
+        { status: 404 }
+      );
+    }
+
+    // Check if user already reviewed this field
+    const existingReview = await prisma.review.findFirst({
+      where: {
+        userId: auth.user.sub,
+        fieldId,
+      },
+    });
+
+    if (existingReview) {
+      return NextResponse.json(
+        { success: false, message: "You have already reviewed this field." },
+        { status: 409 }
+      );
+    }
+
+    const review = await prisma.review.create({
       data: {
-        customerName,
+        userId: auth.user.sub,
+        fieldId,
         rating: Math.round(rating),
         comment,
-        date,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        field: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
 
     return NextResponse.json({
-      id: created.id,
-      customerName: created.customerName,
-      rating: created.rating,
-      comment: created.comment,
-      date: created.date,
+      success: true,
+      message: "Review created successfully.",
+      review: {
+        id: review.id,
+        userName: review.user.name,
+        fieldName: review.field.name,
+        rating: review.rating,
+        comment: review.comment,
+        createdAt: review.createdAt,
+      },
     });
-  } catch {
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  } catch (error) {
+    console.error("Error creating review:", error);
+    return NextResponse.json(
+      { success: false, message: "Unable to create review." },
+      { status: 500 }
+    );
   }
 }

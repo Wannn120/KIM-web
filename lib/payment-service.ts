@@ -52,6 +52,7 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
 
   const createData: {
     bookingId: string;
+    userId: string;
     transactionId: string;
     paymentMethod: PaymentMethod;
     amount: number;
@@ -61,6 +62,7 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
     paidAt?: Date;
   } = {
     bookingId: input.bookingId,
+    userId: booking.userId,
     transactionId: transaction.transactionId,
     paymentMethod: transaction.paymentMethod,
     amount: input.amount,
@@ -77,18 +79,15 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
 
   // If transaction is already successful, update booking status immediately
   if (transaction.status === "success") {
-    const booking = await prisma.booking.findUnique({ where: { id: input.bookingId } });
-    if (booking) {
-      await prisma.booking.update({ where: { id: input.bookingId }, data: { status: "confirmed" } });
-      await sendNotification("email-confirmation", {
-        bookingId: booking.id,
-        amount: createData.amount,
-        customerName: booking.customer,
-        fieldName: booking.fieldId,
-        startAt: booking.startAt.toISOString(),
-        endAt: booking.endAt.toISOString(),
-      });
-    }
+    await prisma.booking.update({ where: { id: input.bookingId }, data: { status: "confirmed" } });
+    await sendNotification("email-confirmation", {
+      bookingId: booking.id,
+      amount: createData.amount,
+      customerName: booking.customerName,
+      fieldName: booking.fieldId,
+      startAt: booking.bookingDate.toISOString(),
+      endAt: booking.bookingDate.toISOString(),
+    });
   }
 
   return transaction;

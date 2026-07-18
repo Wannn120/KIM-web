@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
     where: { id: auth.user.sub },
     select: {
       id: true,
+      username: true,
       name: true,
       email: true,
       phone: true,
