@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { UserMenu } from "@/components/user-menu";
 import { siteConfig } from "@/lib/site-config";
 
 export function SiteHeader() {
@@ -40,7 +39,6 @@ export function SiteHeader() {
           <Link href="/book" className="btn-primary hidden md:inline-flex md:px-3 md:py-1.5">
             Book a field
           </Link>
-          <UserMenu />
         </div>
       </div>
 

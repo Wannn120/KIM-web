@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { DemoPaymentProvider, PaymentMethod, PaymentStatus, PaymentTransactionInput, PaymentSimulationDetails } from "@/lib/payment-provider";
 import { BookingStatus } from "@/lib/booking-engine";
 import { sendNotification } from "@/lib/notifications";
+import { createMidtransTransaction } from "@/lib/midtrans";
 
 const paymentProvider = new DemoPaymentProvider();
 
@@ -19,36 +20,28 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
     throw new Error("Booking not found.");
   }
 
-  // Allow bypassing external gateway in non-production or when explicitly configured
-  const skipGateway = process.env.SKIP_PAYMENT_GATEWAY === "true" || process.env.MIDTRANS_IS_PRODUCTION === "false";
+  // Use Midtrans for payment processing
+  const midtransPayload = {
+    transaction_details: {
+      order_id: input.bookingId,
+      gross_amount: input.amount,
+    },
+    customer_details: {
+      first_name: input.customerName || "Guest",
+      email: input.email,
+      phone: input.phone,
+    },
+    item_details: [
+      {
+        id: booking.fieldId,
+        name: `Field booking`,
+        price: input.amount,
+        quantity: 1,
+      },
+    ],
+  };
 
-  let transaction:
-    | {
-        transactionId: string;
-        expiresAt: string;
-        paymentMethod: PaymentMethod;
-        amount: number;
-        status: PaymentStatus;
-        providerName: string;
-      }
-    | Awaited<ReturnType<typeof paymentProvider.createTransaction>>;
-
-  if (skipGateway) {
-    const now = new Date();
-    const expiresAt = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
-    const id = `OFFLINE-${now.getUTCFullYear()}${String(now.getUTCMonth() + 1).padStart(2, "0")}${String(now.getUTCDate()).padStart(2, "0")}-${Math.floor(Math.random() * 90000) + 10000}`;
-
-    transaction = {
-      transactionId: id,
-      expiresAt,
-      paymentMethod: input.paymentMethod,
-      amount: input.amount,
-      status: "pending",
-      providerName: "OfflineSimulator",
-    };
-  } else {
-    transaction = await paymentProvider.createTransaction(input);
-  }
+  const midtransResponse = await createMidtransTransaction(midtransPayload);
 
   const createData: {
     bookingId: string;
@@ -63,36 +56,27 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
   } = {
     bookingId: input.bookingId,
     userId: booking.userId,
-    transactionId: transaction.transactionId,
-    paymentMethod: transaction.paymentMethod,
+    transactionId: input.bookingId,
+    paymentMethod: input.paymentMethod as PaymentMethod,
     amount: input.amount,
-    status: transaction.status,
-    provider: transaction.providerName,
-    expiredAt: new Date(transaction.expiresAt),
+    status: "pending",
+    provider: "Midtrans",
+    expiredAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
   };
-
-  if (transaction.status === "success") {
-    createData.paidAt = new Date();
-  }
 
   await prisma.payment.create({ data: createData });
 
-  // If transaction is already successful, update booking status immediately
-  if (transaction.status === "success") {
-    await prisma.booking.update({ where: { id: input.bookingId }, data: { status: "confirmed" } });
-    await sendNotification("email-confirmation", {
-      bookingId: booking.id,
-      amount: createData.amount,
-      customerName: booking.customerName,
-      fieldName: booking.fieldId,
-      startAt: `${booking.bookingDate.toISOString().slice(0, 10)} ${booking.startTime}`,
-      endAt: `${booking.bookingDate.toISOString().slice(0, 10)} ${booking.endTime}`,
-      email: booking.customerEmail ?? undefined,
-      phone: booking.customerPhone,
-    });
-  }
-
-  return transaction;
+  // Return transaction with Midtrans snap URL
+  return {
+    transactionId: input.bookingId,
+    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    paymentMethod: input.paymentMethod as PaymentMethod,
+    amount: input.amount,
+    status: "pending",
+    providerName: "Midtrans",
+    snapUrl: midtransResponse.redirect_url,
+    snapToken: midtransResponse.token,
+  };
 }
 
 export async function getPaymentTransaction(transactionId: string) {

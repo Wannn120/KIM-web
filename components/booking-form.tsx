@@ -113,7 +113,6 @@ export function BookingForm({ fields }: { fields: Field[] }) {
       const resp = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({
           fieldId: selectedField.id,
           bookingDate: selectedDate,

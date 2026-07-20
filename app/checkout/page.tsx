@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatedCard } from "@/components/animated-card";
 
@@ -37,9 +37,9 @@ export default function CheckoutPage() {
   const searchParams = useSearchParams();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [profile, setProfile] = useState<{ name?: string; email?: string; phone?: string } | null>(null);
-  const [authChecked, setAuthChecked] = useState(false);
-  const [requiresLogin, setRequiresLogin] = useState(false);
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
 
   const fieldId = getSearchParam(searchParams.get("fieldId"));
   const fieldName = getSearchParam(searchParams.get("fieldName"));
@@ -47,52 +47,9 @@ export default function CheckoutPage() {
   const startTime = getSearchParam(searchParams.get("startTime"));
   const endTime = getSearchParam(searchParams.get("endTime"));
   const amount = Number(getSearchParam(searchParams.get("amount"), "0"));
-  const customerNameFromQuery = getSearchParam(searchParams.get("customerName"));
-
-  useEffect(() => {
-    let active = true;
-
-    fetch("/api/auth/me", { cache: "no-store", credentials: "include" })
-      .then(async (response) => {
-        if (!response.ok) {
-          return null;
-        }
-
-        const data = await response.json();
-        return data?.user ?? null;
-      })
-      .then((user) => {
-        if (!active) {
-          return;
-        }
-
-        if (user) {
-          setProfile(user);
-        } else {
-          setRequiresLogin(true);
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setRequiresLogin(true);
-        }
-      })
-      .finally(() => {
-        if (active) {
-          setAuthChecked(true);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const customerName = customerNameFromQuery || profile?.name || "Guest";
-  const customerEmail = profile?.email ?? "";
-  const customerPhone = profile?.phone ?? "";
 
   const hasValidBookingDetails = Boolean(fieldId && fieldName && bookingDate && startTime && endTime && amount > 0);
+  const hasValidCustomerInfo = Boolean(customerName.trim() && customerEmail.trim() && customerPhone.trim());
 
   const handleCheckout = async () => {
     if (!hasValidBookingDetails) {
@@ -100,22 +57,20 @@ export default function CheckoutPage() {
       return;
     }
 
+    if (!hasValidCustomerInfo) {
+      setError("Please fill in your name, email, and phone number.");
+      return;
+    }
+
     setSaving(true);
     setError(null);
 
     try {
-      if (requiresLogin) {
-        setError("Please sign in before confirming your booking.");
-        setSaving(false);
-        return;
-      }
-
-      // Validate slot again with backend to surface exact server reason before creating booking
+      // Validate slot again with backend
       try {
         const validateResp = await fetch("/api/bookings", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          credentials: "include",
           body: JSON.stringify({ fieldId, bookingDate, startTime, endTime, validateOnly: true }),
         });
 
@@ -131,10 +86,10 @@ export default function CheckoutPage() {
         return;
       }
 
+      // Create booking with guest customer info
       const response = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({
           fieldId,
           bookingDate,
@@ -151,14 +106,14 @@ export default function CheckoutPage() {
         throw new Error(result.message || "Unable to create booking.");
       }
 
+      // Create payment transaction
       const paymentResp = await fetch("/api/payments/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({
           bookingId: result.booking.id,
           amount,
-          paymentMethod: "Offline",
+          paymentMethod: "Midtrans",
           customerName,
           email: customerEmail,
           phone: customerPhone,
@@ -175,13 +130,19 @@ export default function CheckoutPage() {
           bookingDate: formatDate(bookingDate),
           bookingTime,
           customerName,
+          customerEmail,
         }).toString();
 
         router.push(`/payment?${query}`);
         return;
       }
 
-      router.push(`/booking-history`);
+      // Payment created successfully, redirect to payment page
+      if (paymentResult.snapUrl) {
+        window.location.href = paymentResult.snapUrl;
+      } else {
+        router.push("/booking-history");
+      }
     } catch (error) {
       setError((error as Error).message);
       setSaving(false);
@@ -195,7 +156,7 @@ export default function CheckoutPage() {
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Secure checkout</p>
           <h1 className="mt-3 text-4xl font-semibold text-white">Review your booking details</h1>
           <p className="mt-4 max-w-2xl text-lg text-[color:var(--muted)]">
-            Confirm the field, date, and time before moving to the payment gateway.
+            Confirm the field, date, and time, then enter your contact information to proceed to payment.
           </p>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -218,9 +179,44 @@ export default function CheckoutPage() {
         </div>
 
         <AnimatedCard className="p-8">
-          <h2 className="text-2xl font-semibold text-white">Payment summary</h2>
-          <div className="mt-6 space-y-4 text-sm text-[color:var(--muted)]">
-            <div className="flex justify-between"><span>Base price</span><span>Rp {amount.toLocaleString("id-ID")}</span></div>
+          <h2 className="text-2xl font-semibold text-white">Your contact information</h2>
+          <p className="mt-2 text-sm text-[color:var(--muted)]">Required for booking confirmation and payment receipt.</p>
+          
+          <div className="mt-6 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-[color:var(--muted)]">Name</label>
+              <input
+                type="text"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="Enter your full name"
+                className="mt-2 w-full rounded-3xl border border-white/10 bg-[color:var(--background)] px-4 py-3 text-white outline-none focus:border-[color:var(--accent)] placeholder:text-[color:var(--muted)]"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[color:var(--muted)]">Email</label>
+              <input
+                type="email"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+                placeholder="Enter your email"
+                className="mt-2 w-full rounded-3xl border border-white/10 bg-[color:var(--background)] px-4 py-3 text-white outline-none focus:border-[color:var(--accent)] placeholder:text-[color:var(--muted)]"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[color:var(--muted)]">Phone Number</label>
+              <input
+                type="tel"
+                value={customerPhone}
+                onChange={(e) => setCustomerPhone(e.target.value)}
+                placeholder="Enter your phone number"
+                className="mt-2 w-full rounded-3xl border border-white/10 bg-[color:var(--background)] px-4 py-3 text-white outline-none focus:border-[color:var(--accent)] placeholder:text-[color:var(--muted)]"
+              />
+            </div>
+          </div>
+
+          <div className="mt-8 space-y-4 border-t border-white/10 pt-8 text-sm text-[color:var(--muted)]">
+            <div className="flex justify-between"><span>Field booking</span><span>Rp {amount.toLocaleString("id-ID")}</span></div>
           </div>
 
           {error ? (
@@ -229,25 +225,17 @@ export default function CheckoutPage() {
             </p>
           ) : null}
 
-          {requiresLogin ? (
-            <button
-              type="button"
-              onClick={() => router.push("/login")}
-              className="mt-8 btn-primary w-full py-4 text-lg"
-            >
-              Sign in to continue
-            </button>
-          ) : (
-            <button
-              onClick={handleCheckout}
-              disabled={saving || !hasValidBookingDetails || !authChecked}
-              className="mt-8 btn-primary w-full py-4 text-lg"
-            >
-              {saving ? "Reserving booking…" : "Confirm and pay"}
-            </button>
-          )}
+          <button
+            onClick={handleCheckout}
+            disabled={saving || !hasValidBookingDetails || !hasValidCustomerInfo}
+            className="mt-8 btn-primary w-full py-4 text-lg disabled:opacity-60"
+          >
+            {saving ? "Processing…" : "Confirm and pay"}
+          </button>
         </AnimatedCard>
       </div>
+    </main>
+  );
     </main>
   );
 }
