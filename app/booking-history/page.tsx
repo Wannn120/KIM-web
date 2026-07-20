@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AnimatedCard } from "@/components/animated-card";
 import { formatCurrency } from "@/utils/formatting";
 

@@ -13,11 +13,14 @@ export async function POST(request: Request) {
       phone: typeof body?.phone === "string" ? body.phone : undefined,
     });
 
+    const snapUrl = typeof result === 'object' && result !== null && 'snapUrl' in result ? (result as Record<string, unknown>).snapUrl : null;
+    const snapToken = typeof result === 'object' && result !== null && 'snapToken' in result ? (result as Record<string, unknown>).snapToken : null;
+    
     return NextResponse.json({
       success: true,
       transaction: result,
-      snapUrl: (result as any).snapUrl,
-      snapToken: (result as any).snapToken,
+      snapUrl,
+      snapToken,
     }, { status: 201 });
   } catch (error) {
     console.error("Payment creation error:", error);

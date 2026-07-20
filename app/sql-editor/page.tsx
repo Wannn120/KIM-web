@@ -236,11 +236,11 @@ ORDER BY booking_date DESC;`,
             <div>
               <h3 className="text-lg font-semibold text-white">Key Columns</h3>
               <div className="mt-3 space-y-2 text-sm text-[color:var(--muted)]">
-                <p><strong className="text-white">booking.customer_name</strong> - Guest's name</p>
-                <p><strong className="text-white">booking.customer_email</strong> - Guest's email for invoices</p>
-                <p><strong className="text-white">booking.customer_phone</strong> - Guest's phone for contact</p>
-                <p><strong className="text-white">payment.status</strong> - pending, success, failed, refunded</p>
-                <p><strong className="text-white">payment.provider</strong> - Always "Midtrans" for this app</p>
+                <p><strong className="text-white">booking.customer_name</strong> &ndash; Guest&apos;s name</p>
+                <p><strong className="text-white">booking.customer_email</strong> &ndash; Guest&apos;s email for invoices</p>
+                <p><strong className="text-white">booking.customer_phone</strong> &ndash; Guest&apos;s phone for contact</p>
+                <p><strong className="text-white">payment.status</strong> &ndash; pending, success, failed, refunded</p>
+                <p><strong className="text-white">payment.provider</strong> &ndash; Always &quot;Midtrans&quot; for this app</p>
               </div>
             </div>
 
