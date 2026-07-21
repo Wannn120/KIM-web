@@ -20,8 +20,8 @@ export function SiteFooter() {
             <ul className="space-y-2">
               <li><a href="/fields" className="transition hover:text-[color:var(--accent)]">Fields</a></li>
               <li><a href="/book" className="transition hover:text-[color:var(--accent)]">Book now</a></li>
-              <li><a href="/payment" className="transition hover:text-[color:var(--accent)]">Payment</a></li>
-              <li><a href="/admin" className="transition hover:text-[color:var(--accent)]">Admin</a></li>
+              <li><a href="/booking-history" className="transition hover:text-[color:var(--accent)]">Booking History</a></li>
+              <li><a href="/sql-editor" className="transition hover:text-[color:var(--accent)]">Admin</a></li>
             </ul>
           </div>
           <div>

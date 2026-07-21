@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
-import { clearSecureCookie } from "@/lib/security";
 
 export async function POST() {
-  const response = NextResponse.json({ success: true, message: "Logged out." });
-  clearSecureCookie(response, "auth-token");
-  return response;
+  return NextResponse.json({ success: false, message: "Logout is disabled in guest-only booking mode." }, { status: 404 });
 }

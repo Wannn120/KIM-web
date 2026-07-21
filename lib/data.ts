@@ -51,7 +51,7 @@ export async function getReviews(): Promise<import("@/types").Review[]> {
       createdAt: "desc",
     },
     include: {
-      user: {
+      field: {
         select: {
           name: true,
         },
@@ -61,7 +61,7 @@ export async function getReviews(): Promise<import("@/types").Review[]> {
 
   return records.map((r) => ({
     id: r.id,
-    customerName: r.user?.name ?? "Guest",
+    customerName: r.customerName,
     rating: Number(r.rating),
     comment: r.comment,
     date: r.createdAt.toISOString(),

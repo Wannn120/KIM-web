@@ -13,7 +13,6 @@ export interface BookingRecord {
 }
 
 interface CreateBookingInput {
-  userId: string;
   fieldId: string;
   bookingDate: string;
   startTime: string;
@@ -100,10 +99,10 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingR
   const endTime = input.endTime;
   const timezone = input.timezone ?? "UTC";
 
-  if (!input.userId) {
+  if (!input.customerName || !input.customerPhone) {
     return {
       success: false,
-      message: "Missing customer identifier.",
+      message: "Customer name and phone number are required.",
       statusCode: 400,
     };
   }
@@ -155,7 +154,6 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingR
 
   const record = await prisma.booking.create({
     data: {
-      userId: input.userId,
       fieldId: input.fieldId,
       bookingDate,
       startTime,

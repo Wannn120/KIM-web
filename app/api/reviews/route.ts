@@ -1,20 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/auth";
 
 export async function GET() {
   try {
     const reviews = await prisma.review.findMany({
       include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
         field: {
           select: {
-            id: true,
             name: true,
           },
         },
@@ -29,9 +21,8 @@ export async function GET() {
       success: true,
       data: reviews.map((review) => ({
         id: review.id,
-        customerName: review.user.name,
-        userName: review.user.name,
-        fieldName: review.field.name,
+        customerName: review.customerName,
+        fieldName: review.field?.name ?? null,
         rating: review.rating,
         comment: review.comment,
         date: review.createdAt.toISOString(),
@@ -48,19 +39,16 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const auth = requireAuth(request);
-    if (!auth.ok) {
-      return auth.response;
-    }
-
     const body = await request.json();
-    const fieldId = typeof body?.fieldId === "string" ? body.fieldId : "";
+    const customerName = typeof body?.customerName === "string" ? body.customerName.trim() : "";
+    const fieldId = typeof body?.fieldId === "string" ? body.fieldId : undefined;
+    const bookingId = typeof body?.bookingId === "string" ? body.bookingId : undefined;
     const rating = Number(body?.rating ?? 5);
     const comment = typeof body?.comment === "string" ? body.comment.trim() : "";
 
-    if (!fieldId || !comment) {
+    if (!customerName || !comment) {
       return NextResponse.json(
-        { success: false, message: "Field ID and comment are required." },
+        { success: false, message: "Customer name and comment are required." },
         { status: 400 }
       );
     }
@@ -72,51 +60,45 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if field exists
-    const field = await prisma.field.findUnique({
-      where: { id: fieldId },
-      select: { id: true, name: true },
-    });
+    if (fieldId) {
+      const field = await prisma.field.findUnique({
+        where: { id: fieldId },
+        select: { id: true },
+      });
 
-    if (!field) {
-      return NextResponse.json(
-        { success: false, message: "Field not found." },
-        { status: 404 }
-      );
+      if (!field) {
+        return NextResponse.json(
+          { success: false, message: "Field not found." },
+          { status: 404 }
+        );
+      }
     }
 
-    // Check if user already reviewed this field
-    const existingReview = await prisma.review.findFirst({
-      where: {
-        userId: auth.user.sub,
-        fieldId,
-      },
-    });
+    if (bookingId) {
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        select: { id: true },
+      });
 
-    if (existingReview) {
-      return NextResponse.json(
-        { success: false, message: "You have already reviewed this field." },
-        { status: 409 }
-      );
+      if (!booking) {
+        return NextResponse.json(
+          { success: false, message: "Booking not found." },
+          { status: 404 }
+        );
+      }
     }
 
     const review = await prisma.review.create({
       data: {
-        userId: auth.user.sub,
+        customerName,
         fieldId,
+        bookingId,
         rating: Math.round(rating),
         comment,
       },
       include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
         field: {
           select: {
-            id: true,
             name: true,
           },
         },
@@ -128,9 +110,8 @@ export async function POST(request: NextRequest) {
       message: "Review created successfully.",
       review: {
         id: review.id,
-        customerName: review.user.name,
-        userName: review.user.name,
-        fieldName: review.field.name,
+        customerName: review.customerName,
+        fieldName: review.field?.name ?? null,
         rating: review.rating,
         comment: review.comment,
         date: review.createdAt.toISOString(),

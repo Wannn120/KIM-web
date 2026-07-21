@@ -45,7 +45,7 @@ CREATE TABLE booking (
   -- Customer info (guest only - no login required)
   customer_name VARCHAR(255) NOT NULL,
   customer_phone VARCHAR(20) NOT NULL,
-  customer_email VARCHAR(255),
+  customer_email VARCHAR(255) NOT NULL,
   
   -- Status tracking
   status VARCHAR(50) DEFAULT 'pending', -- pending, confirmed, completed, cancelled
@@ -100,6 +100,28 @@ CREATE TABLE invoice (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- ==================== REVIEW & RATING ====================
+CREATE TABLE review (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  field_id UUID REFERENCES field(id) ON DELETE SET NULL,
+  booking_id UUID REFERENCES booking(id) ON DELETE CASCADE,
+  customer_name VARCHAR(255) NOT NULL,
+  rating INTEGER NOT NULL,
+  comment TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==================== ADMIN SETTINGS ====================
+CREATE TABLE admin_setting (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  key VARCHAR(100) UNIQUE NOT NULL,
+  value TEXT NOT NULL,
+  description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- ==================== AUDIT LOG ====================
 CREATE TABLE audit_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -120,6 +142,10 @@ CREATE INDEX IF NOT EXISTS idx_booking_customer_phone ON booking(customer_phone)
 CREATE INDEX IF NOT EXISTS idx_booking_booking_date ON booking(booking_date);
 CREATE INDEX IF NOT EXISTS idx_booking_status ON booking(status);
 CREATE INDEX IF NOT EXISTS idx_booking_field_id ON booking(field_id);
+
+CREATE INDEX IF NOT EXISTS idx_review_field_id ON review(field_id);
+CREATE INDEX IF NOT EXISTS idx_review_booking_id ON review(booking_id);
+CREATE INDEX IF NOT EXISTS idx_admin_setting_key ON admin_setting(key);
 
 CREATE INDEX IF NOT EXISTS idx_payment_booking_id ON payment(booking_id);
 CREATE INDEX IF NOT EXISTS idx_payment_transaction_id ON payment(transaction_id);
@@ -190,6 +216,20 @@ VALUES
   ('880e8400-e29b-41d4-a716-446655440000', 'INV-20260720-001', '660e8400-e29b-41d4-a716-446655440000', '770e8400-e29b-41d4-a716-446655440000', 500000, 0, 0, 500000, 'paid', NOW(), NOW()),
   ('880e8400-e29b-41d4-a716-446655440001', 'INV-20260720-002', '660e8400-e29b-41d4-a716-446655440001', '770e8400-e29b-41d4-a716-446655440001', 400000, 0, 0, 400000, 'issued', NULL, NOW()),
   ('880e8400-e29b-41d4-a716-446655440002', 'INV-20260720-003', '660e8400-e29b-41d4-a716-446655440002', '770e8400-e29b-41d4-a716-446655440002', 500000, 0, 0, 500000, 'paid', NOW(), NOW());
+
+-- Insert review data
+INSERT INTO review (id, field_id, booking_id, customer_name, rating, comment, created_at, updated_at)
+VALUES
+  ('a70e8400-e29b-41d4-a716-446655440000', '550e8400-e29b-41d4-a716-446655440000', '660e8400-e29b-41d4-a716-446655440000', 'Ahmad Rahman', 5, 'Lapangan bersih, proses booking cepat, dan pelayanan ramah.', NOW(), NOW()),
+  ('a70e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440001', NULL, 'Nina Sari', 4, 'Fasilitas bagus dan suasana nyaman. Parkir bisa ditingkatkan.', NOW(), NOW()),
+  ('a70e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655440000', '660e8400-e29b-41d4-a716-446655440002', 'Bima Kusuma', 5, 'Cocok untuk latihan tim kecil, booking mudah dan transparan.', NOW(), NOW());
+
+-- Insert admin settings
+INSERT INTO admin_setting (id, key, value, description, created_at, updated_at)
+VALUES
+  ('b80e8400-e29b-41d4-a716-446655440000', 'site_title', 'Klaten International Minisoccer', 'Nama utama situs web', NOW(), NOW()),
+  ('b80e8400-e29b-41d4-a716-446655440001', 'contact_email', 'info@klatenminisoccer.id', 'Email kontak utama', NOW(), NOW()),
+  ('b80e8400-e29b-41d4-a716-446655440002', 'contact_phone', '+62 821-1234-5678', 'Nomor telepon kontak utama', NOW(), NOW());
 
 -- Insert audit logs
 INSERT INTO audit_log (id, action, entity, entity_id, changes, reference_email, created_at)

@@ -6,7 +6,6 @@ import type { Review } from "@/types";
 type RawReview = {
   id?: string;
   customerName?: string;
-  userName?: string;
   rating?: number;
   comment?: string;
   date?: string;
@@ -35,7 +34,7 @@ export function ReviewSection({ initialReviews }: { initialReviews: Review[] }) 
           setReviews(
             result.data.map((review: RawReview) => ({
               ...review,
-              customerName: review.customerName ?? review.userName ?? "Guest",
+              customerName: review.customerName ?? "Guest",
               rating: review.rating ?? 5,
               comment: review.comment ?? "",
               date: review.date ?? review.createdAt ?? "",
@@ -48,32 +47,6 @@ export function ReviewSection({ initialReviews }: { initialReviews: Review[] }) 
     }
 
     fetchReviews();
-  }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadUser() {
-      try {
-        const res = await fetch("/api/auth/me", { credentials: "include" });
-        if (!res.ok) return;
-
-        const result = await res.json();
-        if (!isMounted) return;
-
-        if (result?.success && result?.user?.name) {
-          setName(result.user.name);
-        }
-      } catch {
-        // ignore if not logged in or request fails
-      }
-    }
-
-    loadUser();
-
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
   const saveReviews = (nextReviews: Review[]) => {
@@ -107,7 +80,7 @@ export function ReviewSection({ initialReviews }: { initialReviews: Review[] }) 
         const nextReviews = [
           {
             ...createdReview,
-            customerName: createdReview.customerName ?? createdReview.userName ?? "Guest",
+            customerName: createdReview.customerName ?? "Guest",
             date: createdReview.date ?? createdReview.createdAt ?? "",
           },
           ...reviews,

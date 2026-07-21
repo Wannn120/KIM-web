@@ -20,7 +20,6 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
     throw new Error("Booking not found.");
   }
 
-  // Use Midtrans for payment processing
   const midtransPayload = {
     transaction_details: {
       order_id: input.bookingId,
@@ -45,7 +44,6 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
 
   const createData: {
     bookingId: string;
-    userId: string;
     transactionId: string;
     paymentMethod: PaymentMethod;
     amount: number;
@@ -55,18 +53,16 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
     paidAt?: Date;
   } = {
     bookingId: input.bookingId,
-    userId: booking.userId,
     transactionId: input.bookingId,
     paymentMethod: input.paymentMethod as PaymentMethod,
     amount: input.amount,
     status: "pending",
     provider: "Midtrans",
-    expiredAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+    expiredAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
   };
 
   await prisma.payment.create({ data: createData });
 
-  // Return transaction with Midtrans snap URL
   return {
     transactionId: input.bookingId,
     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),

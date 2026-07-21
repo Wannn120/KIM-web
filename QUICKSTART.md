@@ -21,7 +21,7 @@
 - [x] Updated .env.example with Midtrans credentials
 
 ### 4. Database Schema
-- [x] Created guest-booking-schema.sql file
+- [x] Created `prisma/main table.sql` canonical schema file
 - [x] Simplified schema (removed user auth fields)
 - [x] Added sample data and views
 - [x] Included indexes for performance
@@ -61,7 +61,7 @@ npx prisma migrate deploy
 npx prisma db seed
 
 # Option B: Using direct SQL
-psql -U username -d dbname -f prisma/guest-booking-schema.sql
+psql -U username -d dbname -f prisma/main table.sql
 ```
 
 ### Step 3: Start Development Server

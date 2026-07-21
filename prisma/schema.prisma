@@ -7,195 +7,141 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ==================== USER & AUTHENTICATION ====================
-model User {
-  id            String   @id @default(uuid())
-  username      String   @unique
-  email         String   @unique
-  passwordHash  String
-  name          String
-  phone         String   @unique
-  avatar        String?
-  profileStatus String   @default("incomplete") // incomplete, complete
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  // Relations
-  bookings      Booking[]
-  payments      Payment[]
-  reviews       Review[]
-  invoices      Invoice[]
-  auditLogs     AuditLog[]
-}
-
-// ==================== FIELD MANAGEMENT ====================
 model Field {
-  id          String   @id @default(uuid())
-  name        String
-  location    String
-  description String?
-  price       Int      // Price per hour in IDR
-  type        String   // 5-aside, 7-aside, futsal, etc
-  size        String   // Small, Medium, Large
-  capacity    Int      // Number of players
-  rating      Float    @default(0)
-  imageUrl    String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id          String   @id @default(uuid()) @map("id")
+  name        String   @map("name")
+  location    String   @map("location")
+  description String?  @map("description")
+  price       Int      @map("price")
+  type        String   @map("type")
+  size        String   @map("size")
+  capacity    Int      @map("capacity")
+  rating      Float    @default(0) @map("rating")
+  imageUrl    String?  @map("image_url")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
-  // Relations
   bookings    Booking[]
   schedules   FieldSchedule[]
   reviews     Review[]
+
+  @@map("field")
 }
 
-// ==================== FIELD SCHEDULE & AVAILABILITY ====================
 model FieldSchedule {
-  id        String   @id @default(uuid())
-  fieldId   String
-  field     Field    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
-  date      DateTime // Specific date
-  startTime String   // HH:mm format
-  endTime   String   // HH:mm format
-  isAvailable Boolean @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(uuid()) @map("id")
+  fieldId     String   @map("field_id")
+  field       Field    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  date        DateTime @map("date")
+  startTime   String   @map("start_time")
+  endTime     String   @map("end_time")
+  isAvailable Boolean  @default(true) @map("is_available")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@unique([fieldId, date, startTime])
+  @@map("field_schedule")
 }
 
-// ==================== BOOKING ====================
 model Booking {
-  id           String   @id @default(uuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  fieldId      String
-  field        Field    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
-  
-  // Booking details
-  bookingDate  DateTime // The date the field is booked for
-  startTime    String   // HH:mm format
-  endTime      String   // HH:mm format
-  durationHours Int    // Number of hours
-  totalPrice   Int      // Total price in IDR
-  
-  // Customer info
-  customerName String
-  customerPhone String
-  customerEmail String?
-  
-  // Status tracking
-  status       String   @default("pending") // pending, confirmed, active, completed, cancelled
-  notes        String?
-  
-  // Timestamps
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
-  // Relations
-  payments     Payment[]
-  invoice      Invoice?
+  id            String   @id @default(uuid()) @map("id")
+  fieldId       String   @map("field_id")
+  field         Field    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  bookingDate   DateTime @map("booking_date")
+  startTime     String   @map("start_time")
+  endTime       String   @map("end_time")
+  durationHours Int      @map("duration_hours")
+  totalPrice    Int      @map("total_price")
+  customerName  String   @map("customer_name")
+  customerPhone String   @map("customer_phone")
+  customerEmail String   @map("customer_email")
+  status        String   @default("pending") @map("status")
+  notes         String?  @map("notes")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  payments      Payment[]
+  invoice       Invoice?
+  reviews       Review[]
+
+  @@map("booking")
 }
 
-// ==================== PAYMENT & TRANSACTION ====================
 model Payment {
-  id              String   @id @default(uuid())
-  bookingId       String
-  booking         Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Transaction details
-  transactionId   String   @unique
-  amount          Int      // Amount in IDR
-  paymentMethod   String   // Transfer Bank, E-Wallet (GoPay, Dana, etc), Virtual Account
-  provider        String   // BCA, BNI, Mandiri, GoPay, Dana, OVO, etc
-  
-  // Status
-  status          String   @default("pending") // pending, success, failed, cancelled, refunded
-  
-  // Proof of payment
-  proofImageUrl   String?  // URL to payment proof image
-  proofFileName   String?
-  
-  // Timestamps
-  paidAt          DateTime?
-  expiredAt       DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  // Relations
-  invoice         Invoice?
+  id            String   @id @default(uuid()) @map("id")
+  bookingId     String   @map("booking_id")
+  booking       Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  transactionId String   @unique @map("transaction_id")
+  amount        Int      @map("amount")
+  paymentMethod String   @default("Midtrans") @map("payment_method")
+  provider      String   @default("Midtrans") @map("provider")
+  status        String   @default("pending") @map("status")
+  paidAt        DateTime? @map("paid_at")
+  expiredAt     DateTime? @map("expired_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  invoice       Invoice?
+
+  @@map("payment")
 }
 
-// ==================== INVOICE & RECEIPT ====================
 model Invoice {
-  id           String   @id @default(uuid())
-  invoiceNumber String  @unique
-  bookingId    String   @unique
-  booking      Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  paymentId    String   @unique
-  payment      Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
-  
-  // Invoice details
-  subtotal     Int
-  tax          Int      @default(0)
-  discount     Int      @default(0)
-  total        Int
-  
-  // Status
-  status       String   @default("issued") // issued, paid, cancelled
-  
-  // Timestamps
-  issuedAt     DateTime @default(now())
-  paidAt       DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String   @id @default(uuid()) @map("id")
+  invoiceNumber String   @unique @map("invoice_number")
+  bookingId     String   @unique @map("booking_id")
+  booking       Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  paymentId     String   @unique @map("payment_id")
+  payment       Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  subtotal      Int      @map("subtotal")
+  tax           Int      @default(0) @map("tax")
+  discount      Int      @default(0) @map("discount")
+  total         Int      @map("total")
+  status        String   @default("issued") @map("status")
+  issuedAt      DateTime @default(now()) @map("issued_at")
+  paidAt        DateTime? @map("paid_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("invoice")
 }
 
-// ==================== REVIEW & RATING ====================
 model Review {
-  id           String   @id @default(uuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  fieldId      String
-  field        Field    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
-  bookingId    String?  // Optional: link to specific booking
-  
-  rating       Int      // 1-5 stars
-  comment      String
-  
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
-  @@unique([userId, fieldId])
+  id           String   @id @default(uuid()) @map("id")
+  fieldId      String?  @map("field_id")
+  field        Field?   @relation(fields: [fieldId], references: [id], onDelete: SetNull)
+  bookingId    String?  @map("booking_id")
+  booking      Booking? @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  customerName String   @map("customer_name")
+  rating       Int      @map("rating")
+  comment      String   @map("comment")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("review")
 }
 
-// ==================== AUDIT LOG ====================
 model AuditLog {
-  id          String   @id @default(uuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  action      String   // login, register, booking_created, payment_made, profile_updated, etc
-  entity      String   // User, Booking, Payment, etc
-  entityId    String
-  changes     String?  // JSON string of what changed
-  ipAddress   String?
-  userAgent   String?
-  
-  createdAt   DateTime @default(now())
+  id             String   @id @default(uuid()) @map("id")
+  action         String   @map("action")
+  entity         String   @map("entity")
+  entityId       String   @map("entity_id")
+  changes        String?  @map("changes")
+  ipAddress      String?  @map("ip_address")
+  referenceEmail String?  @map("reference_email")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@map("audit_log")
 }
 
-// ==================== ADMIN SETTINGS ====================
 model AdminSetting {
-  id             String   @id @default(uuid())
-  key            String   @unique
-  value          String
-  description    String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id          String   @id @default(uuid()) @map("id")
+  key         String   @unique @map("key")
+  value       String   @map("value")
+  description String?  @map("description")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("admin_setting")
 }

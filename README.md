@@ -66,7 +66,7 @@ npx prisma db seed
 
 ### Option 2: Using Direct SQL
 ```bash
-psql -U username -d dbname -f prisma/guest-booking-schema.sql
+psql -U username -d dbname -f prisma/main\ table.sql
 ```
 
 ## Configuration

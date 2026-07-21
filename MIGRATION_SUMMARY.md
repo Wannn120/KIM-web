@@ -21,7 +21,7 @@ The Mini Soccer application has been successfully converted from an authenticati
   - `customer_phone` - For contact & SMS notifications
 - **Files Changed**: 
   - `prisma/schema.prisma` - Updated Prisma schema
-  - `prisma/guest-booking-schema.sql` - New complete SQL schema for direct database setup
+  - `prisma/main table.sql` - New complete SQL schema for direct database setup
 
 ### 3. Booking Workflow - REDESIGNED ✅
 **Before (Auth-based):**
@@ -132,7 +132,7 @@ The Mini Soccer application has been successfully converted from an authenticati
 ### Files Created
 | File | Purpose |
 |------|---------|
-| `prisma/guest-booking-schema.sql` | Complete SQL schema for direct database setup |
+| `prisma/main table.sql` | Complete SQL schema for direct database setup |
 | `app/sql-editor/page.tsx` | SQL query editor interface |
 | `app/api/admin/query/route.ts` | Query execution endpoint |
 | `SQL_SCHEMA_GUIDE.md` | Database schema documentation |
@@ -156,8 +156,8 @@ MIDTRANS_CLIENT_KEY=Mid-client-xxxxx
 ### 2. Database Migration
 Option A - Using provided SQL file:
 ```sql
--- Run prisma/guest-booking-schema.sql directly
-psql -U username -d dbname -f prisma/guest-booking-schema.sql
+-- Run prisma/main table.sql directly
+psql -U username -d dbname -f prisma/main table.sql
 ```
 
 Option B - Using Prisma:

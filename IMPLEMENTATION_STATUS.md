@@ -149,7 +149,7 @@ GET    /api/admin/audit-logs      - View audit logs
 - Invoice generation for payment receipts
 - Audit logging for all booking actions
 
-**Schema File:** `prisma/guest-booking-schema.sql`
+**Schema File:** `prisma/main table.sql`
 
 ---
 
