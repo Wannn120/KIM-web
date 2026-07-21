@@ -1,3 +1,18 @@
+-- ==================== DROP EXISTING TABLES ====================
+-- Drop tables dalam urutan reverse dependencies
+DROP VIEW IF EXISTS field_availability CASCADE;
+DROP VIEW IF EXISTS daily_revenue CASCADE;
+DROP VIEW IF EXISTS guest_booking_history CASCADE;
+
+DROP TABLE IF EXISTS invoice CASCADE;
+DROP TABLE IF EXISTS review CASCADE;
+DROP TABLE IF EXISTS payment CASCADE;
+DROP TABLE IF EXISTS booking CASCADE;
+DROP TABLE IF EXISTS field_schedule CASCADE;
+DROP TABLE IF EXISTS admin_setting CASCADE;
+DROP TABLE IF EXISTS audit_log CASCADE;
+DROP TABLE IF EXISTS field CASCADE;
+
 -- ==================== FIELD MANAGEMENT ====================
 CREATE TABLE field (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
