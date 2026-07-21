@@ -27,8 +27,20 @@ async function loadReviews() {
 }
 
 export default async function Home() {
-  const fields = await loadFields();
-  const reviews = await loadReviews();
+  let fields = [];
+  let reviews = [];
+  
+  try {
+    fields = await loadFields();
+  } catch (error) {
+    console.error('❌ Failed to load fields:', error);
+  }
+  
+  try {
+    reviews = await loadReviews();
+  } catch (error) {
+    console.error('❌ Failed to load reviews:', error);
+  }
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "SportsActivityLocation",
