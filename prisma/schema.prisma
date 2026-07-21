@@ -55,7 +55,7 @@ model Booking {
   totalPrice    Int      @map("total_price")
   customerName  String   @map("customer_name")
   customerPhone String   @map("customer_phone")
-  customerEmail String   @map("customer_email")
+  customerEmail String?  @map("customer_email")
   status        String   @default("pending") @map("status")
   notes         String?  @map("notes")
   createdAt     DateTime @default(now()) @map("created_at")
