@@ -35,8 +35,8 @@ CREATE TABLE field_schedule (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   field_id UUID NOT NULL REFERENCES field(id) ON DELETE CASCADE,
   date DATE NOT NULL,
-  start_time TIME NOT NULL, -- HH:mm format
-  end_time TIME NOT NULL, -- HH:mm format
+  start_time VARCHAR(10) NOT NULL, -- HH:mm format
+  end_time VARCHAR(10) NOT NULL, -- HH:mm format
   is_available BOOLEAN DEFAULT true,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -52,15 +52,15 @@ CREATE TABLE booking (
   
   -- Booking details
   booking_date DATE NOT NULL,
-  start_time TIME NOT NULL, -- HH:mm format
-  end_time TIME NOT NULL, -- HH:mm format
+  start_time VARCHAR(10) NOT NULL, -- HH:mm format
+  end_time VARCHAR(10) NOT NULL, -- HH:mm format
   duration_hours INTEGER NOT NULL, -- Number of hours
   total_price INTEGER NOT NULL, -- Total price in IDR
   
   -- Customer info (guest only - no login required)
   customer_name VARCHAR(255) NOT NULL,
   customer_phone VARCHAR(20) NOT NULL,
-  customer_email VARCHAR(255) NOT NULL,
+  customer_email VARCHAR(255),
   
   -- Status tracking
   status VARCHAR(50) DEFAULT 'pending', -- pending, confirmed, completed, cancelled
@@ -198,25 +198,25 @@ FROM field f
 CROSS JOIN generate_series(1, 7) AS d
 CROSS JOIN (
   SELECT * FROM (VALUES
-    ('08:00'::time, '09:00'::time),
-    ('09:00'::time, '10:00'::time),
-    ('10:00'::time, '11:00'::time),
-    ('15:00'::time, '16:00'::time),
-    ('16:00'::time, '17:00'::time),
-    ('17:00'::time, '18:00'::time),
-    ('18:00'::time, '19:00'::time),
-    ('19:00'::time, '20:00'::time),
-    ('20:00'::time, '21:00'::time),
-    ('21:00'::time, '22:00'::time)
+    ('08:00', '09:00'),
+    ('09:00', '10:00'),
+    ('10:00', '11:00'),
+    ('15:00', '16:00'),
+    ('16:00', '17:00'),
+    ('17:00', '18:00'),
+    ('18:00', '19:00'),
+    ('19:00', '20:00'),
+    ('20:00', '21:00'),
+    ('21:00', '22:00')
   ) AS times(start_time, end_time)
 ) AS times;
 
 -- Insert sample bookings (guest bookings)
 INSERT INTO booking (id, field_id, booking_date, start_time, end_time, duration_hours, total_price, customer_name, customer_phone, customer_email, status)
 VALUES
-  ('660e8400-e29b-41d4-a716-446655440000', '550e8400-e29b-41d4-a716-446655440000', CURRENT_DATE + 1, '18:00'::time, '20:00'::time, 2, 500000, 'Ahmad Rahman', '08123456789', 'ahmad@email.com', 'confirmed'),
-  ('660e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440001', CURRENT_DATE + 1, '19:00'::time, '21:00'::time, 2, 400000, 'Budi Santoso', '08987654321', 'budi@email.com', 'pending'),
-  ('660e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655440000', CURRENT_DATE + 2, '17:00'::time, '19:00'::time, 2, 500000, 'Citra Dewi', '08765432109', 'citra@email.com', 'confirmed');
+  ('660e8400-e29b-41d4-a716-446655440000', '550e8400-e29b-41d4-a716-446655440000', CURRENT_DATE + 1, '18:00', '20:00', 2, 500000, 'Ahmad Rahman', '08123456789', 'ahmad@email.com', 'confirmed'),
+  ('660e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440001', CURRENT_DATE + 1, '19:00', '21:00', 2, 400000, 'Budi Santoso', '08987654321', 'budi@email.com', 'pending'),
+  ('660e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655440000', CURRENT_DATE + 2, '17:00', '19:00', 2, 500000, 'Citra Dewi', '08765432109', 'citra@email.com', 'confirmed');
 
 -- Insert sample payments (Midtrans)
 INSERT INTO payment (id, booking_id, transaction_id, amount, payment_method, provider, status, paid_at, created_at)
