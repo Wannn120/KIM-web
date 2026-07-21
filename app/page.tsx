@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { Field, Review } from "@/types";
 import { HeroSection } from "@/components/hero-section";
 import { ReviewSection } from "@/components/review-section";
 import { FieldCard } from "@/components/field-card";
@@ -27,8 +28,8 @@ async function loadReviews() {
 }
 
 export default async function Home() {
-  let fields = [];
-  let reviews = [];
+  let fields: Field[] = [];
+  let reviews: Review[] = [];
   
   try {
     fields = await loadFields();
