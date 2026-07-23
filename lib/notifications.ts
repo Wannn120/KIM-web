@@ -52,7 +52,7 @@ function buildMessage(event: NotificationEvent, payload: NotificationPayload) {
     case "email-confirmation":
       return {
         channel: "email" as const,
-        message: `Email sent to ${payload.email ?? "customer@example.com"}: Hi ${customerName}, your booking ${bookingId} has been confirmed for ${payload.fieldName ?? "the selected field"}.`,
+        message: `Hi ${customerName}, your booking ${bookingId} has been confirmed for ${payload.fieldName ?? "the selected field"}.`,
       };
     case "whatsapp-confirmation":
       return {
@@ -116,11 +116,23 @@ async function sendEmail(event: NotificationEvent, payload: NotificationPayload)
   const { message } = buildMessage(event, payload);
   const subject = getEmailSubject(event);
 
+  const body = event === "email-confirmation"
+    ? `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#0f172a;">
+        <h2 style="margin-bottom:12px;">Booking Confirmed</h2>
+        <p>${message}</p>
+        <p><strong>Customer:</strong> ${payload.customerName ?? "Guest"}</p>
+        <p><strong>Field:</strong> ${payload.fieldName ?? "N/A"}</p>
+        <p><strong>Schedule:</strong> ${payload.startAt ?? "N/A"} - ${payload.endAt ?? "N/A"}</p>
+        <p><strong>Amount:</strong> Rp ${payload.amount?.toLocaleString("id-ID") ?? "0"}</p>
+        <p><strong>Booking ID:</strong> ${payload.bookingId ?? "N/A"}</p>
+      </div>`
+    : `<p>${message}</p>`;
+
   await resendClient.emails.send({
     from,
     to,
     subject,
-    html: `<p>${message}</p>`,
+    html: body,
   });
 }
 

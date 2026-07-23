@@ -6,6 +6,23 @@ import { createMidtransTransaction } from "@/lib/midtrans";
 
 const paymentProvider = new DemoPaymentProvider();
 
+function normalizePaymentStatus(status: string): PaymentStatus {
+  const lower = status.toLowerCase();
+
+  if (["capture", "settlement", "success"].includes(lower)) return "success";
+  if (["deny", "failure", "failed"].includes(lower)) return "failed";
+  if (["expire", "expired"].includes(lower)) return "expired";
+  if (["cancel", "cancelled"].includes(lower)) return "cancelled";
+  if (["refund", "refunded"].includes(lower)) return "refunded";
+  return "pending";
+}
+
+function buildInvoiceNumber() {
+  const now = new Date();
+  const date = now.toISOString().slice(0, 10).replace(/-/g, "");
+  return `INV-${date}-${Math.floor(1000 + Math.random() * 9000)}`;
+}
+
 export async function createPaymentTransaction(input: PaymentTransactionInput) {
   if (!input.bookingId) {
     throw new Error("bookingId is required.");
@@ -15,7 +32,11 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
     throw new Error("A valid amount is required.");
   }
 
-  const booking = await prisma.booking.findUnique({ where: { id: input.bookingId } });
+  const booking = await prisma.booking.findUnique({
+    where: { id: input.bookingId },
+    include: { field: true },
+  });
+
   if (!booking) {
     throw new Error("Booking not found.");
   }
@@ -33,35 +54,55 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
     item_details: [
       {
         id: booking.fieldId,
-        name: `Field booking`,
+        name: booking.field?.name ?? "Field booking",
         price: input.amount,
         quantity: 1,
       },
     ],
+    callbacks: {
+      finish: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://klaten-international-minisoccer.vercel.app"}/payment/success?transactionId=${encodeURIComponent(input.bookingId)}`,
+    },
   };
 
   const midtransResponse = await createMidtransTransaction(midtransPayload);
+  const paymentRecord = await prisma.payment.create({
+    data: {
+      bookingId: input.bookingId,
+      transactionId: input.bookingId,
+      midtransOrderId: input.bookingId,
+      snapToken: midtransResponse.token,
+      paymentLinkUrl: midtransResponse.redirect_url,
+      paymentMethod: input.paymentMethod as PaymentMethod,
+      amount: input.amount,
+      status: "pending",
+      provider: "Midtrans",
+      expiredAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    },
+  });
 
-  const createData: {
-    bookingId: string;
-    transactionId: string;
-    paymentMethod: PaymentMethod;
-    amount: number;
-    status: PaymentStatus;
-    provider: string;
-    expiredAt: Date;
-    paidAt?: Date;
-  } = {
-    bookingId: input.bookingId,
-    transactionId: input.bookingId,
-    paymentMethod: input.paymentMethod as PaymentMethod,
-    amount: input.amount,
-    status: "pending",
-    provider: "Midtrans",
-    expiredAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-  };
-
-  await prisma.payment.create({ data: createData });
+  await prisma.invoice.upsert({
+    where: { bookingId: booking.id },
+    update: {
+      customerName: booking.customerName,
+      customerEmail: booking.customerEmail,
+      customerPhone: booking.customerPhone,
+      subtotal: booking.totalPrice,
+      total: booking.totalPrice,
+      status: "issued",
+      updatedAt: new Date(),
+    },
+    create: {
+      invoiceNumber: buildInvoiceNumber(),
+      bookingId: booking.id,
+      paymentId: paymentRecord.id,
+      customerName: booking.customerName,
+      customerEmail: booking.customerEmail,
+      customerPhone: booking.customerPhone,
+      subtotal: booking.totalPrice,
+      total: booking.totalPrice,
+      status: "issued",
+    },
+  });
 
   return {
     transactionId: input.bookingId,
@@ -78,7 +119,7 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
 export async function getPaymentTransaction(transactionId: string) {
   const payment = await prisma.payment.findUnique({
     where: { transactionId },
-    include: { booking: true },
+    include: { booking: { include: { field: true } } },
   });
 
   if (!payment) {
@@ -93,32 +134,35 @@ export async function getPaymentSimulationDetails(method: PaymentMethod): Promis
 }
 
 export async function processWebhookEvent(transactionId: string, status: PaymentStatus) {
-  const payment = await prisma.payment.findUnique({ where: { transactionId } });
+  const normalized = normalizePaymentStatus(status);
+
+  const payment = await prisma.payment.findUnique({
+    where: { transactionId },
+    include: { booking: { include: { field: true } } },
+  });
+
   if (!payment) {
     throw new Error("Payment record not found.");
   }
 
-  const booking = await prisma.booking.findUnique({ where: { id: payment.bookingId } });
-  if (!booking) {
-    throw new Error("Associated booking not found.");
-  }
-
+  const booking = payment.booking;
   const now = new Date();
+
   const updateData: {
     status: PaymentStatus;
     updatedAt: Date;
     paidAt?: Date;
     expiredAt?: Date;
   } = {
-    status,
+    status: normalized,
     updatedAt: now,
   };
 
-  if (status === "success") {
+  if (normalized === "success") {
     updateData.paidAt = now;
   }
 
-  if (status === "expired") {
+  if (["expired", "failed", "cancelled"].includes(normalized)) {
     updateData.expiredAt = now;
   }
 
@@ -127,31 +171,48 @@ export async function processWebhookEvent(transactionId: string, status: Payment
     data: updateData,
   });
 
-  let nextBookingStatus: BookingStatus = booking.status as BookingStatus;
-
-  if (status === "success") {
-    nextBookingStatus = "confirmed";
-  }
-
-  if (status === "expired" || status === "cancelled") {
-    nextBookingStatus = "cancelled";
-  }
-
-  if (status === "refunded") {
-    nextBookingStatus = "refunded";
-  }
+  const nextBookingStatus: BookingStatus = normalized === "success"
+    ? "confirmed"
+    : normalized === "refunded"
+    ? "refunded"
+    : "cancelled";
 
   await prisma.booking.update({
     where: { id: booking.id },
     data: { status: nextBookingStatus },
   });
 
-  if (status === "success") {
+  await prisma.invoice.upsert({
+    where: { bookingId: booking.id },
+    update: {
+      status: normalized === "success" ? "paid" : "issued",
+      paidAt: normalized === "success" ? now : undefined,
+      customerName: booking.customerName,
+      customerEmail: booking.customerEmail,
+      customerPhone: booking.customerPhone,
+      subtotal: booking.totalPrice,
+      total: booking.totalPrice,
+      updatedAt: now,
+    },
+    create: {
+      invoiceNumber: buildInvoiceNumber(),
+      bookingId: booking.id,
+      paymentId: payment.id,
+      customerName: booking.customerName,
+      customerEmail: booking.customerEmail,
+      customerPhone: booking.customerPhone,
+      subtotal: booking.totalPrice,
+      total: booking.totalPrice,
+      status: normalized === "success" ? "paid" : "issued",
+    },
+  });
+
+  if (normalized === "success") {
     await sendNotification("email-confirmation", {
       bookingId: booking.id,
       amount: payment.amount,
       customerName: booking.customerName,
-      fieldName: booking.fieldId,
+      fieldName: booking.field?.name ?? booking.fieldId,
       startAt: `${booking.bookingDate.toISOString().slice(0, 10)} ${booking.startTime}`,
       endAt: `${booking.bookingDate.toISOString().slice(0, 10)} ${booking.endTime}`,
       email: booking.customerEmail ?? undefined,
@@ -159,10 +220,10 @@ export async function processWebhookEvent(transactionId: string, status: Payment
     });
   }
 
-  if (status === "cancelled" || status === "expired") {
+  if (["cancelled", "expired", "failed"].includes(normalized)) {
     await sendNotification("booking-cancelled", {
       bookingId: booking.id,
-      reason: status === "expired" ? "payment expired" : "payment was cancelled",
+      reason: normalized === "expired" ? "payment expired" : normalized === "failed" ? "payment failed" : "payment was cancelled",
     });
   }
 }

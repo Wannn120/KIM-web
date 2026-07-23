@@ -78,6 +78,9 @@ CREATE TABLE payment (
   
   -- Transaction details
   transaction_id VARCHAR(255) UNIQUE NOT NULL,
+  midtrans_order_id VARCHAR(255) UNIQUE,
+  snap_token VARCHAR(512),
+  payment_link_url TEXT,
   amount INTEGER NOT NULL, -- Amount in IDR
   payment_method VARCHAR(100) DEFAULT 'Midtrans', -- Payment method used
   provider VARCHAR(100) DEFAULT 'Midtrans', -- Payment provider
@@ -98,6 +101,11 @@ CREATE TABLE invoice (
   invoice_number VARCHAR(50) UNIQUE NOT NULL,
   booking_id UUID UNIQUE NOT NULL REFERENCES booking(id) ON DELETE CASCADE,
   payment_id UUID UNIQUE NOT NULL REFERENCES payment(id) ON DELETE CASCADE,
+  
+  -- Customer details for verification and pickup
+  customer_name VARCHAR(255),
+  customer_email VARCHAR(255),
+  customer_phone VARCHAR(50),
   
   -- Invoice details
   subtotal INTEGER NOT NULL,
@@ -137,6 +145,27 @@ CREATE TABLE admin_setting (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- ==================== RBAC ADMIN USERS ====================
+CREATE TABLE admin_user (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  role VARCHAR(50) DEFAULT 'staff',
+  is_active BOOLEAN DEFAULT true,
+  last_login_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE admin_session (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  admin_user_id UUID NOT NULL REFERENCES admin_user(id) ON DELETE CASCADE,
+  token_hash VARCHAR(255) UNIQUE NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- ==================== AUDIT LOG ====================
 CREATE TABLE audit_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -161,6 +190,10 @@ CREATE INDEX IF NOT EXISTS idx_booking_field_id ON booking(field_id);
 CREATE INDEX IF NOT EXISTS idx_review_field_id ON review(field_id);
 CREATE INDEX IF NOT EXISTS idx_review_booking_id ON review(booking_id);
 CREATE INDEX IF NOT EXISTS idx_admin_setting_key ON admin_setting(key);
+CREATE INDEX IF NOT EXISTS idx_admin_user_email ON admin_user(email);
+CREATE INDEX IF NOT EXISTS idx_admin_user_role ON admin_user(role);
+CREATE INDEX IF NOT EXISTS idx_admin_session_user_id ON admin_session(admin_user_id);
+CREATE INDEX IF NOT EXISTS idx_admin_session_token_hash ON admin_session(token_hash);
 
 CREATE INDEX IF NOT EXISTS idx_payment_booking_id ON payment(booking_id);
 CREATE INDEX IF NOT EXISTS idx_payment_transaction_id ON payment(transaction_id);
