@@ -13,13 +13,16 @@ export async function POST(request: NextRequest) {
     }
 
     const authResult = await authenticateAdmin(email, password);
-    const response = NextResponse.json({
-      success: true,
-      message: "Admin login successful.",
-      user: authResult.user,
-    });
+    const response = writeAdminSessionCookie(
+      NextResponse.json({
+        success: true,
+        message: "Admin login successful.",
+        user: authResult.user,
+      }),
+      authResult.token,
+    );
 
-    return applySecurityHeaders(writeAdminSessionCookie(response, authResult.token));
+    return applySecurityHeaders(response);
   } catch (error) {
     return NextResponse.json({ success: false, message: (error as Error).message }, { status: 401 });
   }

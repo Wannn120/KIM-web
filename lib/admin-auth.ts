@@ -107,7 +107,7 @@ export async function getAuthenticatedAdmin(request: NextRequest) {
   };
 }
 
-export async function writeAdminSessionCookie(response: NextResponse, token: string) {
+export function writeAdminSessionCookie(response: NextResponse, token: string) {
   setSecureCookie(response, "admin-session", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
