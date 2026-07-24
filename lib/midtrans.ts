@@ -20,6 +20,7 @@ export interface MidtransCreatePayload {
     error?: string;
     pending?: string;
   };
+  notification_url?: string;
   item_details?: Array<{
     id: string;
     price: number;

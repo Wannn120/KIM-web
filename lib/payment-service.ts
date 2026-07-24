@@ -65,6 +65,7 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
       error: `${appBaseUrl}/payment/failure?transactionId=${encodeURIComponent(input.bookingId)}`,
       pending: `${appBaseUrl}/payment/success?transactionId=${encodeURIComponent(input.bookingId)}`,
     },
+    notification_url: `${appBaseUrl}/api/payments/webhook`,
     expiry: {
       unit: "minutes",
       duration: 15,
@@ -83,7 +84,7 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
       amount: input.amount,
       status: "pending",
       provider: "Midtrans",
-      expiredAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      expiredAt: new Date(Date.now() + 15 * 60 * 1000),
     },
   });
 
@@ -123,10 +124,51 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
   };
 }
 
+export async function expirePendingPayments() {
+  const now = new Date();
+  const overduePayments = await prisma.payment.findMany({
+    where: {
+      status: "pending",
+      expiredAt: { lt: now },
+    },
+    select: {
+      id: true,
+      bookingId: true,
+    },
+  });
+
+  if (overduePayments.length === 0) {
+    return;
+  }
+
+  const bookingIds = overduePayments.map((payment) => payment.bookingId);
+  const paymentIds = overduePayments.map((payment) => payment.id);
+
+  await prisma.$transaction([
+    prisma.payment.updateMany({
+      where: { id: { in: paymentIds } },
+      data: { status: "expired", updatedAt: now, expiredAt: now },
+    }),
+    prisma.booking.updateMany({
+      where: { id: { in: bookingIds } },
+      data: { status: "expired", updatedAt: now },
+    }),
+    prisma.invoice.updateMany({
+      where: { bookingId: { in: bookingIds } },
+      data: { status: "issued", updatedAt: now },
+    }),
+  ]);
+}
+
 export async function getPaymentTransaction(transactionId: string) {
+  await expirePendingPayments();
+
   const payment = await prisma.payment.findUnique({
     where: { transactionId },
-    include: { booking: { include: { field: true } } },
+    include: {
+      booking: { include: { field: true } },
+      invoice: true,
+    },
   });
 
   if (!payment) {
@@ -215,8 +257,11 @@ export async function processWebhookEvent(transactionId: string, status: Payment
   });
 
   if (normalized === "success") {
+    const invoice = await prisma.invoice.findUnique({ where: { bookingId: booking.id } });
+
     await sendNotification("email-confirmation", {
       bookingId: booking.id,
+      invoiceNumber: invoice?.invoiceNumber,
       amount: payment.amount,
       customerName: booking.customerName,
       fieldName: booking.field?.name ?? booking.fieldId,

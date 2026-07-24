@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
-import { getPaymentTransaction } from "@/lib/payment-service";
+import { getPaymentTransaction, expirePendingPayments } from "@/lib/payment-service";
 
 export async function GET(request: Request) {
   try {
+    await expirePendingPayments();
+
     const url = new URL(request.url);
     const transactionId = url.searchParams.get("transactionId");
 

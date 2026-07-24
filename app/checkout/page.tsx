@@ -34,6 +34,23 @@ function getSearchParam(value: string | null, fallback = "") {
   return value ?? fallback;
 }
 
+interface MidtransSnapWindow {
+  Snap?: {
+    pay?: (token: string, callbacks: {
+      onSuccess?: () => void;
+      onPending?: () => void;
+      onError?: () => void;
+      onClose?: () => void;
+    }) => void;
+    embed?: (token: string, container: string, callbacks: {
+      onSuccess?: () => void;
+      onPending?: () => void;
+      onError?: () => void;
+      onClose?: () => void;
+    }) => void;
+  };
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -43,6 +60,11 @@ export default function CheckoutPage() {
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [snapReady, setSnapReady] = useState(false);
+  const [snapToken, setSnapToken] = useState<string | null>(null);
+  const [snapUrl, setSnapUrl] = useState<string | null>(null);
+  const [currentTransactionId, setCurrentTransactionId] = useState<string | null>(null);
+  const [embedCheckoutLoaded, setEmbedCheckoutLoaded] = useState(false);
+  const [snapLoadError, setSnapLoadError] = useState<string | null>(null);
 
   const { snapScriptUrl, clientKey: snapClientKey } = useMemo(() => getMidtransConfig(), []);
 
@@ -58,7 +80,8 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     const onSnapReady = () => {
-      setSnapReady(Boolean(window.Snap?.pay));
+      const win = window as unknown as MidtransSnapWindow;
+      setSnapReady(Boolean(win.Snap));
     };
 
     if (typeof window !== "undefined") {
@@ -66,7 +89,66 @@ export default function CheckoutPage() {
       window.addEventListener("snap:ready", onSnapReady);
       return () => window.removeEventListener("snap:ready", onSnapReady);
     }
+    return undefined;
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !snapToken || embedCheckoutLoaded) {
+      return;
+    }
+
+    const win = window as unknown as MidtransSnapWindow;
+    const snap = win.Snap;
+    if (!snap) {
+      if (snapReady) {
+        setSnapLoadError("Payment gateway failed to initialize. Please refresh the page or try again.");
+      }
+      return;
+    }
+
+    const callbacks = {
+      onSuccess: () => {
+        if (currentTransactionId) {
+          router.push(`/payment/success?transactionId=${encodeURIComponent(currentTransactionId)}`);
+        }
+      },
+      onPending: () => {
+        if (currentTransactionId) {
+          router.push(`/payment/success?transactionId=${encodeURIComponent(currentTransactionId)}`);
+        }
+      },
+      onError: () => {
+        if (currentTransactionId) {
+          router.push(`/payment/failure?transactionId=${encodeURIComponent(currentTransactionId)}`);
+        }
+      },
+      onClose: () => {
+        router.push("/booking-history");
+      },
+    };
+
+    try {
+      if (typeof snap.embed === "function") {
+        snap.embed(snapToken, "#snap-container", callbacks);
+        setEmbedCheckoutLoaded(true);
+        setSaving(false);
+        setSnapLoadError(null);
+        return;
+      }
+
+      if (typeof snap.pay === "function") {
+        snap.pay(snapToken, callbacks);
+        setEmbedCheckoutLoaded(true);
+        setSaving(false);
+        setSnapLoadError(null);
+        return;
+      }
+
+      setSnapLoadError("This payment method is not available right now. Please refresh or try again later.");
+    } catch {
+      setSnapLoadError("Unable to load the payment checkout. Please refresh the page and try again.");
+    }
+  }, [snapToken, snapReady, embedCheckoutLoaded, currentTransactionId, router]);
 
   const handleCheckout = async () => {
     if (!hasValidBookingDetails) {
@@ -155,22 +237,10 @@ export default function CheckoutPage() {
       }
 
       // Payment created successfully, use Snap embedded checkout when available.
-      if (paymentResult.snapToken && typeof window !== "undefined" && window.Snap?.pay) {
-        const snap = window.Snap;
-        await snap.pay(paymentResult.snapToken, {
-          onSuccess: () => {
-            router.push(`/payment/success?transactionId=${encodeURIComponent(result.booking.id)}`);
-          },
-          onPending: () => {
-            router.push(`/payment/success?transactionId=${encodeURIComponent(result.booking.id)}`);
-          },
-          onError: () => {
-            router.push(`/payment/failure?transactionId=${encodeURIComponent(result.booking.id)}`);
-          },
-          onClose: () => {
-            router.push("/booking-history");
-          },
-        });
+      if (paymentResult.snapToken) {
+        setSnapToken(paymentResult.snapToken);
+        setSnapUrl(paymentResult.snapUrl ?? null);
+        setCurrentTransactionId(result.booking.id);
         return;
       }
 
@@ -269,6 +339,51 @@ export default function CheckoutPage() {
           >
             {saving ? "Processing…" : snapReady ? "Confirm and pay" : "Loading payment gateway…"}
           </button>
+
+          {snapToken ? (
+            <div className="mt-10 rounded-3xl border border-white/10 bg-[color:var(--surface)] p-6">
+              <h2 className="text-xl font-semibold text-white">Inline payment checkout</h2>
+              <p className="mt-2 text-sm text-[color:var(--muted)]">
+                Complete the payment in the embedded checkout below. The page remains on your site.
+              </p>
+
+              {snapLoadError ? (
+                <div className="mt-6 rounded-3xl border border-rose-500/20 bg-rose-500/10 p-6 text-sm text-rose-200">
+                  <p>{snapLoadError}</p>
+                  <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white"
+                    >
+                      Reload page
+                    </button>
+                    {snapUrl ? (
+                      <a
+                        href={snapUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center justify-center rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white"
+                      >
+                        Continue via payment link
+                      </a>
+                    ) : null}
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-6 rounded-3xl border border-white/10 bg-black/10 p-6">
+                  {!embedCheckoutLoaded ? (
+                    <div className="flex min-h-[300px] items-center justify-center rounded-3xl bg-[color:var(--background)] p-8 text-center text-sm text-[color:var(--muted)]">
+                      <div>
+                        <p className="font-medium text-white">Loading payment checkout…</p>
+                        <p className="mt-2">Please wait while Midtrans initializes the embedded payment experience.</p>
+                      </div>
+                    </div>
+                  ) : null}
+                  <div id="snap-container" className="mt-6 min-h-[400px]" />
+                </div>
+              )}
+            </div>
+          ) : null}
         </AnimatedCard>
       </div>
     </main>

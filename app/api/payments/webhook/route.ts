@@ -1,6 +1,25 @@
 import { NextResponse } from "next/server";
+import { PaymentStatus } from "@/lib/payment-provider";
 import { processWebhookEvent } from "@/lib/payment-service";
 import { verifyMidtransSignature } from "@/lib/midtrans";
+
+function resolveTransactionId(body: Record<string, unknown>) {
+  return (
+    (typeof body?.transactionId === "string" && body.transactionId) ||
+    (typeof body?.orderId === "string" && body.orderId) ||
+    (typeof body?.transaction_id === "string" && body.transaction_id) ||
+    (typeof body?.order_id === "string" && body.order_id) ||
+    ""
+  );
+}
+
+function resolveTransactionStatus(body: Record<string, unknown>): PaymentStatus | "" {
+  if (typeof body?.transaction_status === "string") return body.transaction_status as PaymentStatus;
+  if (typeof body?.status === "string") return body.status as PaymentStatus;
+  if (typeof body?.transactionStatus === "string") return body.transactionStatus as PaymentStatus;
+  if (typeof body?.status_code === "string") return body.status_code as PaymentStatus;
+  return "";
+}
 
 export async function POST(request: Request) {
   try {
@@ -12,24 +31,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: "Invalid Midtrans signature." }, { status: 401 });
     }
 
-    const transactionId =
-      typeof body?.transactionId === "string"
-        ? body.transactionId
-        : typeof body?.orderId === "string"
-        ? body.orderId
-        : typeof body?.transaction_id === "string"
-        ? body.transaction_id
-        : typeof body?.order_id === "string"
-        ? body.order_id
-        : "";
-    const status =
-      typeof body?.status === "string"
-        ? body.status
-        : typeof body?.transaction_status === "string"
-        ? body.transaction_status
-        : typeof body?.transactionStatus === "string"
-        ? body.transactionStatus
-        : "";
+    const transactionId = resolveTransactionId(body as Record<string, unknown>);
+    const status = resolveTransactionStatus(body as Record<string, unknown>);
 
     if (!transactionId || !status) {
       return NextResponse.json({ success: false, message: "Missing transaction identifier or status." }, { status: 400 });

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { auditLog } from "@/lib/audit-log";
+import { expirePendingPayments } from "@/lib/payment-service";
 import { getRateLimitResult, sanitizeObject, applySecurityHeaders } from "@/lib/security";
 import { prisma } from "@/lib/prisma";
 
@@ -192,6 +193,8 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    await expirePendingPayments();
+
     const url = new URL(request.url);
     const email = url.searchParams.get("email")?.trim() ?? "";
     const phone = url.searchParams.get("phone")?.trim() ?? "";

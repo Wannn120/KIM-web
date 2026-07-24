@@ -21,6 +21,7 @@ export interface NotificationPayload {
   amount?: number;
   orderId?: string;
   reason?: string;
+  invoiceNumber?: string;
 }
 
 export interface NotificationResult {
@@ -121,10 +122,13 @@ async function sendEmail(event: NotificationEvent, payload: NotificationPayload)
         <h2 style="margin-bottom:12px;">Booking Confirmed</h2>
         <p>${message}</p>
         <p><strong>Customer:</strong> ${payload.customerName ?? "Guest"}</p>
+        <p><strong>Email:</strong> ${payload.email ?? "N/A"}</p>
+        <p><strong>Phone:</strong> ${payload.phone ?? "N/A"}</p>
         <p><strong>Field:</strong> ${payload.fieldName ?? "N/A"}</p>
         <p><strong>Schedule:</strong> ${payload.startAt ?? "N/A"} - ${payload.endAt ?? "N/A"}</p>
         <p><strong>Amount:</strong> Rp ${payload.amount?.toLocaleString("id-ID") ?? "0"}</p>
         <p><strong>Booking ID:</strong> ${payload.bookingId ?? "N/A"}</p>
+        ${payload.invoiceNumber ? `<p><strong>Invoice:</strong> ${payload.invoiceNumber}</p>` : ""}
       </div>`
     : `<p>${message}</p>`;
 
