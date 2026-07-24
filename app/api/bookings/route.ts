@@ -14,6 +14,45 @@ function getDateRange(dateString: string) {
   return { start, end };
 }
 
+function parseTimeToMinutes(timeValue: string) {
+  const [hourText, minuteText] = timeValue.split(":");
+  const hour = Number(hourText);
+  const minute = Number(minuteText ?? "0");
+
+  if (Number.isNaN(hour) || Number.isNaN(minute)) {
+    return NaN;
+  }
+
+  return hour * 60 + minute;
+}
+
+function formatMinutesToTime(totalMinutes: number) {
+  const safeMinutes = Math.max(0, totalMinutes);
+  const hour = Math.floor(safeMinutes / 60);
+  const minute = safeMinutes % 60;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+function getRequestedScheduleBlocks(startTime: string, endTime: string) {
+  const startMinutes = parseTimeToMinutes(startTime);
+  const endMinutes = parseTimeToMinutes(endTime);
+
+  if (Number.isNaN(startMinutes) || Number.isNaN(endMinutes) || endMinutes <= startMinutes) {
+    return [];
+  }
+
+  const blocks: Array<{ start: string; end: string }> = [];
+  for (let cursor = startMinutes; cursor < endMinutes; cursor += 60) {
+    const nextCursor = Math.min(cursor + 60, endMinutes);
+    blocks.push({
+      start: formatMinutesToTime(cursor),
+      end: formatMinutesToTime(nextCursor),
+    });
+  }
+
+  return blocks;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -51,20 +90,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: "Field not found." }, { status: 404 });
     }
 
-    const schedule = await prisma.fieldSchedule.findFirst({
+    const requestedBlocks = getRequestedScheduleBlocks(startTime, endTime);
+    if (requestedBlocks.length === 0) {
+      return NextResponse.json({ success: false, message: "Invalid booking time range." }, { status: 400 });
+    }
+
+    const scheduleBlocks = await prisma.fieldSchedule.findMany({
       where: {
         fieldId,
         date: {
           gte: range.start,
           lt: range.end,
         },
-        startTime,
-        endTime,
+        startTime: {
+          in: requestedBlocks.map((block) => block.start),
+        },
         isAvailable: true,
+      },
+      select: {
+        startTime: true,
       },
     });
 
-    if (!schedule) {
+    const availableStarts = new Set(scheduleBlocks.map((block) => block.startTime));
+    const hasCompleteAvailability = requestedBlocks.every((block) => availableStarts.has(block.start));
+
+    if (!hasCompleteAvailability) {
       return NextResponse.json({ success: false, message: "This time slot is not available." }, { status: 409 });
     }
 
@@ -76,9 +127,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: "Customer name, email, and phone are required." }, { status: 400 });
     }
 
-    const startHour = parseInt(startTime.split(":")[0], 10);
-    const endHour = parseInt(endTime.split(":")[0], 10);
-    const durationHours = Math.max(endHour - startHour, 1);
+    const startMinutes = parseTimeToMinutes(startTime);
+    const endMinutes = parseTimeToMinutes(endTime);
+    const durationHours = Math.max(Math.ceil((endMinutes - startMinutes) / 60), 1);
     const totalPrice = field.price * durationHours;
 
     const booking = await prisma.$transaction(async (tx) => {
@@ -107,8 +158,14 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      await tx.fieldSchedule.update({
-        where: { id: schedule.id },
+      await tx.fieldSchedule.updateMany({
+        where: {
+          fieldId,
+          date: range.start,
+          startTime: {
+            in: requestedBlocks.map((block) => block.start),
+          },
+        },
         data: { isAvailable: false },
       });
 

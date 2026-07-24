@@ -191,8 +191,8 @@ export function PaymentSimulator({ bookingId, amount, fieldName, bookingDate, bo
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <p className="text-sm uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Demo payment gateway</p>
-          <h1 className="mt-3 text-4xl font-semibold text-white">Complete your demo payment</h1>
-          <p className="mt-4 text-[color:var(--muted)]">This is a local demo payment flow for now. It is not a real Midtrans integration yet.</p>
+          <h1 className="mt-3 text-4xl font-semibold text-white">Complete your payment</h1>
+          <p className="mt-4 text-[color:var(--muted)]">This screen mirrors the same payment-state lifecycle used by the checkout flow and records the transaction status back into the database.</p>
         </div>
         <div className="rounded-3xl border border-white/10 bg-[color:var(--background-strong)] p-6">
           <div className="grid gap-3 text-sm text-[color:var(--muted)]">

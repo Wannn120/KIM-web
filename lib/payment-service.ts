@@ -41,6 +41,7 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
     throw new Error("Booking not found.");
   }
 
+  const appBaseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://klaten-international-minisoccer.vercel.app";
   const midtransPayload = {
     transaction_details: {
       order_id: input.bookingId,
@@ -60,7 +61,13 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
       },
     ],
     callbacks: {
-      finish: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://klaten-international-minisoccer.vercel.app"}/payment/success?transactionId=${encodeURIComponent(input.bookingId)}`,
+      finish: `${appBaseUrl}/payment/success?transactionId=${encodeURIComponent(input.bookingId)}`,
+      error: `${appBaseUrl}/payment/failure?transactionId=${encodeURIComponent(input.bookingId)}`,
+      pending: `${appBaseUrl}/payment/success?transactionId=${encodeURIComponent(input.bookingId)}`,
+    },
+    expiry: {
+      unit: "minutes",
+      duration: 15,
     },
   };
 

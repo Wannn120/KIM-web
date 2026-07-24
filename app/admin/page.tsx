@@ -1,9 +1,20 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { getAdminSummary } from "@/lib/admin-dashboard";
+import { getAuthenticatedAdminFromToken } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("admin-session")?.value ?? "";
+  const admin = await getAuthenticatedAdminFromToken(token);
+
+  if (!admin) {
+    redirect("/admin/login");
+  }
+
   const summary = getAdminSummary();
 
   return (
@@ -14,6 +25,10 @@ export default function AdminPage() {
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Admin dashboard</p>
               <h1 className="mt-2 text-4xl font-semibold text-white">Control panel</h1>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--accent-strong)]">Role: {admin.role}</span>
+                <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-200">Authenticated session active</span>
+              </div>
             </div>
             <Link href="/admin/login" className="btn-secondary">Back to sign in</Link>
           </div>

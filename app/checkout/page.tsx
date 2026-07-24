@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Script from "next/script";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatedCard } from "@/components/animated-card";
+import { getMidtransConfig } from "@/lib/midtrans";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +42,9 @@ export default function CheckoutPage() {
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [snapReady, setSnapReady] = useState(false);
+
+  const { snapScriptUrl, clientKey: snapClientKey } = useMemo(() => getMidtransConfig(), []);
 
   const fieldId = getSearchParam(searchParams.get("fieldId"));
   const fieldName = getSearchParam(searchParams.get("fieldName"));
@@ -50,6 +55,18 @@ export default function CheckoutPage() {
 
   const hasValidBookingDetails = Boolean(fieldId && fieldName && bookingDate && startTime && endTime && amount > 0);
   const hasValidCustomerInfo = Boolean(customerName.trim() && customerEmail.trim() && customerPhone.trim());
+
+  useEffect(() => {
+    const onSnapReady = () => {
+      setSnapReady(Boolean(window.Snap?.pay));
+    };
+
+    if (typeof window !== "undefined") {
+      onSnapReady();
+      window.addEventListener("snap:ready", onSnapReady);
+      return () => window.removeEventListener("snap:ready", onSnapReady);
+    }
+  }, []);
 
   const handleCheckout = async () => {
     if (!hasValidBookingDetails) {
@@ -137,7 +154,26 @@ export default function CheckoutPage() {
         return;
       }
 
-      // Payment created successfully, redirect to payment page
+      // Payment created successfully, use Snap embedded checkout when available.
+      if (paymentResult.snapToken && typeof window !== "undefined" && window.Snap?.pay) {
+        const snap = window.Snap;
+        await snap.pay(paymentResult.snapToken, {
+          onSuccess: () => {
+            router.push(`/payment/success?transactionId=${encodeURIComponent(result.booking.id)}`);
+          },
+          onPending: () => {
+            router.push(`/payment/success?transactionId=${encodeURIComponent(result.booking.id)}`);
+          },
+          onError: () => {
+            router.push(`/payment/failure?transactionId=${encodeURIComponent(result.booking.id)}`);
+          },
+          onClose: () => {
+            router.push("/booking-history");
+          },
+        });
+        return;
+      }
+
       if (paymentResult.snapUrl) {
         window.location.href = paymentResult.snapUrl;
       } else {
@@ -151,6 +187,7 @@ export default function CheckoutPage() {
 
   return (
     <main className="flex-1 px-6 py-16 lg:px-8">
+      <Script src={snapScriptUrl} data-client-key={snapClientKey} strategy="afterInteractive" />
       <div className="mx-auto max-w-7xl space-y-8">
         <div className="card-surface p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Secure checkout</p>
@@ -227,10 +264,10 @@ export default function CheckoutPage() {
 
           <button
             onClick={handleCheckout}
-            disabled={saving || !hasValidBookingDetails || !hasValidCustomerInfo}
+            disabled={saving || !hasValidBookingDetails || !hasValidCustomerInfo || !snapReady}
             className="mt-8 btn-primary w-full py-4 text-lg disabled:opacity-60"
           >
-            {saving ? "Processing…" : "Confirm and pay"}
+            {saving ? "Processing…" : snapReady ? "Confirm and pay" : "Loading payment gateway…"}
           </button>
         </AnimatedCard>
       </div>

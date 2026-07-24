@@ -17,6 +17,5 @@ export const siteConfig = {
     { href: "/", label: "Home" },
     { href: "/book", label: "Booking" },
     { href: "/booking-history", label: "History" },
-    { href: "/sql-editor", label: "Admin" },
   ],
 };

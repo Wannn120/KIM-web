@@ -42,7 +42,12 @@ export default function AdminLoginPage() {
         <AnimatedCard className="p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Admin access</p>
           <h1 className="mt-2 text-4xl font-semibold text-white">Sign in to the dashboard</h1>
-          <p className="mt-3 text-[color:var(--muted)]">Use the seeded admin credentials to open the control panel.</p>
+          <p className="mt-3 text-[color:var(--muted)]">Use the seeded role-based credentials below to open the control panel.</p>
+          <div className="mt-4 rounded-3xl border border-white/10 bg-white/5 p-4 text-sm text-[color:var(--muted)]">
+            <p><strong className="text-white">staff</strong> : staff@klatenminisoccer.id / staff123</p>
+            <p><strong className="text-white">manager</strong> : manager1@klatenminisoccer.id / manager123</p>
+            <p><strong className="text-white">super_admin</strong> : superadmin1@klatenminisoccer.id / superadmin123</p>
+          </div>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
             <div>

@@ -6,8 +6,28 @@ import { createJwt, verifyJwt, setSecureCookie, clearSecureCookie } from "@/lib/
 const DEFAULT_ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@klatenminisoccer.id";
 const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "admin123";
 
+export const ADMIN_ROLES = {
+  staff: "staff",
+  manager: "manager",
+  superAdmin: "super_admin",
+} as const;
+
+export type AdminRole = (typeof ADMIN_ROLES)[keyof typeof ADMIN_ROLES];
+
 function hashSecret(input: string) {
   return crypto.createHash("sha256").update(input).digest("hex");
+}
+
+function normalizeAdminRole(role: string): AdminRole {
+  const normalized = role.toLowerCase();
+  if (normalized === ADMIN_ROLES.manager) return ADMIN_ROLES.manager;
+  if (normalized === ADMIN_ROLES.superAdmin) return ADMIN_ROLES.superAdmin;
+  return ADMIN_ROLES.staff;
+}
+
+export function isAdminRoleAllowed(role: string, allowedRoles: AdminRole[]) {
+  const normalizedRole = normalizeAdminRole(role);
+  return allowedRoles.includes(normalizedRole);
 }
 
 async function ensureDefaultAdminUser() {
@@ -26,10 +46,27 @@ async function ensureDefaultAdminUser() {
       name: "System Administrator",
       email: DEFAULT_ADMIN_EMAIL,
       passwordHash,
-      role: "admin",
+      role: ADMIN_ROLES.superAdmin,
       isActive: true,
     },
   });
+}
+
+async function findAdminUserByEmail(email: string) {
+  const normalizedEmail = email.trim().toLowerCase();
+  const existing = await prisma.adminUser.findUnique({
+    where: { email: normalizedEmail },
+  });
+
+  if (existing) {
+    return existing;
+  }
+
+  if (normalizedEmail === DEFAULT_ADMIN_EMAIL.toLowerCase()) {
+    return ensureDefaultAdminUser();
+  }
+
+  return null;
 }
 
 export async function authenticateAdmin(email: string, password: string) {
@@ -40,9 +77,9 @@ export async function authenticateAdmin(email: string, password: string) {
     throw new Error("Admin email and password are required.");
   }
 
-  const adminUser = await ensureDefaultAdminUser();
+  const adminUser = await findAdminUserByEmail(normalizedEmail);
 
-  if (adminUser.email !== normalizedEmail) {
+  if (!adminUser) {
     throw new Error("Admin credentials are invalid.");
   }
 
@@ -78,8 +115,7 @@ export async function authenticateAdmin(email: string, password: string) {
   };
 }
 
-export async function getAuthenticatedAdmin(request: NextRequest) {
-  const token = request.cookies.get("admin-session")?.value;
+export async function getAuthenticatedAdminFromToken(token: string) {
   if (!token) {
     return null;
   }
@@ -103,8 +139,13 @@ export async function getAuthenticatedAdmin(request: NextRequest) {
     id: session.adminUser.id,
     name: session.adminUser.name,
     email: session.adminUser.email,
-    role: session.adminUser.role,
+    role: normalizeAdminRole(session.adminUser.role),
   };
+}
+
+export async function getAuthenticatedAdmin(request: NextRequest) {
+  const token = request.cookies.get("admin-session")?.value;
+  return getAuthenticatedAdminFromToken(token ?? "");
 }
 
 export function writeAdminSessionCookie(response: NextResponse, token: string) {

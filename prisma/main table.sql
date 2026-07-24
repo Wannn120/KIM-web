@@ -279,6 +279,16 @@ VALUES
   ('b80e8400-e29b-41d4-a716-446655440001', 'contact_email', 'info@klatenminisoccer.id', 'Email kontak utama', NOW(), NOW()),
   ('b80e8400-e29b-41d4-a716-446655440002', 'contact_phone', '+62 821-1234-5678', 'Nomor telepon kontak utama', NOW(), NOW());
 
+-- Insert mock RBAC admin accounts (1 staff, 2 manager, 3 super_admin)
+INSERT INTO admin_user (id, name, email, password_hash, role, is_active, last_login_at, created_at, updated_at)
+VALUES
+  ('c90e8400-e29b-41d4-a716-446655440000', 'Staff Operator', 'staff@klatenminisoccer.id', encode(digest('staff123', 'sha256'), 'hex'), 'staff', true, NULL, NOW(), NOW()),
+  ('c90e8400-e29b-41d4-a716-446655440001', 'Manager One', 'manager1@klatenminisoccer.id', encode(digest('manager123', 'sha256'), 'hex'), 'manager', true, NULL, NOW(), NOW()),
+  ('c90e8400-e29b-41d4-a716-446655440002', 'Manager Two', 'manager2@klatenminisoccer.id', encode(digest('manager123', 'sha256'), 'hex'), 'manager', true, NULL, NOW(), NOW()),
+  ('c90e8400-e29b-41d4-a716-446655440003', 'Super Admin One', 'superadmin1@klatenminisoccer.id', encode(digest('superadmin123', 'sha256'), 'hex'), 'super_admin', true, NULL, NOW(), NOW()),
+  ('c90e8400-e29b-41d4-a716-446655440004', 'Super Admin Two', 'superadmin2@klatenminisoccer.id', encode(digest('superadmin123', 'sha256'), 'hex'), 'super_admin', true, NULL, NOW(), NOW()),
+  ('c90e8400-e29b-41d4-a716-446655440005', 'Super Admin Three', 'superadmin3@klatenminisoccer.id', encode(digest('superadmin123', 'sha256'), 'hex'), 'super_admin', true, NULL, NOW(), NOW());
+
 -- Insert audit logs
 INSERT INTO audit_log (id, action, entity, entity_id, changes, reference_email, created_at)
 VALUES
