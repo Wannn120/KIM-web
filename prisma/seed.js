@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const crypto = require('crypto');
 const prisma = new PrismaClient();
 
 function formatDate(date) {
@@ -144,7 +145,52 @@ async function main() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    
+
+    await prisma.$queryRawUnsafe(`
+      CREATE TABLE admin_role_permission (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        role VARCHAR(50) UNIQUE NOT NULL,
+        can_manage_fields BOOLEAN DEFAULT false,
+        can_manage_bookings BOOLEAN DEFAULT false,
+        can_manage_payments BOOLEAN DEFAULT false,
+        can_manage_schedule BOOLEAN DEFAULT false,
+        can_manage_cms BOOLEAN DEFAULT false,
+        can_manage_admins BOOLEAN DEFAULT false,
+        can_view_reports BOOLEAN DEFAULT false,
+        can_verify_payments BOOLEAN DEFAULT false,
+        can_create_bookings BOOLEAN DEFAULT false,
+        can_read_bookings BOOLEAN DEFAULT true,
+        can_manage_settings BOOLEAN DEFAULT false,
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await prisma.$queryRawUnsafe(`
+      CREATE TABLE admin_user (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        role VARCHAR(50) NOT NULL REFERENCES admin_role_permission(role) ON DELETE RESTRICT,
+        is_active BOOLEAN DEFAULT true,
+        last_login_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await prisma.$queryRawUnsafe(`
+      CREATE TABLE admin_session (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        admin_user_id UUID NOT NULL REFERENCES admin_user(id) ON DELETE CASCADE,
+        token_hash VARCHAR(255) UNIQUE NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     await prisma.$queryRawUnsafe(`
       CREATE TABLE audit_log (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -334,6 +380,97 @@ async function main() {
         { key: 'site_title', value: 'Klaten International Minisoccer', description: 'Nama utama situs web' },
         { key: 'contact_email', value: 'info@klatenminisoccer.id', description: 'Email kontak utama' },
         { key: 'contact_phone', value: '+62 821-1234-5678', description: 'Nomor telepon kontak utama' },
+      ],
+    });
+  }
+
+  const existingRolePermissions = await prisma.adminRolePermission.findMany();
+  if (existingRolePermissions.length === 0) {
+    console.log('Creating default admin roles...');
+    await prisma.adminRolePermission.createMany({
+      data: [
+        {
+          role: 'super_admin',
+          can_manage_fields: true,
+          can_manage_bookings: true,
+          can_manage_payments: true,
+          can_manage_schedule: true,
+          can_manage_cms: true,
+          can_manage_admins: true,
+          can_view_reports: true,
+          can_verify_payments: true,
+          can_create_bookings: true,
+          can_read_bookings: true,
+          can_manage_settings: true,
+          is_active: true,
+        },
+        {
+          role: 'manager',
+          can_manage_fields: true,
+          can_manage_bookings: true,
+          can_manage_payments: true,
+          can_manage_schedule: true,
+          can_manage_cms: true,
+          can_manage_admins: false,
+          can_view_reports: true,
+          can_verify_payments: true,
+          can_create_bookings: true,
+          can_read_bookings: true,
+          can_manage_settings: false,
+          is_active: true,
+        },
+        {
+          role: 'staff',
+          can_manage_fields: false,
+          can_manage_bookings: true,
+          can_manage_payments: false,
+          can_manage_schedule: false,
+          can_manage_cms: false,
+          can_manage_admins: false,
+          can_view_reports: false,
+          can_verify_payments: true,
+          can_create_bookings: true,
+          can_read_bookings: true,
+          can_manage_settings: false,
+          is_active: true,
+        },
+      ],
+    });
+  }
+
+  const existingAdmins = await prisma.adminUser.findMany();
+  if (existingAdmins.length === 0) {
+    console.log('Creating seeded admin users...');
+    await prisma.adminUser.createMany({
+      data: [
+        {
+          name: 'System Administrator',
+          email: 'admin@klatenminisoccer.id',
+          password_hash: crypto.createHash('sha256').update('admin123').digest('hex'),
+          role: 'super_admin',
+          is_active: true,
+        },
+        {
+          name: 'Primary Super Admin',
+          email: 'superadmin1@klatenminisoccer.id',
+          password_hash: crypto.createHash('sha256').update('superadmin123').digest('hex'),
+          role: 'super_admin',
+          is_active: true,
+        },
+        {
+          name: 'Booking Manager',
+          email: 'manager1@klatenminisoccer.id',
+          password_hash: crypto.createHash('sha256').update('manager123').digest('hex'),
+          role: 'manager',
+          is_active: true,
+        },
+        {
+          name: 'Support Staff',
+          email: 'staff@klatenminisoccer.id',
+          password_hash: crypto.createHash('sha256').update('staff123').digest('hex'),
+          role: 'staff',
+          is_active: true,
+        },
       ],
     });
   }

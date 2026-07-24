@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatedCard } from "@/components/animated-card";
 
 export default function SqlEditorPage() {
@@ -8,6 +8,32 @@ export default function SqlEditorPage() {
   const [results, setResults] = useState<Record<string, unknown>[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
+  const [adminName, setAdminName] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function verifyAdmin() {
+      try {
+        const response = await fetch("/api/admin/me");
+        if (!response.ok) {
+          setAuthorized(false);
+          return;
+        }
+
+        const data = await response.json();
+        if (data?.success && data.user?.permissions?.canManageAdmins) {
+          setAuthorized(true);
+          setAdminName(data.user.name ?? null);
+          return;
+        }
+      } catch {
+        // ignore network errors and treat as unauthorized
+      }
+      setAuthorized(false);
+    }
+
+    verifyAdmin();
+  }, []);
 
   const templates = {
     "All Bookings": `SELECT 
@@ -85,6 +111,11 @@ ORDER BY booking_date DESC;`,
   };
 
   const handleExecute = async () => {
+    if (authorized === false) {
+      setError("You do not have permission to execute SQL queries.");
+      return;
+    }
+
     if (!query.trim()) {
       setError("Please enter a query");
       return;
@@ -125,6 +156,19 @@ ORDER BY booking_date DESC;`,
             <p className="mt-2 text-[color:var(--muted)]">
               Execute SQL queries to view and analyze booking data. Select a template or write your own query.
             </p>
+            {authorized === false ? (
+              <div className="mt-4 rounded-3xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">
+                You are not authorized to use the SQL Query Editor. Contact a super admin to request access.
+              </div>
+            ) : authorized === null ? (
+              <div className="mt-4 rounded-3xl border border-white/10 bg-[color:var(--background)] p-4 text-sm text-[color:var(--muted)]">
+                Verifying administrative permissions...
+              </div>
+            ) : adminName ? (
+              <div className="mt-4 rounded-3xl border border-white/10 bg-[color:var(--background)] p-4 text-sm text-[color:var(--muted)]">
+                Signed in as <strong className="text-white">{adminName}</strong>.
+              </div>
+            ) : null}
           </div>
 
           <div className="mt-8 grid gap-2">

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { applySecurityHeaders, getRateLimitResult } from "@/lib/security";
+import { getAuthenticatedAdmin } from "@/lib/admin-auth";
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const ip = request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip") ?? "unknown";
   const rateLimit = getRateLimitResult(`global:${ip}`);
@@ -11,11 +12,19 @@ export function middleware(request: NextRequest) {
     return applySecurityHeaders(response, request);
   }
 
-  if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
-    const adminSession = request.cookies.get("admin-session")?.value;
-    if (!adminSession) {
-      const redirectUrl = new URL("/admin/login", request.url);
-      return NextResponse.redirect(redirectUrl);
+  const isAdminRoute = pathname.startsWith("/admin") && !pathname.startsWith("/admin/login");
+  const isAdminApiRoute = pathname.startsWith("/api/admin") && !pathname.startsWith("/api/admin/login");
+
+  if (isAdminRoute || isAdminApiRoute) {
+    const admin = await getAuthenticatedAdmin(request);
+    if (!admin) {
+      if (isAdminRoute) {
+        const redirectUrl = new URL("/admin/login", request.url);
+        return NextResponse.redirect(redirectUrl);
+      }
+
+      const response = NextResponse.json({ success: false, message: "Admin session not found or expired." }, { status: 401 });
+      return applySecurityHeaders(response, request);
     }
   }
 

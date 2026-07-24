@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ADMIN_ROLES, getAuthenticatedAdmin, isAdminRoleAllowed } from "@/lib/admin-auth";
+import { getAuthenticatedAdmin, hasAdminPermission } from "@/lib/admin-auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: "Admin session not found." }, { status: 401 });
     }
 
-    if (!isAdminRoleAllowed(admin.role, [ADMIN_ROLES.superAdmin])) {
+    if (!hasAdminPermission(admin, "canManageAdmins")) {
       return NextResponse.json({ success: false, message: "Only super admins can run SQL queries." }, { status: 403 });
     }
 

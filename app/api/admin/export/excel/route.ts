@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { ADMIN_ROLES, getAuthenticatedAdmin, isAdminRoleAllowed } from "@/lib/admin-auth";
+import { getAuthenticatedAdmin, hasAdminPermission } from "@/lib/admin-auth";
 
 export async function GET(request: NextRequest) {
   const admin = await getAuthenticatedAdmin(request);
@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, message: "Admin session not found." }, { status: 401 });
   }
 
-  if (!isAdminRoleAllowed(admin.role, [ADMIN_ROLES.manager, ADMIN_ROLES.superAdmin])) {
+  if (!hasAdminPermission(admin, "canViewReports")) {
     return NextResponse.json({ success: false, message: "Insufficient admin privileges." }, { status: 403 });
   }
 

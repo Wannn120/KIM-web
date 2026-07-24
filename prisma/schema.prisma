@@ -79,20 +79,23 @@ enum CustomerStatus {
 }
 
 model Field {
-  id          String      @id @default(uuid()) @map("id")
-  name        String      @map("name")
-  location    String      @map("location")
-  description String?     @map("description")
-  price       Int         @map("price")
-  type        String      @map("type")
-  size        String      @map("size")
-  capacity    Int         @map("capacity")
-  rating      Float       @default(0) @map("rating")
-  imageUrl    String?     @map("image_url")
-  isActive    Boolean     @default(true) @map("is_active")
-  status      FieldStatus @default(ACTIVE) @map("status")
-  createdAt   DateTime    @default(now()) @map("created_at")
-  updatedAt   DateTime    @updatedAt @map("updated_at")
+  id                 String      @id @default(uuid()) @map("id")
+  name               String      @map("name")
+  location           String      @map("location")
+  description        String?     @map("description")
+  price              Int         @map("price")
+  type               String      @map("type")
+  size               String      @map("size")
+  capacity           Int         @map("capacity")
+  facilities         Json?       @map("facilities")
+  rating             Float       @default(0) @map("rating")
+  imageUrl           String?     @map("image_url")
+  cloudinaryPublicId String?     @map("cloudinary_public_id")
+  isFeatured         Boolean     @default(false) @map("is_featured")
+  isActive           Boolean     @default(true) @map("is_active")
+  status             FieldStatus @default(ACTIVE) @map("status")
+  createdAt          DateTime    @default(now()) @map("created_at")
+  updatedAt          DateTime    @updatedAt @map("updated_at")
 
   bookings      Booking[]
   schedules     FieldSchedule[]
@@ -152,15 +155,16 @@ model ScheduleBlock {
 }
 
 model Customer {
-  id          String         @id @default(uuid()) @map("id")
-  name        String         @map("name")
-  email       String         @unique @map("email")
-  phone       String         @map("phone")
-  totalSpend  Int            @default(0) @map("total_spend")
-  status      CustomerStatus @default(ACTIVE) @map("status")
-  isActive    Boolean        @default(true) @map("is_active")
-  createdAt   DateTime       @default(now()) @map("created_at")
-  updatedAt   DateTime       @updatedAt @map("updated_at")
+  id            String         @id @default(uuid()) @map("id")
+  name          String         @map("name")
+  email         String         @unique @map("email")
+  phone         String         @map("phone")
+  totalSpend    Int            @default(0) @map("total_spend")
+  lastBookingAt DateTime?      @map("last_booking_at")
+  status        CustomerStatus @default(ACTIVE) @map("status")
+  isActive      Boolean        @default(true) @map("is_active")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
 
   bookings    Booking[]
 
@@ -173,6 +177,8 @@ model Booking {
   field         Field         @relation(fields: [fieldId], references: [id], onDelete: Cascade)
   customerId    String?       @map("customer_id")
   customer      Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  approvedById  String?       @map("approved_by_id")
+  approvedBy    AdminUser?    @relation(fields: [approvedById], references: [id], onDelete: SetNull)
   bookingDate   DateTime      @map("booking_date")
   startTime     String        @map("start_time")
   endTime       String        @map("end_time")
@@ -199,6 +205,7 @@ model Payment {
   booking         Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   transactionId   String        @unique @map("transaction_id")
   midtransOrderId String?       @unique @map("midtrans_order_id")
+  referenceNumber String?       @map("reference_number")
   snapToken       String?       @map("snap_token")
   snapUrl         String?       @map("snap_url")
   amount          Int           @map("amount")
@@ -309,21 +316,46 @@ model AdminSetting {
   @@map("admin_setting")
 }
 
-model AdminUser {
-  id           String     @id @default(uuid()) @map("id")
-  name         String     @map("name")
-  email        String     @unique @map("email")
-  passwordHash String     @map("password_hash")
-  role         AdminRole  @default(staff) @map("role")
-  isActive     Boolean    @default(true) @map("is_active")
-  lastLoginAt  DateTime?  @map("last_login_at")
-  createdAt    DateTime   @default(now()) @map("created_at")
-  updatedAt    DateTime   @updatedAt @map("updated_at")
+model AdminRolePermission {
+  id                  String     @id @default(uuid()) @map("id")
+  role                AdminRole  @unique @map("role")
+  canManageFields     Boolean    @default(false) @map("can_manage_fields")
+  canManageBookings   Boolean    @default(false) @map("can_manage_bookings")
+  canManagePayments   Boolean    @default(false) @map("can_manage_payments")
+  canManageSchedule   Boolean    @default(false) @map("can_manage_schedule")
+  canManageCMS        Boolean    @default(false) @map("can_manage_cms")
+  canManageAdmins     Boolean    @default(false) @map("can_manage_admins")
+  canViewReports      Boolean    @default(false) @map("can_view_reports")
+  canVerifyPayments   Boolean    @default(false) @map("can_verify_payments")
+  canCreateBookings   Boolean    @default(false) @map("can_create_bookings")
+  canReadBookings     Boolean    @default(true)  @map("can_read_bookings")
+  canManageSettings   Boolean    @default(false) @map("can_manage_settings")
+  isActive            Boolean    @default(true)  @map("is_active")
+  createdAt           DateTime   @default(now()) @map("created_at")
+  updatedAt           DateTime   @updatedAt @map("updated_at")
 
-  sessions      AdminSession[]
-  auditLogs     AuditLog[]
+  adminUsers          AdminUser[]
+
+  @@map("admin_role_permission")
+}
+
+model AdminUser {
+  id              String     @id @default(uuid()) @map("id")
+  name            String     @map("name")
+  email           String     @unique @map("email")
+  passwordHash    String     @map("password_hash")
+  role            AdminRole  @default(staff) @map("role")
+  rolePermission  AdminRolePermission? @relation(fields: [role], references: [role])
+  isActive        Boolean    @default(true) @map("is_active")
+  lastLoginAt     DateTime?  @map("last_login_at")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  sessions       AdminSession[]
+  auditLogs      AuditLog[]
   scheduleBlocks ScheduleBlock[]
-  reportLogs    ReportLog[]
+  reportLogs     ReportLog[]
+  approvedBookings Booking[]
 
   @@map("admin_user")
 }

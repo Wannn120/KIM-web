@@ -6,6 +6,33 @@ import { createJwt, verifyJwt, setSecureCookie, clearSecureCookie } from "@/lib/
 const DEFAULT_ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@klatenminisoccer.id";
 const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "admin123";
 
+const SEEDED_ADMIN_CREDENTIALS = [
+  {
+    name: "System Administrator",
+    email: DEFAULT_ADMIN_EMAIL.toLowerCase(),
+    password: DEFAULT_ADMIN_PASSWORD,
+    role: "super_admin" as const,
+  },
+  {
+    name: "Primary Super Admin",
+    email: "superadmin1@klatenminisoccer.id",
+    password: "superadmin123",
+    role: "super_admin" as const,
+  },
+  {
+    name: "Booking Manager",
+    email: "manager1@klatenminisoccer.id",
+    password: "manager123",
+    role: "manager" as const,
+  },
+  {
+    name: "Support Staff",
+    email: "staff@klatenminisoccer.id",
+    password: "staff123",
+    role: "staff" as const,
+  },
+];
+
 export const ADMIN_ROLES = {
   staff: "staff",
   manager: "manager",
@@ -13,6 +40,28 @@ export const ADMIN_ROLES = {
 } as const;
 
 export type AdminRole = (typeof ADMIN_ROLES)[keyof typeof ADMIN_ROLES];
+
+export interface AdminPermissions {
+  canManageFields: boolean;
+  canManageBookings: boolean;
+  canManagePayments: boolean;
+  canManageSchedule: boolean;
+  canManageCMS: boolean;
+  canManageAdmins: boolean;
+  canViewReports: boolean;
+  canVerifyPayments: boolean;
+  canCreateBookings: boolean;
+  canReadBookings: boolean;
+  canManageSettings: boolean;
+}
+
+export interface AuthenticatedAdmin {
+  id: string;
+  name: string;
+  email: string;
+  role: AdminRole;
+  permissions: AdminPermissions;
+}
 
 function hashSecret(input: string) {
   return crypto.createHash("sha256").update(input).digest("hex");
@@ -25,16 +74,176 @@ function normalizeAdminRole(role: string): AdminRole {
   return ADMIN_ROLES.staff;
 }
 
+function getDefaultPermissions(role: AdminRole): AdminPermissions {
+  switch (role) {
+    case ADMIN_ROLES.superAdmin:
+      return {
+        canManageFields: true,
+        canManageBookings: true,
+        canManagePayments: true,
+        canManageSchedule: true,
+        canManageCMS: true,
+        canManageAdmins: true,
+        canViewReports: true,
+        canVerifyPayments: true,
+        canCreateBookings: true,
+        canReadBookings: true,
+        canManageSettings: true,
+      };
+    case ADMIN_ROLES.manager:
+      return {
+        canManageFields: true,
+        canManageBookings: true,
+        canManagePayments: true,
+        canManageSchedule: true,
+        canManageCMS: true,
+        canManageAdmins: false,
+        canViewReports: true,
+        canVerifyPayments: true,
+        canCreateBookings: true,
+        canReadBookings: true,
+        canManageSettings: false,
+      };
+    default:
+      return {
+        canManageFields: false,
+        canManageBookings: true,
+        canManagePayments: false,
+        canManageSchedule: false,
+        canManageCMS: false,
+        canManageAdmins: false,
+        canViewReports: false,
+        canVerifyPayments: true,
+        canCreateBookings: true,
+        canReadBookings: true,
+        canManageSettings: false,
+      };
+  }
+}
+
+function mapRolePermissions(
+  rolePermission: Awaited<ReturnType<typeof prisma.adminRolePermission.findUnique>> | null,
+  role: AdminRole,
+): AdminPermissions {
+  if (!rolePermission) {
+    return getDefaultPermissions(role);
+  }
+
+  return {
+    canManageFields: rolePermission.canManageFields,
+    canManageBookings: rolePermission.canManageBookings,
+    canManagePayments: rolePermission.canManagePayments,
+    canManageSchedule: rolePermission.canManageSchedule,
+    canManageCMS: rolePermission.canManageCMS,
+    canManageAdmins: rolePermission.canManageAdmins,
+    canViewReports: rolePermission.canViewReports,
+    canVerifyPayments: rolePermission.canVerifyPayments,
+    canCreateBookings: rolePermission.canCreateBookings,
+    canReadBookings: rolePermission.canReadBookings,
+    canManageSettings: rolePermission.canManageSettings,
+  };
+}
+
 export function isAdminRoleAllowed(role: string, allowedRoles: AdminRole[]) {
   const normalizedRole = normalizeAdminRole(role);
   return allowedRoles.includes(normalizedRole);
 }
 
+export function hasAdminPermission(admin: AuthenticatedAdmin | null, permission: keyof AdminPermissions) {
+  if (!admin) {
+    return false;
+  }
+
+  return admin.permissions[permission] === true;
+}
+
+async function ensureDefaultRolePermissions() {
+  const rolePermissions = [
+    {
+      role: ADMIN_ROLES.superAdmin,
+      canManageFields: true,
+      canManageBookings: true,
+      canManagePayments: true,
+      canManageSchedule: true,
+      canManageCMS: true,
+      canManageAdmins: true,
+      canViewReports: true,
+      canVerifyPayments: true,
+      canCreateBookings: true,
+      canReadBookings: true,
+      canManageSettings: true,
+      isActive: true,
+    },
+    {
+      role: ADMIN_ROLES.manager,
+      canManageFields: true,
+      canManageBookings: true,
+      canManagePayments: true,
+      canManageSchedule: true,
+      canManageCMS: true,
+      canManageAdmins: false,
+      canViewReports: true,
+      canVerifyPayments: true,
+      canCreateBookings: true,
+      canReadBookings: true,
+      canManageSettings: false,
+      isActive: true,
+    },
+    {
+      role: ADMIN_ROLES.staff,
+      canManageFields: false,
+      canManageBookings: true,
+      canManagePayments: false,
+      canManageSchedule: false,
+      canManageCMS: false,
+      canManageAdmins: false,
+      canViewReports: false,
+      canVerifyPayments: true,
+      canCreateBookings: true,
+      canReadBookings: true,
+      canManageSettings: false,
+      isActive: true,
+    },
+  ];
+
+  for (const rolePermission of rolePermissions) {
+    await prisma.adminRolePermission.upsert({
+      where: { role: rolePermission.role },
+      update: rolePermission,
+      create: rolePermission,
+    });
+  }
+}
+
+async function ensureSeededAdminUsers() {
+  await ensureDefaultRolePermissions();
+
+  for (const seededAdmin of SEEDED_ADMIN_CREDENTIALS) {
+    const existing = await prisma.adminUser.findUnique({
+      where: { email: seededAdmin.email.toLowerCase() },
+    });
+
+    if (!existing) {
+      await prisma.adminUser.create({
+        data: {
+          name: seededAdmin.name,
+          email: seededAdmin.email.toLowerCase(),
+          passwordHash: hashSecret(seededAdmin.password),
+          role: seededAdmin.role,
+          isActive: true,
+        },
+      });
+    }
+  }
+}
+
 async function ensureDefaultAdminUser() {
+  await ensureSeededAdminUsers();
   const passwordHash = hashSecret(DEFAULT_ADMIN_PASSWORD);
+  const normalizedEmail = DEFAULT_ADMIN_EMAIL.toLowerCase();
 
   const existing = await prisma.adminUser.findUnique({
-    where: { email: DEFAULT_ADMIN_EMAIL },
+    where: { email: normalizedEmail },
   });
 
   if (existing) {
@@ -44,7 +253,7 @@ async function ensureDefaultAdminUser() {
   return prisma.adminUser.create({
     data: {
       name: "System Administrator",
-      email: DEFAULT_ADMIN_EMAIL,
+      email: normalizedEmail,
       passwordHash,
       role: ADMIN_ROLES.superAdmin,
       isActive: true,
@@ -64,6 +273,12 @@ async function findAdminUserByEmail(email: string) {
 
   if (normalizedEmail === DEFAULT_ADMIN_EMAIL.toLowerCase()) {
     return ensureDefaultAdminUser();
+  }
+
+  const seededAccount = SEEDED_ADMIN_CREDENTIALS.find((account) => account.email.toLowerCase() === normalizedEmail);
+  if (seededAccount) {
+    await ensureSeededAdminUsers();
+    return prisma.adminUser.findUnique({ where: { email: normalizedEmail } });
   }
 
   return null;
@@ -128,18 +343,22 @@ export async function getAuthenticatedAdminFromToken(token: string) {
   const tokenHash = hashSecret(token);
   const session = await prisma.adminSession.findUnique({
     where: { tokenHash },
-    include: { adminUser: true },
+    include: { adminUser: { include: { rolePermission: true } } },
   });
 
   if (!session || !session.adminUser || session.expiresAt < new Date()) {
     return null;
   }
 
+  const role = normalizeAdminRole(session.adminUser.role);
+  const permissions = mapRolePermissions(session.adminUser.rolePermission, role);
+
   return {
     id: session.adminUser.id,
     name: session.adminUser.name,
     email: session.adminUser.email,
-    role: normalizeAdminRole(session.adminUser.role),
+    role,
+    permissions,
   };
 }
 
