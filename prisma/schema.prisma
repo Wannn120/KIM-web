@@ -8,9 +8,9 @@ datasource db {
 }
 
 enum AdminRole {
-  SUPER_ADMIN
-  MANAGER
-  STAFF
+  super_admin
+  manager
+  staff
 }
 
 enum FieldStatus {
@@ -20,41 +20,41 @@ enum FieldStatus {
 }
 
 enum BookingStatus {
-  PENDING
-  CONFIRMED
-  CANCELLED
-  RESCHEDULED
-  COMPLETED
-  EXPIRED
+  pending
+  confirmed
+  cancelled
+  rescheduled
+  completed
+  expired
 }
 
 enum PaymentStatus {
-  PENDING
-  SUCCESS
-  FAILED
-  REFUNDED
-  EXPIRED
-  CANCELLED
+  pending
+  success
+  failed
+  refunded
+  expired
+  cancelled
 }
 
 enum PaymentMethod {
-  MIDTRANS
+  Midtrans
   QRIS
-  GOPAY
-  DANA
-  SHOPEEPAY
+  GoPay
+  Dana
+  ShopeePay
   OVO
   BCA
   BNI
-  MANDIRI
-  OFFLINE
+  Mandiri
+  Offline
 }
 
 enum InvoiceStatus {
-  ISSUED
-  PAID
-  CANCELLED
-  REFUNDED
+  issued
+  paid
+  cancelled
+  refunded
 }
 
 enum WebContentType {
@@ -180,7 +180,7 @@ model Booking {
   customerName  String        @map("customer_name")
   customerPhone String        @map("customer_phone")
   customerEmail String?       @map("customer_email")
-  status        BookingStatus @default(PENDING) @map("status")
+  status        BookingStatus @default(pending) @map("status")
   notes         String?       @map("notes")
   createdAt     DateTime      @default(now()) @map("created_at")
   updatedAt     DateTime      @updatedAt @map("updated_at")
@@ -201,9 +201,9 @@ model Payment {
   snapToken       String?       @map("snap_token")
   snapUrl         String?       @map("snap_url")
   amount          Int           @map("amount")
-  paymentMethod   PaymentMethod @default(MIDTRANS) @map("payment_method")
+  paymentMethod   PaymentMethod @default(Midtrans) @map("payment_method")
   provider        String        @default("Midtrans") @map("provider")
-  status          PaymentStatus @default(PENDING) @map("status")
+  status          PaymentStatus @default(pending) @map("status")
   paidAt          DateTime?     @map("paid_at")
   expiredAt       DateTime?     @map("expired_at")
   createdAt       DateTime      @default(now()) @map("created_at")
@@ -228,7 +228,7 @@ model Invoice {
   tax            Int           @default(0) @map("tax")
   discount       Int           @default(0) @map("discount")
   total          Int           @map("total")
-  status         InvoiceStatus @default(ISSUED) @map("status")
+  status         InvoiceStatus @default(issued) @map("status")
   issuedAt       DateTime      @default(now()) @map("issued_at")
   paidAt         DateTime?     @map("paid_at")
   createdAt      DateTime      @default(now()) @map("created_at")
@@ -313,7 +313,7 @@ model AdminUser {
   name         String     @map("name")
   email        String     @unique @map("email")
   passwordHash String     @map("password_hash")
-  role         AdminRole  @default(STAFF) @map("role")
+  role         AdminRole  @default(staff) @map("role")
   isActive     Boolean    @default(true) @map("is_active")
   lastLoginAt  DateTime?  @map("last_login_at")
   createdAt    DateTime   @default(now()) @map("created_at")

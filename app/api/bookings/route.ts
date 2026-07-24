@@ -230,7 +230,7 @@ export async function GET(request: NextRequest) {
             amount: true,
             provider: true,
             paymentMethod: true,
-            paymentLinkUrl: true,
+            snapUrl: true,
             createdAt: true,
             updatedAt: true,
             paidAt: true,

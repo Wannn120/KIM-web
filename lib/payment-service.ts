@@ -79,7 +79,7 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
       transactionId: input.bookingId,
       midtransOrderId: input.bookingId,
       snapToken: midtransResponse.token,
-      paymentLinkUrl: midtransResponse.redirect_url,
+      snapUrl: midtransResponse.redirect_url,
       paymentMethod: input.paymentMethod as PaymentMethod,
       amount: input.amount,
       status: "pending",

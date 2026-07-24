@@ -16,10 +16,33 @@ function getTodayIso() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function parseTimeToMinutes(time: string) {
+  const [hourText, minuteText] = time.split(":");
+  const hour = Number(hourText);
+  const minute = Number(minuteText ?? "0");
+  return Number.isNaN(hour) || Number.isNaN(minute) ? NaN : hour * 60 + minute;
+}
+
 function getDurationHours(startTime: string, endTime: string) {
-  const startHour = Number(startTime.split(":")[0]);
-  const endHour = Number(endTime.split(":")[0]);
-  return Math.max(endHour - startHour, 1);
+  const startMinutes = parseTimeToMinutes(startTime);
+  const endMinutes = parseTimeToMinutes(endTime);
+  return Math.max(Math.ceil((endMinutes - startMinutes) / 60), 1);
+}
+
+function getSelectedRange(slots: AvailabilitySlot[]) {
+  if (slots.length === 0) {
+    return null;
+  }
+
+  const sorted = [...slots].sort((a, b) => parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime));
+  const startTime = sorted[0].startTime;
+  const endTime = sorted[sorted.length - 1].endTime;
+  const isContinuous = sorted.every((slot, index) => {
+    if (index === 0) return true;
+    return slot.startTime === sorted[index - 1].endTime;
+  });
+
+  return { startTime, endTime, isContinuous };
 }
 
 export function BookingForm({ fields }: { fields: Field[] }) {
@@ -27,7 +50,7 @@ export function BookingForm({ fields }: { fields: Field[] }) {
   const [selectedFieldId, setSelectedFieldId] = useState(fields[0]?.id ?? "");
   const [selectedDate, setSelectedDate] = useState(getTodayIso());
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
-  const [selectedSlot, setSelectedSlot] = useState<AvailabilitySlot | null>(null);
+  const [selectedSlots, setSelectedSlots] = useState<AvailabilitySlot[]>([]);
   const [loading, setLoading] = useState(false);
   const [validating, setValidating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +70,7 @@ export function BookingForm({ fields }: { fields: Field[] }) {
     setLoading(true);
     setError(null);
     setSlots([]);
-    setSelectedSlot(null);
+    setSelectedSlots([]);
 
     fetch(`/api/fields/${selectedFieldId}/availability?date=${selectedDate}`, {
       cache: "no-store",
@@ -81,13 +104,35 @@ export function BookingForm({ fields }: { fields: Field[] }) {
     return () => controller.abort();
   }, [selectedFieldId, selectedDate]);
 
-  const selectedAmount = selectedSlot
-    ? selectedField.price * getDurationHours(selectedSlot.startTime, selectedSlot.endTime)
-    : selectedField?.price ?? 0;
+  const selectedIds = useMemo(() => new Set(selectedSlots.map((slot) => slot.id)), [selectedSlots]);
+  const selectedRange = useMemo(() => getSelectedRange(selectedSlots), [selectedSlots]);
+  const selectedDuration = selectedRange ? getDurationHours(selectedRange.startTime, selectedRange.endTime) : 0;
+  const selectedAmount = selectedRange ? selectedField.price * selectedDuration : 0;
+
+  const selectedLabel = selectedRange
+    ? `${selectedRange.startTime} - ${selectedRange.endTime}`
+    : "Not selected";
+
+  const handleSlotToggle = (slot: AvailabilitySlot) => {
+    if (!slot.isAvailable) return;
+
+    setSelectedSlots((current) => {
+      const isSelected = current.some((selected) => selected.id === slot.id);
+      if (isSelected) {
+        return current.filter((selected) => selected.id !== slot.id);
+      }
+      return [...current, slot];
+    });
+  };
 
   const handleContinue = async () => {
-    if (!selectedSlot) {
-      setSubmitError("Please choose a time slot before continuing.");
+    if (!selectedRange) {
+      setSubmitError("Please choose at least one slot before continuing.");
+      return;
+    }
+
+    if (!selectedRange.isContinuous) {
+      setSubmitError("Please select a continuous range of slots without gaps.");
       return;
     }
 
@@ -102,12 +147,11 @@ export function BookingForm({ fields }: { fields: Field[] }) {
       fieldId: selectedField.id,
       fieldName: selectedField.name,
       bookingDate: selectedDate,
-      startTime: selectedSlot.startTime,
-      endTime: selectedSlot.endTime,
+      startTime: selectedRange.startTime,
+      endTime: selectedRange.endTime,
       amount: selectedAmount.toString(),
     }).toString();
 
-    // Validate slot with backend before redirecting so we can show exact error
     setValidating(true);
     try {
       const resp = await fetch("/api/bookings", {
@@ -116,8 +160,8 @@ export function BookingForm({ fields }: { fields: Field[] }) {
         body: JSON.stringify({
           fieldId: selectedField.id,
           bookingDate: selectedDate,
-          startTime: selectedSlot.startTime,
-          endTime: selectedSlot.endTime,
+          startTime: selectedRange.startTime,
+          endTime: selectedRange.endTime,
           validateOnly: true,
         }),
       });
@@ -198,13 +242,13 @@ export function BookingForm({ fields }: { fields: Field[] }) {
             <div className="grid gap-3">
               {slots.map((slot) => {
                 const label = `${slot.startTime} - ${slot.endTime}`;
-                const isSelected = selectedSlot?.id === slot.id;
+                const isSelected = selectedIds.has(slot.id);
                 return (
                   <button
                     key={slot.id}
                     type="button"
-                    onClick={() => slot.isAvailable && setSelectedSlot(slot)}
-                    className={`rounded-3xl border px-4 py-4 text-left transition ${slot.isAvailable ? "border-white/10 bg-[color:var(--background)] hover:border-[color:var(--accent)]" : "border-white/5 bg-white/5 text-[color:var(--muted)] cursor-not-allowed"} ${isSelected ? "border-[color:var(--accent)] bg-[color:rgba(16,185,129,0.12)]" : ""}`}
+                    onClick={() => handleSlotToggle(slot)}
+                    className={`rounded-3xl border px-4 py-4 text-left transition ${slot.isAvailable ? "border-white/10 bg-[color:var(--background)] hover:border-[color:var(--accent)] hover:bg-[color:rgba(16,185,129,0.08)]" : "border-white/5 bg-white/5 text-[color:var(--muted)] cursor-not-allowed"} ${isSelected ? "border-[color:var(--accent)] bg-[color:rgba(16,185,129,0.16)] shadow-[0_0_0_3px_rgba(16,185,129,0.12)]" : ""}`}
                     disabled={!slot.isAvailable}
                   >
                     <div className="flex items-center justify-between gap-4">
@@ -234,19 +278,13 @@ export function BookingForm({ fields }: { fields: Field[] }) {
           <div className="text-right">
             <p className="text-sm text-[color:var(--muted)]">Duration</p>
             <p className="text-xl font-semibold text-white">
-              {selectedSlot ? `${getDurationHours(selectedSlot.startTime, selectedSlot.endTime)} hour(s)` : "Select a slot"}
+              {selectedRange ? `${selectedDuration} hour(s)` : "Select a slot"}
             </p>
-          </div>
-        </div>
-
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-3xl border border-white/10 bg-[color:var(--surface)] p-4">
-            <p className="text-sm text-[color:var(--muted)]">Date</p>
-            <p className="mt-2 text-white">{selectedDate}</p>
-          </div>
-          <div className="rounded-3xl border border-white/10 bg-[color:var(--surface)] p-4">
             <p className="text-sm text-[color:var(--muted)]">Time</p>
-            <p className="mt-2 text-white">{selectedSlot ? `${selectedSlot.startTime} - ${selectedSlot.endTime}` : "Not selected"}</p>
+            <p className="mt-2 text-white">{selectedLabel}</p>
+            {selectedRange && !selectedRange.isContinuous ? (
+              <p className="mt-1 text-sm text-amber-300">Please select continuous slots without gaps.</p>
+            ) : null}
           </div>
         </div>
 

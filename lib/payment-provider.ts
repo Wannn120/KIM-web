@@ -1,4 +1,5 @@
 export type PaymentMethod =
+  | "Midtrans"
   | "QRIS"
   | "GoPay"
   | "Dana"

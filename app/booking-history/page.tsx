@@ -19,7 +19,7 @@ type BookingHistoryItem = {
   payments?: Array<{
     status: string;
     transactionId?: string;
-    paymentLinkUrl?: string | null;
+    snapUrl?: string | null;
     paymentMethod?: string;
   }>;
 };
@@ -182,9 +182,9 @@ export default function BookingHistoryPage() {
                             <td className="px-4 py-3">
                               <div className="flex flex-col gap-2">
                                 <span className={`rounded-full px-3 py-1 text-sm ${getBadgeClasses(item.status)}`}>{item.status}</span>
-                                {item.payments?.[0]?.status === "pending" && item.payments?.[0]?.paymentLinkUrl ? (
+                                {item.payments?.[0]?.status === "pending" && item.payments?.[0]?.snapUrl ? (
                                   <a
-                                    href={item.payments[0].paymentLinkUrl}
+                                    href={item.payments[0].snapUrl}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="rounded-full bg-[color:rgba(16,185,129,0.12)] px-3 py-1 text-center text-xs font-semibold text-emerald-200"
@@ -223,10 +223,10 @@ export default function BookingHistoryPage() {
                             <p className="text-xs text-[color:var(--muted)]">Amount</p>
                             <p className="text-sm text-white">{formatCurrency(item.totalPrice)}</p>
                           </div>
-                          {item.payments?.[0]?.status === "pending" && item.payments?.[0]?.paymentLinkUrl ? (
+                          {item.payments?.[0]?.status === "pending" && item.payments?.[0]?.snapUrl ? (
                             <div className="col-span-2">
                               <a
-                                href={item.payments[0].paymentLinkUrl}
+                                href={item.payments[0].snapUrl}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="inline-flex rounded-full bg-[color:rgba(16,185,129,0.12)] px-4 py-2 text-xs font-semibold text-emerald-200"
