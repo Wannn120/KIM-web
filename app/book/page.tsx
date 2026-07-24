@@ -1,16 +1,26 @@
-import { bookingSteps } from "@/lib/mock-data";
+import { bookingSteps, bookedSlots as fallbackBookedSlots, fields as fallbackFields } from "@/lib/mock-data";
 import { getUpcomingBookings, getFields, mapBookingsToSlots } from "@/lib/data";
 import { BookingForm } from "@/components/booking-form";
 
 export const dynamic = "force-dynamic";
 
 async function loadBookedSlots() {
-  const bookings = await getUpcomingBookings(5);
-  return mapBookingsToSlots(bookings);
+  try {
+    const bookings = await getUpcomingBookings(5);
+    return mapBookingsToSlots(bookings);
+  } catch (error) {
+    console.error("Failed to load booked slots:", error);
+    return fallbackBookedSlots;
+  }
 }
 
 async function loadFields() {
-  return await getFields();
+  try {
+    return await getFields();
+  } catch (error) {
+    console.error("Failed to load fields:", error);
+    return fallbackFields;
+  }
 }
 
 export default async function BookPage() {
