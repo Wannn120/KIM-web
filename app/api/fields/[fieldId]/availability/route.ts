@@ -77,9 +77,16 @@ export async function GET(request: Request, props: { params: Promise<{ fieldId: 
     });
   } catch (error) {
     console.error("Error fetching field schedule:", error);
-    return NextResponse.json(
-      { success: false, message: "Unable to fetch field schedule." },
-      { status: 500 }
-    );
+    const payload: any = { success: false, message: "Unable to fetch field schedule." };
+    // Opt-in debug information. Set DEBUG_API=1 in your Vercel environment to include server error details in the response.
+    if (process.env.DEBUG_API === "1") {
+      try {
+        payload.detail = String(error instanceof Error ? error.stack || error.message : error);
+      } catch (e) {
+        payload.detail = "(failed to serialize error)";
+      }
+    }
+
+    return NextResponse.json(payload, { status: 500 });
   }
 }
