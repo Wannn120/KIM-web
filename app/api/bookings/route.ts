@@ -54,11 +54,32 @@ function getRequestedScheduleBlocks(startTime: string, endTime: string) {
   return blocks;
 }
 
+async function resolveField(fieldId: string, fieldName?: string) {
+  const field = await prisma.field.findUnique({
+    where: { id: fieldId },
+    select: { id: true, name: true, price: true },
+  });
+
+  if (field) {
+    return field;
+  }
+
+  if (fieldName) {
+    return prisma.field.findFirst({
+      where: { name: fieldName },
+      select: { id: true, name: true, price: true },
+    });
+  }
+
+  return null;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const safeBody = sanitizeObject(body as Record<string, unknown>);
     const fieldId = typeof safeBody?.fieldId === "string" ? safeBody.fieldId : "";
+    const fieldName = typeof safeBody?.fieldName === "string" ? safeBody.fieldName.trim() : "";
     const bookingDate = typeof safeBody?.bookingDate === "string" ? safeBody.bookingDate : "";
     const startTime = typeof safeBody?.startTime === "string" ? safeBody.startTime : "";
     const endTime = typeof safeBody?.endTime === "string" ? safeBody.endTime : "";
@@ -82,13 +103,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: "Invalid booking date." }, { status: 400 });
     }
 
-    const field = await prisma.field.findUnique({
-      where: { id: fieldId },
-      select: { id: true, name: true, price: true },
-    });
+    const field = await resolveField(fieldId, fieldName);
 
     if (!field) {
-      return NextResponse.json({ success: false, message: "Field not found." }, { status: 404 });
+      return NextResponse.json({ success: false, message: "Field not found. Please choose a valid field." }, { status: 404 });
     }
 
     const requestedBlocks = getRequestedScheduleBlocks(startTime, endTime);
@@ -98,7 +116,7 @@ export async function POST(request: NextRequest) {
 
     const scheduleBlocks = await prisma.fieldSchedule.findMany({
       where: {
-        fieldId,
+        fieldId: field.id,
         date: {
           gte: range.start,
           lt: range.end,
@@ -136,7 +154,7 @@ export async function POST(request: NextRequest) {
     const booking = await prisma.$transaction(async (tx) => {
       const newBooking = await tx.booking.create({
         data: {
-          fieldId,
+          fieldId: field.id,
           bookingDate: range.start,
           startTime,
           endTime,
@@ -161,7 +179,7 @@ export async function POST(request: NextRequest) {
 
       await tx.fieldSchedule.updateMany({
         where: {
-          fieldId,
+          fieldId: field.id,
           date: range.start,
           startTime: {
             in: requestedBlocks.map((block) => block.start),
@@ -202,6 +220,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, message: "The selected field is no longer available." },
         { status: 404 }
+      );
+    }
+
+    if (errorMsg.includes("invalid character") || errorMsg.includes("P2023")) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid booking details. Please return to the booking page and select a valid slot.",
+        },
+        { status: 400 }
       );
     }
 

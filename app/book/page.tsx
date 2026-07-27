@@ -16,16 +16,17 @@ async function loadBookedSlots() {
 
 async function loadFields() {
   try {
-    return await getFields();
+    const fields = await getFields();
+    return { fields, usingFallback: false } as const;
   } catch (error) {
     console.error("Failed to load fields:", error);
-    return fallbackFields;
+    return { fields: fallbackFields, usingFallback: true } as const;
   }
 }
 
 export default async function BookPage() {
   const bookedSlots = await loadBookedSlots();
-  const fields = await loadFields();
+  const { fields, usingFallback } = await loadFields();
 
   return (
     <main className="flex-1 px-6 py-16 lg:px-8">
@@ -111,7 +112,17 @@ export default async function BookPage() {
           </div>
 
           <aside className="card-glow p-8">
-            <BookingForm fields={fields} />
+            {usingFallback ? (
+              <div className="rounded-3xl border border-rose-500/10 bg-rose-500/5 p-8">
+                <p className="text-sm uppercase tracking-[0.3em] text-rose-200">Booking unavailable</p>
+                <h2 className="mt-3 text-3xl font-semibold text-white">Database connection required</h2>
+                <p className="mt-4 text-sm text-[color:var(--muted)]">
+                  The booking service is temporarily unavailable because the database could not be accessed. Please try again later.
+                </p>
+              </div>
+            ) : (
+              <BookingForm fields={fields} />
+            )}
           </aside>
         </section>
       </div>
