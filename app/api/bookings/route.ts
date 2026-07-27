@@ -183,9 +183,30 @@ export async function POST(request: NextRequest) {
 
     return applySecurityHeaders(response);
   } catch (error) {
-    console.error("Booking creation error:", error);
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error("[API] Booking creation error:", {
+      message: errorMsg,
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Return more specific error messages for known scenarios
+    if (errorMsg.includes("Unique constraint failed")) {
+      return NextResponse.json(
+        { success: false, message: "This time slot is no longer available. Please select another slot." },
+        { status: 409 }
+      );
+    }
+
+    if (errorMsg.includes("Field not found")) {
+      return NextResponse.json(
+        { success: false, message: "The selected field is no longer available." },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(
-      { success: false, message: "Unable to create booking." },
+      { success: false, message: "Unable to create booking. Please try again or contact support." },
       { status: 500 }
     );
   }
@@ -246,9 +267,15 @@ export async function GET(request: NextRequest) {
       bookings,
     });
   } catch (error) {
-    console.error("Error fetching bookings:", error);
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error("[API] Booking retrieval error:", {
+      message: errorMsg,
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString(),
+    });
+
     return NextResponse.json(
-      { success: false, message: "Unable to fetch bookings." },
+      { success: false, message: "Unable to fetch bookings. Please try again." },
       { status: 500 }
     );
   }
