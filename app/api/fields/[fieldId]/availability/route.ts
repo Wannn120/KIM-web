@@ -15,7 +15,41 @@ function getDateRange(dateString: string) {
 
 export async function GET(request: Request, props: { params: Promise<{ fieldId: string }> }) {
   const params = await props.params;
-  const fieldId = params.fieldId;
+  const fieldParam = params?.fieldId;
+  type FallbackSchedule = { id: string; startTime: string; endTime: string; isAvailable: boolean };
+  // If the deployment has no DATABASE_URL or Prisma cannot connect, prefer returning
+  // a safe fallback so the booking UI remains usable. This avoids uncaught runtime
+  // errors that can surface as server component render failures in production.
+  if (!process.env.DATABASE_URL) {
+    const fieldId = fieldParam ?? "klaten-field-1";
+    const date = new URL(request.url).searchParams.get("date") ?? new Date().toISOString().split("T")[0];
+
+    const fallbackField = fallbackFields.find((f) => f.id === fieldId) || { id: fieldId, name: "Unknown Field", price: 110000 };
+    const fallbackSchedules = [] as Array<{ id: string; startTime: string; endTime: string; isAvailable: boolean }>;
+    const startHour = 6;
+    const endHour = 22;
+    for (let h = startHour; h < endHour; h++) {
+      const sh = String(h).padStart(2, "0") + ":00";
+      const eh = String(h + 1).padStart(2, "0") + ":00";
+      const timeLabel = `${sh} - ${eh}`;
+      const isBooked = fallbackBookedSlots.some((b) => b.date === date && b.time === timeLabel && b.field === fallbackField.name);
+      fallbackSchedules.push({ id: `mock-${date}-${sh}`, startTime: sh, endTime: eh, isAvailable: !isBooked });
+    }
+
+    const payload: { success: boolean; field: { id: string; name?: string; price?: number }; schedules: FallbackSchedule[]; _debug?: string } = {
+      success: true,
+      field: fallbackField,
+      schedules: fallbackSchedules,
+    };
+
+    if (process.env.DEBUG_API === "1" || process.env.NODE_ENV !== "production") {
+      payload._debug = "Fallback (no DATABASE_URL)";
+    }
+
+    return NextResponse.json(payload, { status: 200 });
+  }
+
+  const fieldId = fieldParam;
   const { searchParams } = new URL(request.url);
   const date = searchParams.get("date");
 
