@@ -21,6 +21,7 @@ export async function GET(request: Request, props: { params: Promise<{ fieldId: 
   // a safe fallback so the booking UI remains usable. This avoids uncaught runtime
   // errors that can surface as server component render failures in production.
   if (!process.env.DATABASE_URL) {
+    console.warn("[API] Field availability fallback because DATABASE_URL is not set.");
     const fieldId = fieldParam ?? "klaten-field-1";
     const date = new URL(request.url).searchParams.get("date") ?? new Date().toISOString().split("T")[0];
 
@@ -139,6 +140,7 @@ export async function GET(request: Request, props: { params: Promise<{ fieldId: 
       }
     }
 
+    console.warn(`[API] Field availability fallback due to error: ${errorMsg}`);
     // Return fallback data with success=true and status 200 so client can proceed
     const payload: { success: boolean; field: { id: string; name?: string; price?: number }; schedules: FallbackSchedule[]; _debug?: string } = {
       success: true,

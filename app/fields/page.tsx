@@ -1,11 +1,17 @@
 import Link from "next/link";
 import { FieldCard } from "@/components/field-card";
+import { fields as fallbackFields } from "@/lib/mock-data";
 import { getFields } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
 async function loadFields() {
-  return await getFields();
+  try {
+    return await getFields();
+  } catch (error) {
+    console.error("Failed to load fields for /fields page:", error);
+    return fallbackFields;
+  }
 }
 
 export default async function FieldsPage() {
