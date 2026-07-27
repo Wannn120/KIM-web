@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatedCard } from "@/components/animated-card";
 
@@ -290,8 +290,15 @@ export default function CheckoutPage() {
     const container = document.querySelector("#snap-container");
 
     try {
+        const containerEl = document.querySelector("#snap-container") as HTMLElement | null;
+        if (containerEl) {
+          try {
+            containerEl.scrollIntoView({ behavior: "smooth", block: "center" });
+          } catch {}
+        }
+
       if (typeof snap.embed === "function" && container) {
-        snap.embed(snapToken, "#snap-container", callbacks);
+          snap.embed(snapToken, "#snap-container", callbacks);
         setEmbedCheckoutLoaded(true);
         setSaving(false);
         setSnapLoadError(null);
