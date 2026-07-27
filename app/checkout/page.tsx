@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Script from "next/script";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatedCard } from "@/components/animated-card";
 import { getMidtransConfig } from "@/lib/midtrans";
@@ -18,16 +17,27 @@ function formatDate(iso: string) {
 }
 
 function formatTimeRange(start: string, end: string) {
-  const startTime = new Date(`${start}`).toLocaleTimeString("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  const endTime = new Date(`${end}`).toLocaleTimeString("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const parseTime = (value: string) => {
+    const [hourText, minuteText] = value.split(":");
+    const hour = Number(hourText);
+    const minute = Number(minuteText ?? "0");
 
-  return `${startTime} - ${endTime}`;
+    if (Number.isNaN(hour) || Number.isNaN(minute)) {
+      return null;
+    }
+
+    return { hour, minute };
+  };
+
+  const formatTime = (hour: number, minute: number) => `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+  const parsedStart = parseTime(start);
+  const parsedEnd = parseTime(end);
+
+  if (!parsedStart || !parsedEnd) {
+    return `${start} - ${end}`;
+  }
+
+  return `${formatTime(parsedStart.hour, parsedStart.minute)} - ${formatTime(parsedEnd.hour, parsedEnd.minute)}`;
 }
 
 function getSearchParam(value: string | null, fallback = "") {
@@ -65,6 +75,8 @@ export default function CheckoutPage() {
   const [currentTransactionId, setCurrentTransactionId] = useState<string | null>(null);
   const [embedCheckoutLoaded, setEmbedCheckoutLoaded] = useState(false);
   const [snapLoadError, setSnapLoadError] = useState<string | null>(null);
+  const [scriptLoadError, setScriptLoadError] = useState<string | null>(null);
+  const [scriptLoaded, setScriptLoaded] = useState(false);
 
   const { snapScriptUrl, clientKey: snapClientKey } = useMemo(() => getMidtransConfig(), []);
 
@@ -77,6 +89,7 @@ export default function CheckoutPage() {
 
   const hasValidBookingDetails = Boolean(fieldId && fieldName && bookingDate && startTime && endTime && amount > 0);
   const hasValidCustomerInfo = Boolean(customerName.trim() && customerEmail.trim() && customerPhone.trim());
+  const canSubmit = hasValidBookingDetails && hasValidCustomerInfo && (scriptLoaded || snapReady);
 
   useEffect(() => {
     const onSnapReady = () => {
@@ -93,6 +106,37 @@ export default function CheckoutPage() {
   }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined" || scriptLoaded) {
+      return;
+    }
+
+    const existing = document.getElementById("midtrans-snap-script") as HTMLScriptElement | null;
+    if (existing) {
+      setScriptLoaded(true);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.id = "midtrans-snap-script";
+    script.src = snapScriptUrl;
+    script.async = true;
+    script.setAttribute("data-client-key", snapClientKey);
+    script.onload = () => {
+      setScriptLoaded(true);
+      setScriptLoadError(null);
+    };
+    script.onerror = () => {
+      setScriptLoadError("Unable to load payment gateway. Please refresh and try again.");
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      script.onload = null;
+      script.onerror = null;
+    };
+  }, [scriptLoaded, snapScriptUrl, snapClientKey]);
+
+  useEffect(() => {
     if (typeof window === "undefined" || !snapToken || embedCheckoutLoaded) {
       return;
     }
@@ -103,6 +147,7 @@ export default function CheckoutPage() {
       if (snapReady) {
         setSnapLoadError("Payment gateway failed to initialize. Please refresh the page or try again.");
       }
+      setSaving(false);
       return;
     }
 
@@ -145,8 +190,10 @@ export default function CheckoutPage() {
       }
 
       setSnapLoadError("This payment method is not available right now. Please refresh or try again later.");
+      setSaving(false);
     } catch {
       setSnapLoadError("Unable to load the payment checkout. Please refresh the page and try again.");
+      setSaving(false);
     }
   }, [snapToken, snapReady, embedCheckoutLoaded, currentTransactionId, router]);
 
@@ -257,7 +304,6 @@ export default function CheckoutPage() {
 
   return (
     <main className="flex-1 px-6 py-16 lg:px-8">
-      <Script src={snapScriptUrl} data-client-key={snapClientKey} strategy="afterInteractive" />
       <div className="mx-auto max-w-7xl space-y-8">
         <div className="card-surface p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Secure checkout</p>
@@ -334,11 +380,22 @@ export default function CheckoutPage() {
 
           <button
             onClick={handleCheckout}
-            disabled={saving || !hasValidBookingDetails || !hasValidCustomerInfo || !snapReady}
+            disabled={saving || !canSubmit}
             className="mt-8 btn-primary w-full py-4 text-lg disabled:opacity-60"
           >
-            {saving ? "Processing…" : snapReady ? "Confirm and pay" : "Loading payment gateway…"}
+            {saving
+              ? "Processing…"
+              : scriptLoadError
+              ? "Cannot load payment gateway"
+              : canSubmit
+              ? "Confirm and pay"
+              : "Loading payment gateway…"}
           </button>
+          {scriptLoadError ? (
+            <p className="mt-4 rounded-3xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">
+              {scriptLoadError}
+            </p>
+          ) : null}
 
           {snapToken ? (
             <div className="mt-10 rounded-3xl border border-white/10 bg-[color:var(--surface)] p-6">
