@@ -2,16 +2,56 @@ import Link from "next/link";
 import { FieldCard } from "@/components/field-card";
 import { fields as fallbackFields } from "@/lib/mock-data";
 import { getFields } from "@/lib/data";
+import type { Field } from "@/types";
+import { headers } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
-async function loadFields() {
+async function getAppUrl() {
+  const requestHeaders = await headers();
+  const forwardedHost = requestHeaders.get("x-forwarded-host");
+  const host = forwardedHost ?? requestHeaders.get("host");
+  const protocol = requestHeaders.get("x-forwarded-proto") ?? "https";
+
+  if (host) {
+    return `${protocol}://${host}`;
+  }
+
+  return (
+    process.env.NEXT_PUBLIC_APP_URL ??
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")
+  );
+}
+
+async function loadFields(): Promise<Field[]> {
   try {
     return await getFields();
   } catch (error) {
-    console.error("Failed to load fields for /fields page:", error);
-    return fallbackFields;
+    console.error("Failed to load fields directly from DB for /fields page:", error);
   }
+
+  try {
+    const appUrl = await getAppUrl();
+    const response = await fetch(new URL("/api/fields", appUrl).toString(), {
+      cache: "no-store",
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data?.success && Array.isArray(data.data) && data.data.length > 0) {
+        return data.data;
+      }
+      console.error("Fields API returned invalid data for /fields page:", data);
+    } else {
+      const body = await response.text();
+      console.error(`Fields API returned ${response.status} for /fields page: ${body}`);
+    }
+  } catch (error) {
+    console.error("Failed to load fields from internal API for /fields page:", error);
+  }
+
+  console.warn("Using fallback fields for /fields page.");
+  return fallbackFields;
 }
 
 export default async function FieldsPage() {

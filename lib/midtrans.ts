@@ -2,8 +2,11 @@ import crypto from "crypto";
 
 const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY ?? "";
 const MIDTRANS_CLIENT_KEY = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY ?? process.env.MIDTRANS_CLIENT_KEY ?? "";
-const MIDTRANS_BASE_URL = process.env.MIDTRANS_BASE_URL ?? "https://app.sandbox.midtrans.com/snap/v1/transactions";
-const MIDTRANS_SNAP_SCRIPT_URL = process.env.NEXT_PUBLIC_MIDTRANS_SNAP_URL ?? "https://app.sandbox.midtrans.com/snap/snap.js";
+const MIDTRANS_IS_PRODUCTION = String(process.env.MIDTRANS_IS_PRODUCTION ?? "false").toLowerCase() === "true";
+const MIDTRANS_SANDBOX_URL = process.env.MIDTRANS_SANDBOX_URL ?? "https://app.sandbox.midtrans.com";
+const MIDTRANS_PRODUCTION_URL = process.env.MIDTRANS_PRODUCTION_URL ?? "https://app.midtrans.com";
+const MIDTRANS_BASE_URL = process.env.MIDTRANS_BASE_URL ?? `${MIDTRANS_IS_PRODUCTION ? MIDTRANS_PRODUCTION_URL : MIDTRANS_SANDBOX_URL}/snap/v1/transactions`;
+const MIDTRANS_SNAP_SCRIPT_URL = process.env.NEXT_PUBLIC_MIDTRANS_SNAP_URL ?? `${MIDTRANS_IS_PRODUCTION ? MIDTRANS_PRODUCTION_URL : MIDTRANS_SANDBOX_URL}/snap/snap.js`;
 
 export interface MidtransCreatePayload {
   transaction_details: {
