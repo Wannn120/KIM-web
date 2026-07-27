@@ -1,6 +1,6 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthenticatedAdmin, hasAdminPermission } from "@/lib/admin-auth";
+import { getAuthenticatedAdminFromToken, hasAdminPermission } from "@/lib/admin-auth";
 
 export async function GET() {
   try {
@@ -12,9 +12,12 @@ export async function GET() {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const admin = await getAuthenticatedAdmin(request);
+    const cookieHeader = request.headers.get("cookie") || "";
+    const match = cookieHeader.match(/admin-session=([^;]+)/);
+    const token = match ? decodeURIComponent(match[1]) : "";
+    const admin = await getAuthenticatedAdminFromToken(token);
     if (!admin) return NextResponse.json({ success: false, message: "Not authenticated." }, { status: 401 });
     if (!hasAdminPermission(admin, "canManageFields")) return NextResponse.json({ success: false, message: "Insufficient privileges." }, { status: 403 });
 
