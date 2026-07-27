@@ -15,7 +15,7 @@ export default async function AdminPage() {
     redirect("/admin/login");
   }
 
-  const summary = getAdminSummary();
+  const summary = await getAdminSummary();
   const permissions = [
     { label: "Manage fields", allowed: admin.permissions.canManageFields },
     { label: "Manage bookings", allowed: admin.permissions.canManageBookings },
