@@ -1,36 +1,74 @@
+import { prisma } from "@/lib/prisma";
+
 export interface AdminSummary {
   revenueToday: number;
   revenueThisMonth: number;
   bookingsToday: number;
   bookingsThisMonth: number;
   peakHours: Array<{ hour: string; bookings: number }>;
-  mostBookedField: { name: string; bookings: number };
+  mostBookedField: { name: string; bookings: number } | null;
   customerStats: { totalCustomers: number; activeCustomers: number; newCustomersThisMonth: number };
-  calendarEvents: Array<{ title: string; date: string; field: string }>;
 }
 
-export function getAdminSummary(): AdminSummary {
+export async function getAdminSummary(): Promise<AdminSummary> {
+  const now = new Date();
+  const startOfToday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
+  const startOfTomorrow = new Date(startOfToday);
+  startOfTomorrow.setUTCDate(startOfTomorrow.getUTCDate() + 1);
+
+  const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+
+  // Revenue: sum of successful payments paid today and this month
+  const revenueTodayResult = await prisma.payment.aggregate({
+    _sum: { amount: true },
+    where: { status: "success", paidAt: { gte: startOfToday, lt: startOfTomorrow } },
+  });
+
+  const revenueMonthResult = await prisma.payment.aggregate({
+    _sum: { amount: true },
+    where: { status: "success", paidAt: { gte: startOfMonth, lt: startOfTomorrow } },
+  });
+
+  const bookingsToday = await prisma.booking.count({ where: { bookingDate: { gte: startOfToday, lt: startOfTomorrow } } });
+  const bookingsThisMonth = await prisma.booking.count({ where: { bookingDate: { gte: startOfMonth, lt: startOfTomorrow } } });
+
+  // Peak hours (group by startTime)
+  const peakRows = await prisma.booking.groupBy({
+    by: ["startTime"],
+    _count: { startTime: true },
+    where: { bookingDate: { gte: startOfMonth, lt: startOfTomorrow } },
+    orderBy: { _count: { startTime: "desc" } },
+    take: 5,
+  });
+
+  const peakHours = peakRows.map((r) => ({ hour: r.startTime, bookings: r._count.startTime }));
+
+  // Most booked field
+  const fieldRows = await prisma.booking.groupBy({
+    by: ["fieldId"],
+    _count: { fieldId: true },
+    where: { bookingDate: { gte: startOfMonth, lt: startOfTomorrow } },
+    orderBy: { _count: { fieldId: "desc" } },
+    take: 1,
+  });
+
+  let mostBookedField = null;
+  if (fieldRows.length > 0) {
+    const field = await prisma.field.findUnique({ where: { id: fieldRows[0].fieldId } });
+    mostBookedField = { name: field?.name ?? "Unknown", bookings: fieldRows[0]._count.fieldId };
+  }
+
+  const totalCustomers = await prisma.customer.count();
+  const activeCustomers = await prisma.customer.count({ where: { status: "ACTIVE" } });
+  const newCustomersThisMonth = await prisma.customer.count({ where: { createdAt: { gte: startOfMonth } } });
+
   return {
-    revenueToday: 1800000,
-    revenueThisMonth: 18400000,
-    bookingsToday: 24,
-    bookingsThisMonth: 182,
-    peakHours: [
-      { hour: "18:00", bookings: 12 },
-      { hour: "19:00", bookings: 15 },
-      { hour: "20:00", bookings: 10 },
-      { hour: "21:00", bookings: 8 },
-    ],
-    mostBookedField: { name: "Elite Turf 1", bookings: 64 },
-    customerStats: {
-      totalCustomers: 438,
-      activeCustomers: 312,
-      newCustomersThisMonth: 27,
-    },
-    calendarEvents: [
-      { title: "Morning league", date: "2026-07-07", field: "Elite Turf 1" },
-      { title: "Training session", date: "2026-07-08", field: "Club Arena" },
-      { title: "Tournament", date: "2026-07-09", field: "Elite Turf 2" },
-    ],
+    revenueToday: revenueTodayResult._sum.amount ?? 0,
+    revenueThisMonth: revenueMonthResult._sum.amount ?? 0,
+    bookingsToday,
+    bookingsThisMonth,
+    peakHours,
+    mostBookedField,
+    customerStats: { totalCustomers, activeCustomers, newCustomersThisMonth },
   };
 }
