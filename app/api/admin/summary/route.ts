@@ -13,7 +13,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, message: "Insufficient admin privileges." }, { status: 403 });
     }
 
-    return NextResponse.json({ success: true, data: getAdminSummary() });
+    const data = await getAdminSummary();
+    return NextResponse.json({ success: true, data });
   } catch {
     return NextResponse.json({ success: false, message: "Unable to load admin summary." }, { status: 500 });
   }
