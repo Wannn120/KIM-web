@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -57,12 +56,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex min-h-screen flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
-        <Script id="theme-init" strategy="beforeInteractive">
-          {`(function(){
-            var theme = window.localStorage.getItem('minisoccer-theme') || 'light';
-            document.documentElement.setAttribute('data-theme', theme);
-          })()`}
-        </Script>
+        <script src="/theme-init.js" defer></script>
         <SiteHeader />
         <div className="flex-1">{children}</div>
         <SiteFooter />

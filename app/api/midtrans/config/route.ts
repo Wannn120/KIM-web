@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
+import { getMidtransConfig } from "@/lib/midtrans";
 
 export async function GET() {
-  const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY ?? process.env.MIDTRANS_CLIENT_KEY ?? "";
-  const snapScriptUrl = process.env.NEXT_PUBLIC_MIDTRANS_SNAP_URL ?? "https://app.sandbox.midtrans.com/snap/snap.js";
+  const { clientKey, snapScriptUrl } = getMidtransConfig();
 
   return NextResponse.json({
     success: true,

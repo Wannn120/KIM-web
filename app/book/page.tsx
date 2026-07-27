@@ -1,8 +1,25 @@
 import { bookingSteps, bookedSlots as fallbackBookedSlots, fields as fallbackFields } from "@/lib/mock-data";
 import { getUpcomingBookings, getFields, mapBookingsToSlots } from "@/lib/data";
 import { BookingForm } from "@/components/booking-form";
+import { headers } from "next/headers";
 
 export const dynamic = "force-dynamic";
+
+async function getAppUrl() {
+  const requestHeaders = await headers();
+  const forwardedHost = requestHeaders.get("x-forwarded-host");
+  const host = forwardedHost ?? requestHeaders.get("host");
+  const protocol = requestHeaders.get("x-forwarded-proto") ?? "https";
+
+  if (host) {
+    return `${protocol}://${host}`;
+  }
+
+  return (
+    process.env.NEXT_PUBLIC_APP_URL ??
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")
+  );
+}
 
 async function loadBookedSlots() {
   try {
@@ -19,9 +36,31 @@ async function loadFields() {
     const fields = await getFields();
     return { fields, usingFallback: false } as const;
   } catch (error) {
-    console.error("Failed to load fields:", error);
-    return { fields: fallbackFields, usingFallback: true } as const;
+    console.error("Failed to load fields directly from DB:", error);
   }
+
+  try {
+    const appUrl = await getAppUrl();
+    const response = await fetch(new URL("/api/fields", appUrl).toString(), {
+      cache: "no-store",
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data?.success && Array.isArray(data.data) && data.data.length > 0) {
+        return { fields: data.data, usingFallback: false } as const;
+      }
+      console.error("Fields API returned invalid data:", data);
+    } else {
+      const body = await response.text();
+      console.error(`Fields API returned ${response.status}: ${body}`);
+    }
+  } catch (error) {
+    console.error("Failed to load fields from internal API:", error);
+  }
+
+  console.warn("Using fallback fields data for booking page.");
+  return { fields: fallbackFields, usingFallback: true } as const;
 }
 
 export default async function BookPage() {
