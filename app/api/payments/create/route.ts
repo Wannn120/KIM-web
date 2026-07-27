@@ -23,9 +23,15 @@ export async function POST(request: Request) {
       snapToken,
     }, { status: 201 });
   } catch (error) {
-    console.error("Payment creation error:", error);
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error("[API] Payment creation error:", {
+      message: errorMsg,
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString(),
+    });
+    
     return NextResponse.json(
-      { success: false, message: (error as Error).message },
+      { success: false, message: `Payment error: ${errorMsg}` },
       { status: 500 }
     );
   }

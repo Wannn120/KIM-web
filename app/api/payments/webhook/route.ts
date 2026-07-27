@@ -28,6 +28,7 @@ export async function POST(request: Request) {
     const body = rawBody ? JSON.parse(rawBody) : {};
 
     if (process.env.NODE_ENV === "production" && (!signature || !verifyMidtransSignature(rawBody, signature))) {
+      console.warn("[WEBHOOK] Invalid Midtrans signature detected", { timestamp: new Date().toISOString() });
       return NextResponse.json({ success: false, message: "Invalid Midtrans signature." }, { status: 401 });
     }
 
@@ -35,12 +36,22 @@ export async function POST(request: Request) {
     const status = resolveTransactionStatus(body as Record<string, unknown>);
 
     if (!transactionId || !status) {
+      console.warn("[WEBHOOK] Missing transaction ID or status", { body, timestamp: new Date().toISOString() });
       return NextResponse.json({ success: false, message: "Missing transaction identifier or status." }, { status: 400 });
     }
 
+    console.info("[WEBHOOK] Processing payment webhook", { transactionId, status, timestamp: new Date().toISOString() });
+    
     await processWebhookEvent(transactionId, status);
     return NextResponse.json({ success: true, message: "Webhook processed." });
   } catch (error) {
-    return NextResponse.json({ success: false, message: (error as Error).message }, { status: 500 });
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error("[WEBHOOK] Error processing webhook:", {
+      message: errorMsg,
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString(),
+    });
+    
+    return NextResponse.json({ success: false, message: `Webhook error: ${errorMsg}` }, { status: 500 });
   }
 }
