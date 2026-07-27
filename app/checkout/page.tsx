@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatedCard } from "@/components/animated-card";
-import { getMidtransConfig } from "@/lib/midtrans";
 
 export const dynamic = "force-dynamic";
 
@@ -44,21 +43,32 @@ function getSearchParam(value: string | null, fallback = "") {
   return value ?? fallback;
 }
 
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
+interface MidtransSnapObject {
+  pay?: (token: string, callbacks: {
+    onSuccess?: () => void;
+    onPending?: () => void;
+    onError?: () => void;
+    onClose?: () => void;
+  }) => void;
+  embed?: (token: string, container: string, callbacks: {
+    onSuccess?: () => void;
+    onPending?: () => void;
+    onError?: () => void;
+    onClose?: () => void;
+  }) => void;
+}
+
 interface MidtransSnapWindow {
-  Snap?: {
-    pay?: (token: string, callbacks: {
-      onSuccess?: () => void;
-      onPending?: () => void;
-      onError?: () => void;
-      onClose?: () => void;
-    }) => void;
-    embed?: (token: string, container: string, callbacks: {
-      onSuccess?: () => void;
-      onPending?: () => void;
-      onError?: () => void;
-      onClose?: () => void;
-    }) => void;
-  };
+  Snap?: MidtransSnapObject;
+  snap?: MidtransSnapObject;
+}
+
+function getSnap(windowObject: MidtransSnapWindow) {
+  return windowObject.Snap ?? windowObject.snap;
 }
 
 export default function CheckoutPage() {
@@ -76,9 +86,12 @@ export default function CheckoutPage() {
   const [embedCheckoutLoaded, setEmbedCheckoutLoaded] = useState(false);
   const [snapLoadError, setSnapLoadError] = useState<string | null>(null);
   const [scriptLoadError, setScriptLoadError] = useState<string | null>(null);
-  const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [snapScriptUrl, setSnapScriptUrl] = useState("");
+  const [snapClientKey, setSnapClientKey] = useState("");
+  const [configLoading, setConfigLoading] = useState(true);
 
-  const { snapScriptUrl, clientKey: snapClientKey } = useMemo(() => getMidtransConfig(), []);
+  const hasSnapClientKey = Boolean(snapClientKey?.trim());
+  const isPaymentConfigured = !configLoading && hasSnapClientKey && Boolean(snapScriptUrl);
 
   const fieldId = getSearchParam(searchParams.get("fieldId"));
   const fieldName = getSearchParam(searchParams.get("fieldName"));
@@ -89,31 +102,115 @@ export default function CheckoutPage() {
 
   const hasValidBookingDetails = Boolean(fieldId && fieldName && bookingDate && startTime && endTime && amount > 0);
   const hasValidCustomerInfo = Boolean(customerName.trim() && customerEmail.trim() && customerPhone.trim());
-  const canSubmit = hasValidBookingDetails && hasValidCustomerInfo && (scriptLoaded || snapReady);
+  const canSubmit = hasValidBookingDetails && hasValidCustomerInfo && isPaymentConfigured;
+
+  useEffect(() => {
+    if (fieldId && !isUuid(fieldId) && !fieldName) {
+      setError("Booking details are invalid. Please return to the booking page and select a valid slot.");
+    }
+  }, [fieldId, fieldName]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadConfig() {
+      setConfigLoading(true);
+      setScriptLoadError(null);
+
+      try {
+        const response = await fetch("/api/midtrans/config", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
+        });
+
+        const data = await response.json().catch(() => null);
+        if (!response.ok || !data?.success) {
+          throw new Error(data?.message || "Unable to load payment gateway configuration.");
+        }
+
+        setSnapClientKey(data.clientKey ?? "");
+        setSnapScriptUrl(data.snapScriptUrl ?? "");
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+        setScriptLoadError(
+          error instanceof Error ? error.message : String(error) || "Unable to load payment gateway configuration."
+        );
+      } finally {
+        setConfigLoading(false);
+      }
+    }
+
+    loadConfig();
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     const onSnapReady = () => {
       const win = window as unknown as MidtransSnapWindow;
-      setSnapReady(Boolean(win.Snap));
+      setSnapReady(Boolean(getSnap(win)));
     };
 
     if (typeof window !== "undefined") {
       onSnapReady();
+      const interval = window.setInterval(onSnapReady, 300);
       window.addEventListener("snap:ready", onSnapReady);
-      return () => window.removeEventListener("snap:ready", onSnapReady);
+      return () => {
+        window.clearInterval(interval);
+        window.removeEventListener("snap:ready", onSnapReady);
+      };
     }
     return undefined;
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined" || scriptLoaded) {
+    if (typeof window === "undefined") {
       return;
     }
 
-    const existing = document.getElementById("midtrans-snap-script") as HTMLScriptElement | null;
-    if (existing) {
-      setScriptLoaded(true);
+    if (configLoading) {
       return;
+    }
+
+    if (!hasSnapClientKey) {
+      setScriptLoadError("Payment gateway is not configured. Please contact support.");
+      return;
+    }
+
+    if (!snapScriptUrl) {
+      setScriptLoadError("Payment gateway script URL is not configured. Please contact support.");
+      return;
+    }
+
+    const existing = document.getElementById("midtrans-snap-script");
+    let checkInterval: number | null = null;
+
+    const markReady = () => {
+      const win = window as unknown as MidtransSnapWindow;
+      const foundSnap = getSnap(win);
+      if (foundSnap) {
+        setSnapReady(true);
+        setScriptLoadError(null);
+        if (checkInterval !== null) {
+          window.clearInterval(checkInterval);
+          checkInterval = null;
+        }
+      }
+    };
+
+    if (existing) {
+      if (getSnap(window as unknown as MidtransSnapWindow)) {
+        setSnapReady(true);
+      } else {
+        checkInterval = window.setInterval(markReady, 250);
+      }
+      return () => {
+        if (checkInterval !== null) {
+          window.clearInterval(checkInterval);
+        }
+      };
     }
 
     const script = document.createElement("script");
@@ -122,19 +219,27 @@ export default function CheckoutPage() {
     script.async = true;
     script.setAttribute("data-client-key", snapClientKey);
     script.onload = () => {
-      setScriptLoaded(true);
-      setScriptLoadError(null);
+      markReady();
     };
     script.onerror = () => {
       setScriptLoadError("Unable to load payment gateway. Please refresh and try again.");
+      if (checkInterval !== null) {
+        window.clearInterval(checkInterval);
+        checkInterval = null;
+      }
     };
+
     document.body.appendChild(script);
+    checkInterval = window.setInterval(markReady, 250);
 
     return () => {
+      if (checkInterval !== null) {
+        window.clearInterval(checkInterval);
+      }
       script.onload = null;
       script.onerror = null;
     };
-  }, [scriptLoaded, snapScriptUrl, snapClientKey]);
+  }, [configLoading, hasSnapClientKey, snapScriptUrl, snapClientKey]);
 
   useEffect(() => {
     if (typeof window === "undefined" || !snapToken || embedCheckoutLoaded) {
@@ -142,7 +247,7 @@ export default function CheckoutPage() {
     }
 
     const win = window as unknown as MidtransSnapWindow;
-    const snap = win.Snap;
+    const snap = getSnap(win);
     if (!snap) {
       if (snapReady) {
         setSnapLoadError("Payment gateway failed to initialize. Please refresh the page or try again.");
@@ -217,7 +322,7 @@ export default function CheckoutPage() {
         const validateResp = await fetch("/api/bookings", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fieldId, bookingDate, startTime, endTime, validateOnly: true }),
+          body: JSON.stringify({ fieldId, fieldName, bookingDate, startTime, endTime, validateOnly: true }),
         });
 
         const validateResult = await validateResp.json().catch(() => null);
@@ -238,6 +343,7 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fieldId,
+          fieldName,
           bookingDate,
           startTime,
           endTime,
@@ -250,6 +356,10 @@ export default function CheckoutPage() {
       const result = await response.json();
       if (!response.ok || !result.success || !result.booking?.id) {
         throw new Error(result.message || "Unable to create booking.");
+      }
+
+      if (!isPaymentConfigured) {
+        throw new Error("Payment gateway is not configured. Please contact support.");
       }
 
       // Create payment transaction
@@ -293,9 +403,10 @@ export default function CheckoutPage() {
 
       if (paymentResult.snapUrl) {
         window.location.href = paymentResult.snapUrl;
-      } else {
-        router.push("/booking-history");
+        return;
       }
+
+      router.push("/booking-history");
     } catch (error) {
       setError((error as Error).message);
       setSaving(false);
@@ -389,7 +500,9 @@ export default function CheckoutPage() {
               ? "Cannot load payment gateway"
               : canSubmit
               ? "Confirm and pay"
-              : "Loading payment gateway…"}
+              : configLoading
+              ? "Loading payment gateway…"
+              : "Enter booking information to continue"}
           </button>
           {scriptLoadError ? (
             <p className="mt-4 rounded-3xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">

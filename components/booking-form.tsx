@@ -159,6 +159,7 @@ export function BookingForm({ fields }: { fields: Field[] }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fieldId: selectedField.id,
+          fieldName: selectedField.name,
           bookingDate: selectedDate,
           startTime: selectedRange.startTime,
           endTime: selectedRange.endTime,
