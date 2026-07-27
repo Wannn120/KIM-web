@@ -173,8 +173,7 @@ model Booking {
   id            String        @id @default(uuid()) @map("id")
   fieldId       String        @map("field_id")
   field         Field         @relation(fields: [fieldId], references: [id], onDelete: Cascade)
-  approvedById  String?       @map("approved_by_id")
-  approvedBy    AdminUser?    @relation(fields: [approvedById], references: [id], onDelete: SetNull)
+  // approvedById and approvedBy removed to match production DB (column not present)
   bookingDate   DateTime      @map("booking_date")
   startTime     String        @map("start_time")
   endTime       String        @map("end_time")
@@ -350,7 +349,6 @@ model AdminUser {
   auditLogs      AuditLog[]
   scheduleBlocks ScheduleBlock[]
   reportLogs     ReportLog[]
-  approvedBookings Booking[]
 
   @@map("admin_user")
 }
