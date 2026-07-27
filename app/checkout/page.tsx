@@ -102,7 +102,7 @@ export default function CheckoutPage() {
 
   const hasValidBookingDetails = Boolean(fieldId && fieldName && bookingDate && startTime && endTime && amount > 0);
   const hasValidCustomerInfo = Boolean(customerName.trim() && customerEmail.trim() && customerPhone.trim());
-  const canSubmit = hasValidBookingDetails && hasValidCustomerInfo && isPaymentConfigured;
+  const canSubmit = hasValidBookingDetails && isPaymentConfigured;
 
   useEffect(() => {
     if (fieldId && !isUuid(fieldId) && !fieldName) {
@@ -453,6 +453,7 @@ export default function CheckoutPage() {
                 type="text"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
+                onInput={(e) => setCustomerName((e.target as HTMLInputElement).value)}
                 placeholder="Enter your full name"
                 className="mt-2 w-full rounded-3xl border border-white/10 bg-[color:var(--background)] px-4 py-3 text-white outline-none focus:border-[color:var(--accent)] placeholder:text-[color:var(--muted)]"
               />
@@ -463,6 +464,7 @@ export default function CheckoutPage() {
                 type="email"
                 value={customerEmail}
                 onChange={(e) => setCustomerEmail(e.target.value)}
+                onInput={(e) => setCustomerEmail((e.target as HTMLInputElement).value)}
                 placeholder="Enter your email"
                 className="mt-2 w-full rounded-3xl border border-white/10 bg-[color:var(--background)] px-4 py-3 text-white outline-none focus:border-[color:var(--accent)] placeholder:text-[color:var(--muted)]"
               />
@@ -473,6 +475,7 @@ export default function CheckoutPage() {
                 type="tel"
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
+                onInput={(e) => setCustomerPhone((e.target as HTMLInputElement).value)}
                 placeholder="Enter your phone number"
                 className="mt-2 w-full rounded-3xl border border-white/10 bg-[color:var(--background)] px-4 py-3 text-white outline-none focus:border-[color:var(--accent)] placeholder:text-[color:var(--muted)]"
               />
