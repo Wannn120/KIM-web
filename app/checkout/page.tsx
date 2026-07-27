@@ -87,8 +87,10 @@ export default function CheckoutPage() {
   const [snapLoadError, setSnapLoadError] = useState<string | null>(null);
   const [scriptLoadError, setScriptLoadError] = useState<string | null>(null);
   const [snapScriptUrl, setSnapScriptUrl] = useState("");
+  const [retryCheckoutCount, setRetryCheckoutCount] = useState(0);
   const [snapClientKey, setSnapClientKey] = useState("");
   const [configLoading, setConfigLoading] = useState(true);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   const hasSnapClientKey = Boolean(snapClientKey?.trim());
   const isPaymentConfigured = !configLoading && hasSnapClientKey && Boolean(snapScriptUrl);
@@ -184,7 +186,7 @@ export default function CheckoutPage() {
       return;
     }
 
-    const existing = document.getElementById("midtrans-snap-script");
+    const existing = document.getElementById("midtrans-snap-script") as HTMLScriptElement | null;
     let checkInterval: number | null = null;
 
     const markReady = () => {
@@ -200,7 +202,8 @@ export default function CheckoutPage() {
       }
     };
 
-    if (existing) {
+    const shouldReloadScript = retryCheckoutCount > 0 && existing !== null && !getSnap(window as unknown as MidtransSnapWindow);
+    if (existing && !shouldReloadScript) {
       if (getSnap(window as unknown as MidtransSnapWindow)) {
         setSnapReady(true);
       } else {
@@ -211,6 +214,14 @@ export default function CheckoutPage() {
           window.clearInterval(checkInterval);
         }
       };
+    }
+
+    if (existing) {
+      existing.remove();
+      setSnapReady(false);
+      setEmbedCheckoutLoaded(false);
+      setSnapLoadError(null);
+      setIsRetrying(true);
     }
 
     const script = document.createElement("script");
@@ -239,7 +250,7 @@ export default function CheckoutPage() {
       script.onload = null;
       script.onerror = null;
     };
-  }, [configLoading, hasSnapClientKey, snapScriptUrl, snapClientKey]);
+  }, [configLoading, hasSnapClientKey, snapScriptUrl, snapClientKey, retryCheckoutCount]);
 
   useEffect(() => {
     if (typeof window === "undefined" || !snapToken || embedCheckoutLoaded) {
@@ -252,7 +263,6 @@ export default function CheckoutPage() {
       if (snapReady) {
         setSnapLoadError("Payment gateway failed to initialize. Please refresh the page or try again.");
       }
-      setSaving(false);
       return;
     }
 
@@ -277,12 +287,15 @@ export default function CheckoutPage() {
       },
     };
 
+    const container = document.querySelector("#snap-container");
+
     try {
-      if (typeof snap.embed === "function") {
+      if (typeof snap.embed === "function" && container) {
         snap.embed(snapToken, "#snap-container", callbacks);
         setEmbedCheckoutLoaded(true);
         setSaving(false);
         setSnapLoadError(null);
+        setIsRetrying(false);
         return;
       }
 
@@ -291,16 +304,20 @@ export default function CheckoutPage() {
         setEmbedCheckoutLoaded(true);
         setSaving(false);
         setSnapLoadError(null);
+        setIsRetrying(false);
         return;
       }
 
       setSnapLoadError("This payment method is not available right now. Please refresh or try again later.");
       setSaving(false);
-    } catch {
+      setIsRetrying(false);
+    } catch (error) {
+      console.error("Midtrans checkout error:", error);
       setSnapLoadError("Unable to load the payment checkout. Please refresh the page and try again.");
       setSaving(false);
+      setIsRetrying(false);
     }
-  }, [snapToken, snapReady, embedCheckoutLoaded, currentTransactionId, router]);
+  }, [snapToken, snapReady, embedCheckoutLoaded, currentTransactionId, retryCheckoutCount, router]);
 
   const handleCheckout = async () => {
     if (!hasValidBookingDetails) {
@@ -315,6 +332,9 @@ export default function CheckoutPage() {
 
     setSaving(true);
     setError(null);
+    setSnapLoadError(null);
+    setRetryCheckoutCount(0);
+    setIsRetrying(false);
 
     try {
       // Validate slot again with backend
@@ -524,6 +544,17 @@ export default function CheckoutPage() {
                 <div className="mt-6 rounded-3xl border border-rose-500/20 bg-rose-500/10 p-6 text-sm text-rose-200">
                   <p>{snapLoadError}</p>
                   <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                    <button
+                      onClick={() => {
+                        setSnapLoadError(null);
+                        setEmbedCheckoutLoaded(false);
+                        setRetryCheckoutCount((count) => count + 1);
+                      }}
+                      disabled={saving || isRetrying}
+                      className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                    >
+                      {isRetrying ? "Retrying…" : "Retry checkout"}
+                    </button>
                     <button
                       onClick={() => window.location.reload()}
                       className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white"
