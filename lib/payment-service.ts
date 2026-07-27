@@ -41,6 +41,28 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
     throw new Error("Booking not found.");
   }
 
+  const existingPayment = await prisma.payment.findFirst({
+    where: {
+      bookingId: input.bookingId,
+      status: "pending",
+      expiredAt: { gt: new Date() },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (existingPayment && existingPayment.snapToken && existingPayment.snapUrl) {
+    return {
+      transactionId: existingPayment.transactionId,
+      expiresAt: existingPayment.expiredAt?.toISOString() ?? new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+      paymentMethod: existingPayment.paymentMethod as PaymentMethod,
+      amount: existingPayment.amount,
+      status: existingPayment.status,
+      providerName: existingPayment.provider,
+      snapUrl: existingPayment.snapUrl,
+      snapToken: existingPayment.snapToken,
+    };
+  }
+
   const appBaseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://klaten-international-minisoccer.vercel.app";
   const midtransPayload = {
     transaction_details: {
