@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { applySecurityHeaders, getRateLimitResult } from "./lib/security-headers";
-import { getAuthenticatedAdmin } from "./lib/admin-auth";
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -16,8 +15,8 @@ export async function middleware(request: NextRequest) {
   const isAdminApiRoute = pathname.startsWith("/api/admin") && !pathname.startsWith("/api/admin/login");
 
   if (isAdminRoute || isAdminApiRoute) {
-    const admin = await getAuthenticatedAdmin(request);
-    if (!admin) {
+    const token = request.cookies.get("admin-session")?.value;
+    if (!token) {
       if (isAdminRoute) {
         const redirectUrl = new URL("/admin/login", request.url);
         return NextResponse.redirect(redirectUrl);
