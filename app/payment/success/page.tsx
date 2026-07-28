@@ -4,8 +4,6 @@ import { getPaymentTransaction, reconcilePaymentStatus } from "@/lib/payment-ser
 
 export const dynamic = "force-dynamic";
 
-const AUTO_REDIRECT_MS = 8000;
-
 function getSearchParam(value: string | string[] | undefined) {
   if (Array.isArray(value)) {
     return value[0] ?? "";
@@ -31,13 +29,11 @@ export default async function PaymentSuccessPage({
   const isSuccess = status === "success";
   const isFailed = status === "failed" || status === "cancelled" || status === "expired";
   const isPending = status === "pending";
-  const showAutoRedirect = isSuccess || isFailed;
   const refreshUrl = `/payment/success?transactionId=${encodeURIComponent(transactionId)}`;
 
   return (
     <main className="flex-1 px-6 py-16 lg:px-8">
       <div className="mx-auto max-w-4xl">
-        {showAutoRedirect ? <meta httpEquiv="refresh" content={`${AUTO_REDIRECT_MS / 1000};url=/`} /> : null}
         <AnimatedCard className="p-8 text-center">
           <div
             className={`mx-auto mb-6 flex h-28 w-28 items-center justify-center rounded-full text-7xl ${
@@ -59,7 +55,7 @@ export default async function PaymentSuccessPage({
 
           <p className="mt-4 text-lg text-[color:var(--muted)]">
             {isSuccess
-              ? "Your payment has been completed successfully. You will be redirected to the homepage shortly."
+              ? "Your payment has been completed successfully. You can download or copy the invoice details below."
               : isFailed
               ? "Your payment could not be completed. Please try again or return to the homepage."
               : "We are waiting for payment confirmation from the payment provider. Please stay on this page or refresh the status manually."}
@@ -95,6 +91,48 @@ export default async function PaymentSuccessPage({
               <div className="flex justify-between"><span>Field</span><span className="text-white">{payment?.booking?.field?.name ?? payment?.booking?.fieldId ?? "—"}</span></div>
             </div>
           </div>
+
+          <div className="mt-6 rounded-3xl border border-white/10 bg-[color:var(--surface)] p-6 text-left">
+            <div className="grid gap-3 text-sm text-[color:var(--muted)] sm:grid-cols-2">
+              <div className="flex justify-between"><span>Invoice</span><span className="text-white">{payment?.invoice?.invoiceNumber ?? "—"}</span></div>
+              <div className="flex justify-between"><span>Invoice amount</span><span className="text-white">Rp {payment?.invoice?.total?.toLocaleString("id-ID") ?? payment?.amount?.toLocaleString("id-ID") ?? "0"}</span></div>
+            </div>
+          </div>
+
+          {payment?.invoice?.invoiceNumber ? (
+            <div className="mt-6">
+              <div className="rounded-3xl border border-white/10 bg-black/10 p-6">
+                <h2 className="text-xl font-semibold text-white">Invoice details</h2>
+                <p className="mt-2 text-sm text-[color:var(--muted)]">Copy the invoice number or print/save the page to PDF.</p>
+                <div className="mt-6 grid gap-3 text-sm text-[color:var(--muted)] sm:grid-cols-2">
+                  <div className="rounded-2xl bg-white/5 p-4 text-left">
+                    <p className="text-sm text-[color:var(--muted)]">Invoice number</p>
+                    <p className="mt-1 text-lg font-semibold text-white">{payment.invoice.invoiceNumber}</p>
+                  </div>
+                  <div className="rounded-2xl bg-white/5 p-4 text-left">
+                    <p className="text-sm text-[color:var(--muted)]">Service</p>
+                    <p className="mt-1 text-lg font-semibold text-white">Field booking</p>
+                  </div>
+                </div>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => navigator.clipboard.writeText(payment.invoice?.invoiceNumber ?? "")}
+                    className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white"
+                  >
+                    Copy invoice number
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white"
+                  >
+                    Save as PDF / Print
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
 
           <div className="mt-10 grid gap-4 sm:grid-cols-2">
             <Link href="/booking-history" className="btn-primary">
