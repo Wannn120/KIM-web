@@ -85,22 +85,6 @@ export default function CheckoutPage() {
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
-  const [snapReady, setSnapReady] = useState(false);
-  const [snapToken, setSnapToken] = useState<string | null>(null);
-  const [snapUrl, setSnapUrl] = useState<string | null>(null);
-  const [currentTransactionId, setCurrentTransactionId] = useState<string | null>(null);
-  const [embedCheckoutLoaded, setEmbedCheckoutLoaded] = useState(false);
-  const [snapLoadError, setSnapLoadError] = useState<string | null>(null);
-  const [scriptLoadError, setScriptLoadError] = useState<string | null>(null);
-  const [snapScriptUrl, setSnapScriptUrl] = useState("");
-  const [snapScriptLoaded, setSnapScriptLoaded] = useState(false);
-  const [retryCheckoutCount, setRetryCheckoutCount] = useState(0);
-  const [snapClientKey, setSnapClientKey] = useState("");
-  const [configLoading, setConfigLoading] = useState(true);
-  const [isRetrying, setIsRetrying] = useState(false);
-
-  const hasSnapClientKey = Boolean(snapClientKey?.trim());
-  const isPaymentConfigured = !configLoading && hasSnapClientKey && Boolean(snapScriptUrl);
 
   const fieldId = getSearchParam(searchParams.get("fieldId"));
   const fieldName = getSearchParam(searchParams.get("fieldName"));
@@ -111,310 +95,7 @@ export default function CheckoutPage() {
 
   const hasValidBookingDetails = Boolean(fieldId && fieldName && bookingDate && startTime && endTime && amount > 0);
   const hasValidCustomerInfo = Boolean(customerName.trim() && customerEmail.trim() && customerPhone.trim());
-  const canSubmit = hasValidBookingDetails && isPaymentConfigured;
-
-  useEffect(() => {
-    if (fieldId && !isUuid(fieldId) && !fieldName) {
-      setError("Booking details are invalid. Please return to the booking page and select a valid slot.");
-    }
-  }, [fieldId, fieldName]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function loadConfig() {
-      setConfigLoading(true);
-      setScriptLoadError(null);
-
-      try {
-        const response = await fetch("/api/midtrans/config", {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          signal: controller.signal,
-        });
-
-        const data = await response.json().catch(() => null);
-        if (!response.ok || !data?.success) {
-          throw new Error(data?.message || "Unable to load payment gateway configuration.");
-        }
-
-        setSnapClientKey(data.clientKey ?? "");
-        setSnapScriptUrl(data.snapScriptUrl ?? "");
-      } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError") {
-          return;
-        }
-        setScriptLoadError(
-          error instanceof Error ? error.message : String(error) || "Unable to load payment gateway configuration."
-        );
-      } finally {
-        setConfigLoading(false);
-      }
-    }
-
-    loadConfig();
-    return () => controller.abort();
-  }, []);
-
-  useEffect(() => {
-    const onSnapReady = () => {
-      const win = window as unknown as MidtransSnapWindow;
-      setSnapReady(Boolean(getSnap(win)));
-    };
-
-    if (typeof window !== "undefined") {
-      onSnapReady();
-      const interval = window.setInterval(onSnapReady, 300);
-      window.addEventListener("snap:ready", onSnapReady);
-      return () => {
-        window.clearInterval(interval);
-        window.removeEventListener("snap:ready", onSnapReady);
-      };
-    }
-    return undefined;
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    if (configLoading) {
-      return;
-    }
-
-    if (!hasSnapClientKey) {
-      setScriptLoadError("Payment gateway is not configured. Please contact support.");
-      return;
-    }
-
-    if (!snapScriptUrl) {
-      setScriptLoadError("Payment gateway script URL is not configured. Please contact support.");
-      return;
-    }
-
-    const existing = document.getElementById("midtrans-snap-script") as HTMLScriptElement | null;
-    let checkInterval: number | null = null;
-
-    const markReady = () => {
-      const win = window as unknown as MidtransSnapWindow;
-      const foundSnap = getSnap(win);
-      if (foundSnap) {
-        setSnapReady(true);
-        setScriptLoadError(null);
-        if (checkInterval !== null) {
-          window.clearInterval(checkInterval);
-          checkInterval = null;
-        }
-      }
-    };
-
-    const shouldReloadScript = retryCheckoutCount > 0 && existing !== null && !getSnap(window as unknown as MidtransSnapWindow);
-    if (existing && !shouldReloadScript) {
-      if (getSnap(window as unknown as MidtransSnapWindow)) {
-        setSnapReady(true);
-      } else {
-        checkInterval = window.setInterval(markReady, 250);
-      }
-      return () => {
-        if (checkInterval !== null) {
-          window.clearInterval(checkInterval);
-        }
-      };
-    }
-
-    if (existing) {
-      existing.remove();
-      setSnapReady(false);
-      setSnapScriptLoaded(false);
-      setEmbedCheckoutLoaded(false);
-      setSnapLoadError(null);
-      setIsRetrying(true);
-    }
-
-    const script = document.createElement("script");
-    script.id = "midtrans-snap-script";
-    script.src = snapScriptUrl;
-    script.async = true;
-    script.setAttribute("data-client-key", snapClientKey);
-    script.onload = () => {
-      markReady();
-      setSnapScriptLoaded(true);
-    };
-    script.onerror = () => {
-      setScriptLoadError("Unable to load payment gateway. Please refresh and try again.");
-      setSnapScriptLoaded(false);
-      if (checkInterval !== null) {
-        window.clearInterval(checkInterval);
-        checkInterval = null;
-      }
-    };
-
-    document.body.appendChild(script);
-    checkInterval = window.setInterval(markReady, 250);
-
-    return () => {
-      if (checkInterval !== null) {
-        window.clearInterval(checkInterval);
-      }
-      script.onload = null;
-      script.onerror = null;
-    };
-  }, [configLoading, hasSnapClientKey, snapScriptUrl, snapClientKey, retryCheckoutCount]);
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !snapToken || !snapReady || !snapScriptLoaded || embedCheckoutLoaded) {
-      return;
-    }
-
-    const win = window as unknown as MidtransSnapWindow;
-    const snap = getSnap(win);
-    if (!snap) {
-      setSnapLoadError("Payment gateway failed to initialize. Please refresh or use the payment link.");
-      return;
-    }
-
-    const callbacks = {
-      onSuccess: () => {
-        if (currentTransactionId) {
-          router.push(`/payment/success?transactionId=${encodeURIComponent(currentTransactionId)}`);
-        }
-      },
-      onPending: () => {
-        if (currentTransactionId) {
-          router.push(`/payment/success?transactionId=${encodeURIComponent(currentTransactionId)}`);
-        }
-      },
-      onError: () => {
-        if (currentTransactionId) {
-          router.push(`/payment/failure?transactionId=${encodeURIComponent(currentTransactionId)}`);
-        }
-      },
-      onClose: () => {
-        setSnapLoadError("Payment checkout was closed. Please retry or use the payment link.");
-      },
-    };
-
-    const container = document.querySelector("#snap-container");
-
-    const runCheckout = async () => {
-      try {
-        const containerEl = container as HTMLElement | null;
-        if (containerEl) {
-          try {
-            containerEl.scrollIntoView({ behavior: "smooth", block: "center" });
-          } catch {}
-        }
-
-        try {
-          snap.reset?.();
-        } catch (resetError) {
-          console.warn("Midtrans reset warning:", resetError);
-        }
-
-        try {
-          const clientKey = snapClientKey;
-          if (!clientKey) {
-            throw new Error("Missing Midtrans client key.");
-          }
-          snap.init?.(clientKey);
-        } catch (initError) {
-          console.warn("Midtrans init warning:", initError);
-        }
-
-        async function waitForIframe(timeoutMs = 3000) {
-          const start = Date.now();
-          while (Date.now() - start < timeoutMs) {
-            const iframe = document.querySelector('#snap-container iframe');
-            if (iframe) return true;
-            // also check for common popup iframe selectors
-            const popup = document.querySelector('iframe[src*="midtrans"]') || document.querySelector('iframe[src*="snap"]');
-            if (popup) return true;
-            // sleep
-            await new Promise((r) => setTimeout(r, 250));
-          }
-          return false;
-        }
-
-        if (container) {
-          if (typeof snap.embed === 'function') {
-            try {
-              snap.embed(snapToken, { embedId: '#snap-container' }, callbacks);
-              // wait a short time for iframe to appear
-              const ok = await waitForIframe(4000);
-              if (ok) {
-                setEmbedCheckoutLoaded(true);
-                setSnapLoadError(null);
-                setSaving(false);
-                setIsRetrying(false);
-                return;
-              }
-              console.warn('Midtrans embed did not attach iframe, falling back');
-            } catch (embedErr) {
-              console.error('Midtrans embed error:', embedErr);
-            }
-          }
-
-          // Try popup fallback
-          if (typeof snap.pay === 'function') {
-            try {
-              snap.pay(snapToken, callbacks);
-              // popup may be blocked in headless; still mark as attempted
-              setEmbedCheckoutLoaded(true);
-              setSnapLoadError(null);
-              setSaving(false);
-              setIsRetrying(false);
-              return;
-            } catch (payErr) {
-              console.error('Midtrans pay fallback error:', payErr);
-            }
-          }
-
-          // Final fallback: open direct snapUrl if available
-          if (snapUrl) {
-            try {
-              window.open(snapUrl, '_blank');
-              setSnapLoadError(null);
-            } catch (openError) {
-              console.error('Opening snapUrl failed:', openError);
-              setSnapLoadError('Payment gateway failed to initialize. Please refresh or use the payment link.');
-            }
-          } else {
-            setSnapLoadError('Payment gateway failed to initialize. Please refresh or use the payment link.');
-          }
-
-          setSaving(false);
-          setIsRetrying(false);
-          return;
-        }
-
-        if (typeof snap.pay === "function") {
-          try {
-            snap.pay(snapToken, callbacks);
-            setEmbedCheckoutLoaded(true);
-            setSnapLoadError(null);
-          } catch (error) {
-            console.error("Midtrans pay error:", error);
-            setSnapLoadError("Payment link failed to open. Please refresh or try again later.");
-          }
-          setSaving(false);
-          setIsRetrying(false);
-          return;
-        }
-
-        setSnapLoadError("This payment method is not available right now. Please refresh or try again later.");
-        setSaving(false);
-        setIsRetrying(false);
-      } catch (error) {
-        console.error("Midtrans checkout error:", error);
-        setSnapLoadError("Unable to load the payment checkout. Please refresh the page and try again.");
-        setSaving(false);
-        setIsRetrying(false);
-      }
-    };
-
-    runCheckout();
-  }, [snapToken, snapReady, snapScriptLoaded, embedCheckoutLoaded, snapClientKey, currentTransactionId, retryCheckoutCount, snapUrl, router]);
+  const canSubmit = hasValidBookingDetails;
 
   const handleCheckout = async () => {
     if (!hasValidBookingDetails) {
@@ -429,32 +110,21 @@ export default function CheckoutPage() {
 
     setSaving(true);
     setError(null);
-    setSnapLoadError(null);
-    setRetryCheckoutCount(0);
-    setIsRetrying(false);
 
     try {
-      // Validate slot again with backend
-      try {
-        const validateResp = await fetch("/api/bookings", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fieldId, fieldName, bookingDate, startTime, endTime, validateOnly: true }),
-        });
+      const validateResp = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fieldId, fieldName, bookingDate, startTime, endTime, validateOnly: true }),
+      });
 
-        const validateResult = await validateResp.json().catch(() => null);
-        if (!validateResp.ok || !validateResult?.success) {
-          setError(validateResult?.message || "Slot no longer available.");
-          setSaving(false);
-          return;
-        }
-      } catch {
-        setError("Unable to validate booking. Please try again.");
+      const validateResult = await validateResp.json().catch(() => null);
+      if (!validateResp.ok || !validateResult?.success) {
+        setError(validateResult?.message || "Slot no longer available.");
         setSaving(false);
         return;
       }
 
-      // Create booking with guest customer info
       const response = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -475,11 +145,6 @@ export default function CheckoutPage() {
         throw new Error(result.message || "Unable to create booking.");
       }
 
-      if (!isPaymentConfigured) {
-        throw new Error("Payment gateway is not configured. Please contact support.");
-      }
-
-      // Create payment transaction
       const paymentResp = await fetch("/api/payments/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -495,27 +160,7 @@ export default function CheckoutPage() {
 
       const paymentResult = await paymentResp.json();
       if (!paymentResp.ok || !paymentResult.success) {
-        const bookingTime = `${startTime} - ${endTime}`;
-        const query = new URLSearchParams({
-          bookingId: result.booking.id,
-          amount: amount.toString(),
-          fieldName,
-          bookingDate: formatDate(bookingDate),
-          bookingTime,
-          customerName,
-          customerEmail,
-        }).toString();
-
-        router.push(`/payment?${query}`);
-        return;
-      }
-
-      // Payment created successfully, use Snap embedded checkout when available.
-      if (paymentResult.snapToken) {
-        setSnapToken(paymentResult.snapToken);
-        setSnapUrl(paymentResult.snapUrl ?? null);
-        setCurrentTransactionId(result.booking.id);
-        return;
+        throw new Error(paymentResult.message || "Unable to create payment.");
       }
 
       if (paymentResult.snapUrl) {
@@ -523,9 +168,9 @@ export default function CheckoutPage() {
         return;
       }
 
-      router.push("/booking-history");
-    } catch (error) {
-      setError((error as Error).message);
+      throw new Error("Payment link is unavailable. Please contact support.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
       setSaving(false);
     }
   };
@@ -562,7 +207,7 @@ export default function CheckoutPage() {
         <AnimatedCard className="p-8">
           <h2 className="text-2xl font-semibold text-white">Your contact information</h2>
           <p className="mt-2 text-sm text-[color:var(--muted)]">Required for booking confirmation and payment receipt.</p>
-          
+
           <div className="mt-6 space-y-4">
             <div>
               <label className="block text-sm font-medium text-[color:var(--muted)]">Name</label>
@@ -575,6 +220,7 @@ export default function CheckoutPage() {
                 className="mt-2 w-full rounded-3xl border border-white/10 bg-[color:var(--background)] px-4 py-3 text-white outline-none focus:border-[color:var(--accent)] placeholder:text-[color:var(--muted)]"
               />
             </div>
+
             <div>
               <label className="block text-sm font-medium text-[color:var(--muted)]">Email</label>
               <input
@@ -586,6 +232,7 @@ export default function CheckoutPage() {
                 className="mt-2 w-full rounded-3xl border border-white/10 bg-[color:var(--background)] px-4 py-3 text-white outline-none focus:border-[color:var(--accent)] placeholder:text-[color:var(--muted)]"
               />
             </div>
+
             <div>
               <label className="block text-sm font-medium text-[color:var(--muted)]">Phone Number</label>
               <input
@@ -614,77 +261,8 @@ export default function CheckoutPage() {
             disabled={saving || !canSubmit}
             className="mt-8 btn-primary w-full py-4 text-lg disabled:opacity-60"
           >
-            {saving
-              ? "Processing…"
-              : scriptLoadError
-              ? "Cannot load payment gateway"
-              : canSubmit
-              ? "Confirm and pay"
-              : configLoading
-              ? "Loading payment gateway…"
-              : "Enter booking information to continue"}
+            {saving ? "Processing…" : canSubmit ? "Confirm and pay" : "Enter booking information to continue"}
           </button>
-          {scriptLoadError ? (
-            <p className="mt-4 rounded-3xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">
-              {scriptLoadError}
-            </p>
-          ) : null}
-
-          {snapToken ? (
-            <div className="mt-10 rounded-3xl border border-white/10 bg-[color:var(--surface)] p-6">
-              <h2 className="text-xl font-semibold text-white">Inline payment checkout</h2>
-              <p className="mt-2 text-sm text-[color:var(--muted)]">
-                Complete the payment in the embedded checkout below. The page remains on your site.
-              </p>
-
-              {snapLoadError ? (
-                <div className="mt-6 rounded-3xl border border-rose-500/20 bg-rose-500/10 p-6 text-sm text-rose-200">
-                  <p>{snapLoadError}</p>
-                  <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                    <button
-                      onClick={() => {
-                        setSnapLoadError(null);
-                        setEmbedCheckoutLoaded(false);
-                        setRetryCheckoutCount((count) => count + 1);
-                      }}
-                      disabled={saving || isRetrying}
-                      className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-                    >
-                      {isRetrying ? "Retrying…" : "Retry checkout"}
-                    </button>
-                    <button
-                      onClick={() => window.location.reload()}
-                      className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white"
-                    >
-                      Reload page
-                    </button>
-                    {snapUrl ? (
-                      <a
-                        href={snapUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center justify-center rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white"
-                      >
-                        Continue via payment link
-                      </a>
-                    ) : null}
-                  </div>
-                </div>
-              ) : (
-                <div className="mt-6 rounded-3xl border border-white/10 bg-black/10 p-6">
-                  {!embedCheckoutLoaded ? (
-                    <div className="flex min-h-[300px] items-center justify-center rounded-3xl bg-[color:var(--background)] p-8 text-center text-sm text-[color:var(--muted)]">
-                      <div>
-                        <p className="font-medium text-white">Loading payment checkout…</p>
-                        <p className="mt-2">Please wait while Midtrans initializes the embedded payment experience.</p>
-                      </div>
-                    </div>
-                  ) : null}
-                  <div id="snap-container" className="mt-6 min-h-[400px]" />
-                </div>
-              )}
-            </div>
-          ) : null}
         </AnimatedCard>
       </div>
     </main>
