@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { clearAdminSessionCookie } from "@/lib/admin-auth";
-import { applySecurityHeaders } from "@/lib/security";
+import { applySecurityHeaders } from "@/lib/security-headers";
 
 export async function POST(_request: NextRequest) {
   const response = NextResponse.json({ success: true, message: "Admin session cleared." });

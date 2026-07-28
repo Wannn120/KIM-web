@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { applySecurityHeaders, getRateLimitResult } from "@/lib/security";
+import { applySecurityHeaders, getRateLimitResult } from "@/lib/security-headers";
 import { getAuthenticatedAdmin } from "@/lib/admin-auth";
 
 export async function middleware(request: NextRequest) {

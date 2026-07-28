@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { sanitizeObject, applySecurityHeaders } from "@/lib/security";
+import { sanitizeObject, applySecurityHeaders } from "@/lib/security-headers";
 import { authenticateAdmin, writeAdminSessionCookie } from "@/lib/admin-auth";
 
 export async function POST(request: NextRequest) {

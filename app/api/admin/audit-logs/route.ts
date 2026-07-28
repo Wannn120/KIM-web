@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getAuditLogs } from "@/lib/audit-log";
 import { getAuthenticatedAdmin, hasAdminPermission } from "@/lib/admin-auth";
-import { applySecurityHeaders } from "@/lib/security";
+import { applySecurityHeaders } from "@/lib/security-headers";
 
 export async function GET(request: NextRequest) {
   const admin = await getAuthenticatedAdmin(request);

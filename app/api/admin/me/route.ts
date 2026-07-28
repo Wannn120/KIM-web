@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { applySecurityHeaders } from "@/lib/security";
+import { applySecurityHeaders } from "@/lib/security-headers";
 import { getAuthenticatedAdmin } from "@/lib/admin-auth";
 
 export async function GET(request: NextRequest) {
