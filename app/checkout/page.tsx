@@ -321,56 +321,71 @@ export default function CheckoutPage() {
         console.warn("Midtrans init warning:", initError);
       }
 
-      if (typeof snap.embed === "function" && container) {
+      async function waitForIframe(timeoutMs = 3000) {
+        const start = Date.now();
+        while (Date.now() - start < timeoutMs) {
+          const iframe = document.querySelector('#snap-container iframe');
+          if (iframe) return true;
+          // also check for common popup iframe selectors
+          const popup = document.querySelector('iframe[src*="midtrans"]') || document.querySelector('iframe[src*="snap"]');
+          if (popup) return true;
+          // sleep
+          // eslint-disable-next-line no-await-in-loop
+          await new Promise((r) => setTimeout(r, 250));
+        }
+        return false;
+      }
+
+      if (container) {
         try {
-          snap.embed(snapToken, { embedId: "#snap-container" }, callbacks);
-          setEmbedCheckoutLoaded(true);
-          setSnapLoadError(null);
-        } catch (error) {
-          console.error("Midtrans embed error:", error);
-          // Try popup fallback
-          if (typeof snap.pay === "function") {
+          if (typeof snap.embed === 'function') {
             try {
-              snap.pay(snapToken, callbacks);
-              setEmbedCheckoutLoaded(true);
-              setSnapLoadError(null);
-            } catch (payError) {
-              console.error("Midtrans pay fallback error:", payError);
-              // Final fallback: open direct snapUrl if available
-              if (snapUrl) {
-                try {
-                  window.open(snapUrl, "_blank");
-                  setSnapLoadError(null);
-                } catch (openError) {
-                  console.error("Opening snapUrl failed:", openError);
-                  setSnapLoadError(
-                    "Payment gateway failed to initialize and the fallback payment flow could not start. Please refresh or use the payment link."
-                  );
-                }
-              } else {
-                setSnapLoadError(
-                  "Payment gateway failed to initialize and the fallback payment flow could not start. Please refresh or use the payment link."
-                );
-              }
-            }
-          } else {
-            // If embed not available and pay not available, try snapUrl
-            if (snapUrl) {
-              try {
-                window.open(snapUrl, "_blank");
+              snap.embed(snapToken, { embedId: '#snap-container' }, callbacks);
+              // wait a short time for iframe to appear
+              const ok = await waitForIframe(4000);
+              if (ok) {
+                setEmbedCheckoutLoaded(true);
                 setSnapLoadError(null);
-              } catch (openError) {
-                console.error("Opening snapUrl failed:", openError);
-                setSnapLoadError(
-                  "Payment gateway failed to initialize. Please refresh or use the payment link."
-                );
+                setSaving(false);
+                setIsRetrying(false);
+                return;
               }
-            } else {
-              setSnapLoadError(
-                "Payment gateway failed to initialize. Please refresh or use the payment link."
-              );
+              console.warn('Midtrans embed did not attach iframe, falling back');
+            } catch (embedErr) {
+              console.error('Midtrans embed error:', embedErr);
             }
           }
+
+          // Try popup fallback
+          if (typeof snap.pay === 'function') {
+            try {
+              snap.pay(snapToken, callbacks);
+              // popup may be blocked in headless; still mark as attempted
+              setEmbedCheckoutLoaded(true);
+              setSnapLoadError(null);
+              setSaving(false);
+              setIsRetrying(false);
+              return;
+            } catch (payErr) {
+              console.error('Midtrans pay fallback error:', payErr);
+            }
+          }
+
+          // Final fallback: open direct snapUrl if available
+          if (snapUrl) {
+            try {
+              window.open(snapUrl, '_blank');
+              setSnapLoadError(null);
+            } catch (openError) {
+              console.error('Opening snapUrl failed:', openError);
+              setSnapLoadError('Payment gateway failed to initialize. Please refresh or use the payment link.');
+            }
+          } else {
+            setSnapLoadError('Payment gateway failed to initialize. Please refresh or use the payment link.');
+          }
+        } catch (error) {
+          console.error('Midtrans checkout error:', error);
+          setSnapLoadError('Unable to load the payment checkout. Please refresh the page and try again.');
         }
         setSaving(false);
         setIsRetrying(false);
