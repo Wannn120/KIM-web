@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AnimatedCard } from "@/components/animated-card";
-import { getPaymentTransaction } from "@/lib/payment-service";
+import { getPaymentTransaction, reconcilePaymentStatus } from "@/lib/payment-service";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +19,13 @@ export default async function PaymentSuccessPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const resolvedSearchParams = await searchParams;
-  const transactionId = getSearchParam(resolvedSearchParams.transactionId);
+  const transactionId = getSearchParam(resolvedSearchParams.transactionId) || getSearchParam(resolvedSearchParams.order_id) || getSearchParam(resolvedSearchParams.transaction_id);
+  const transactionStatus = getSearchParam(resolvedSearchParams.transaction_status) || getSearchParam(resolvedSearchParams.status) || getSearchParam(resolvedSearchParams.transactionStatus);
+
+  if (transactionId) {
+    await reconcilePaymentStatus(transactionId, transactionStatus).catch(() => undefined);
+  }
+
   const payment = transactionId ? await getPaymentTransaction(transactionId).catch(() => null) : null;
   const status = payment?.status ?? "pending";
   const isSuccess = status === "success";

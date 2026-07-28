@@ -23,7 +23,7 @@ function buildInvoiceNumber() {
   return `INV-${date}-${Math.floor(1000 + Math.random() * 9000)}`;
 }
 
-export async function createPaymentTransaction(input: PaymentTransactionInput) {
+export async function createPaymentTransaction(input: PaymentTransactionInput & { appBaseUrl?: string }) {
   if (!input.bookingId) {
     throw new Error("bookingId is required.");
   }
@@ -63,7 +63,7 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
     };
   }
 
-  const appBaseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://klaten-international-minisoccer.vercel.app";
+  const appBaseUrl = input.appBaseUrl || process.env.NEXT_PUBLIC_APP_URL || "https://klaten-international-minisoccer.vercel.app";
   const midtransPayload = {
     transaction_details: {
       order_id: input.bookingId,
@@ -144,6 +144,17 @@ export async function createPaymentTransaction(input: PaymentTransactionInput) {
     snapUrl: midtransResponse.redirect_url,
     snapToken: midtransResponse.token,
   };
+}
+
+export async function reconcilePaymentStatus(transactionId: string, status?: string) {
+  const normalized = normalizePaymentStatus(status ?? "");
+
+  if (!transactionId || !normalized || normalized === "pending") {
+    return null;
+  }
+
+  await processWebhookEvent(transactionId, normalized);
+  return normalized;
 }
 
 export async function expirePendingPayments() {

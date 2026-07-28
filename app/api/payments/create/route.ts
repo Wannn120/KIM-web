@@ -4,6 +4,11 @@ import { createPaymentTransaction } from "@/lib/payment-service";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    const requestUrl = new URL(request.url);
+    const forwardedHost = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+    const forwardedProto = request.headers.get("x-forwarded-proto") ?? requestUrl.protocol.replace(/:$/, "");
+    const appBaseUrl = forwardedHost ? `${forwardedProto}://${forwardedHost}` : process.env.NEXT_PUBLIC_APP_URL ?? "https://klaten-international-minisoccer.vercel.app";
+
     const result = await createPaymentTransaction({
       bookingId: typeof body?.bookingId === "string" ? body.bookingId : "",
       amount: typeof body?.amount === "number" ? body.amount : 0,
@@ -11,6 +16,7 @@ export async function POST(request: Request) {
       customerName: typeof body?.customerName === "string" ? body.customerName : "Guest",
       email: typeof body?.email === "string" ? body.email : undefined,
       phone: typeof body?.phone === "string" ? body.phone : undefined,
+      appBaseUrl,
     });
 
     const snapUrl = typeof result === 'object' && result !== null && 'snapUrl' in result ? (result as Record<string, unknown>).snapUrl : null;
