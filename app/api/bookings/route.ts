@@ -202,23 +202,24 @@ export async function POST(request: NextRequest) {
     return applySecurityHeaders(response);
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
     console.error("[API] Booking creation error:", {
       message: errorMsg,
-      stack: error instanceof Error ? error.stack : undefined,
+      stack: errorStack,
       timestamp: new Date().toISOString(),
     });
 
     // Return more specific error messages for known scenarios
     if (errorMsg.includes("Unique constraint failed")) {
       return NextResponse.json(
-        { success: false, message: "This time slot is no longer available. Please select another slot." },
+        { success: false, message: "This time slot is no longer available. Please select another slot.", error: errorMsg },
         { status: 409 }
       );
     }
 
     if (errorMsg.includes("Field not found")) {
       return NextResponse.json(
-        { success: false, message: "The selected field is no longer available." },
+        { success: false, message: "The selected field is no longer available.", error: errorMsg },
         { status: 404 }
       );
     }
@@ -228,13 +229,15 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           message: "Invalid booking details. Please return to the booking page and select a valid slot.",
+          error: errorMsg,
         },
         { status: 400 }
       );
     }
 
+    // Fallback: return the actual error message to help debugging in production.
     return NextResponse.json(
-      { success: false, message: "Unable to create booking. Please try again or contact support." },
+      { success: false, message: "Unable to create booking. Please try again or contact support.", error: errorMsg, stack: errorStack },
       { status: 500 }
     );
   }
