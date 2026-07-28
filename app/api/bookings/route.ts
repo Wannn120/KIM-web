@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { auditLog } from "@/lib/audit-log";
 import { expirePendingPayments } from "@/lib/payment-service";
-import { getRateLimitResult, sanitizeObject, applySecurityHeaders } from "@/lib/security";
+import { getRateLimitResult, sanitizeObject, applySecurityHeaders } from "@/lib/security-headers";
 import { prisma } from "@/lib/prisma";
 
 function getDateRange(dateString: string) {
