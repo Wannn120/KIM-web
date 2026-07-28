@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatedCard } from "@/components/animated-card";
 
@@ -64,6 +64,8 @@ interface MidtransSnapObject {
       onClose?: () => void;
     }
   ) => void;
+  init?: (clientKey: string) => void;
+  reset?: () => void;
 }
 
 interface MidtransSnapWindow {
@@ -91,6 +93,7 @@ export default function CheckoutPage() {
   const [snapLoadError, setSnapLoadError] = useState<string | null>(null);
   const [scriptLoadError, setScriptLoadError] = useState<string | null>(null);
   const [snapScriptUrl, setSnapScriptUrl] = useState("");
+  const [snapScriptLoaded, setSnapScriptLoaded] = useState(false);
   const [retryCheckoutCount, setRetryCheckoutCount] = useState(0);
   const [snapClientKey, setSnapClientKey] = useState("");
   const [configLoading, setConfigLoading] = useState(true);
@@ -223,6 +226,7 @@ export default function CheckoutPage() {
     if (existing) {
       existing.remove();
       setSnapReady(false);
+      setSnapScriptLoaded(false);
       setEmbedCheckoutLoaded(false);
       setSnapLoadError(null);
       setIsRetrying(true);
@@ -235,9 +239,11 @@ export default function CheckoutPage() {
     script.setAttribute("data-client-key", snapClientKey);
     script.onload = () => {
       markReady();
+      setSnapScriptLoaded(true);
     };
     script.onerror = () => {
       setScriptLoadError("Unable to load payment gateway. Please refresh and try again.");
+      setSnapScriptLoaded(false);
       if (checkInterval !== null) {
         window.clearInterval(checkInterval);
         checkInterval = null;
@@ -257,16 +263,14 @@ export default function CheckoutPage() {
   }, [configLoading, hasSnapClientKey, snapScriptUrl, snapClientKey, retryCheckoutCount]);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !snapToken) {
+    if (typeof window === "undefined" || !snapToken || !snapReady || !snapScriptLoaded || embedCheckoutLoaded) {
       return;
     }
 
     const win = window as unknown as MidtransSnapWindow;
     const snap = getSnap(win);
     if (!snap) {
-      if (snapReady) {
-        setSnapLoadError("Payment gateway failed to initialize. Please refresh or use the payment link.");
-      }
+      setSnapLoadError("Payment gateway failed to initialize. Please refresh or use the payment link.");
       return;
     }
 
@@ -294,12 +298,28 @@ export default function CheckoutPage() {
     const container = document.querySelector("#snap-container");
 
     try {
-        const containerEl = document.querySelector("#snap-container") as HTMLElement | null;
-        if (containerEl) {
-          try {
-            containerEl.scrollIntoView({ behavior: "smooth", block: "center" });
-          } catch {}
+      const containerEl = container as HTMLElement | null;
+      if (containerEl) {
+        try {
+          containerEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        } catch {}
+      }
+
+      try {
+        snap.reset?.();
+      } catch (resetError) {
+        console.warn("Midtrans reset warning:", resetError);
+      }
+
+      try {
+        const clientKey = snapClientKey;
+        if (!clientKey) {
+          throw new Error("Missing Midtrans client key.");
         }
+        snap.init?.(clientKey);
+      } catch (initError) {
+        console.warn("Midtrans init warning:", initError);
+      }
 
       if (typeof snap.embed === "function" && container) {
         try {
@@ -320,7 +340,9 @@ export default function CheckoutPage() {
               );
             }
           } else {
-            setSnapLoadError("Payment gateway failed to initialize. Please refresh or use the payment link.");
+            setSnapLoadError(
+              "Payment gateway failed to initialize. Please refresh or use the payment link."
+            );
           }
         }
         setSaving(false);
@@ -351,7 +373,7 @@ export default function CheckoutPage() {
       setSaving(false);
       setIsRetrying(false);
     }
-  }, [snapToken, snapReady, embedCheckoutLoaded, currentTransactionId, retryCheckoutCount, router]);
+  }, [snapToken, snapReady, snapScriptLoaded, embedCheckoutLoaded, snapClientKey, currentTransactionId, retryCheckoutCount, router]);
 
   const handleCheckout = async () => {
     if (!hasValidBookingDetails) {
