@@ -328,6 +328,7 @@ export default function CheckoutPage() {
           setSnapLoadError(null);
         } catch (error) {
           console.error("Midtrans embed error:", error);
+          // Try popup fallback
           if (typeof snap.pay === "function") {
             try {
               snap.pay(snapToken, callbacks);
@@ -335,14 +336,40 @@ export default function CheckoutPage() {
               setSnapLoadError(null);
             } catch (payError) {
               console.error("Midtrans pay fallback error:", payError);
-              setSnapLoadError(
-                "Payment gateway failed to initialize and the fallback payment flow could not start. Please refresh or use the payment link."
-              );
+              // Final fallback: open direct snapUrl if available
+              if (snapUrl) {
+                try {
+                  window.open(snapUrl, "_blank");
+                  setSnapLoadError(null);
+                } catch (openError) {
+                  console.error("Opening snapUrl failed:", openError);
+                  setSnapLoadError(
+                    "Payment gateway failed to initialize and the fallback payment flow could not start. Please refresh or use the payment link."
+                  );
+                }
+              } else {
+                setSnapLoadError(
+                  "Payment gateway failed to initialize and the fallback payment flow could not start. Please refresh or use the payment link."
+                );
+              }
             }
           } else {
-            setSnapLoadError(
-              "Payment gateway failed to initialize. Please refresh or use the payment link."
-            );
+            // If embed not available and pay not available, try snapUrl
+            if (snapUrl) {
+              try {
+                window.open(snapUrl, "_blank");
+                setSnapLoadError(null);
+              } catch (openError) {
+                console.error("Opening snapUrl failed:", openError);
+                setSnapLoadError(
+                  "Payment gateway failed to initialize. Please refresh or use the payment link."
+                );
+              }
+            } else {
+              setSnapLoadError(
+                "Payment gateway failed to initialize. Please refresh or use the payment link."
+              );
+            }
           }
         }
         setSaving(false);
