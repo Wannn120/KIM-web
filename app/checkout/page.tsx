@@ -48,18 +48,22 @@ function isUuid(value: string) {
 }
 
 interface MidtransSnapObject {
-  pay?: (token: string, callbacks: {
+  pay?: (token: string, callbacks?: {
     onSuccess?: () => void;
     onPending?: () => void;
     onError?: () => void;
     onClose?: () => void;
   }) => void;
-  embed?: (token: string, container: string, callbacks: {
-    onSuccess?: () => void;
-    onPending?: () => void;
-    onError?: () => void;
-    onClose?: () => void;
-  }) => void;
+  embed?: (
+    token: string,
+    target: string | { embedId: string },
+    callbacks?: {
+      onSuccess?: () => void;
+      onPending?: () => void;
+      onError?: () => void;
+      onClose?: () => void;
+    }
+  ) => void;
 }
 
 interface MidtransSnapWindow {
@@ -299,12 +303,25 @@ export default function CheckoutPage() {
 
       if (typeof snap.embed === "function" && container) {
         try {
-          snap.embed(snapToken, "#snap-container", callbacks);
+          snap.embed(snapToken, { embedId: "#snap-container" }, callbacks);
           setEmbedCheckoutLoaded(true);
           setSnapLoadError(null);
         } catch (error) {
           console.error("Midtrans embed error:", error);
-          setSnapLoadError("Payment gateway failed to initialize. Please refresh or use the payment link.");
+          if (typeof snap.pay === "function") {
+            try {
+              snap.pay(snapToken, callbacks);
+              setEmbedCheckoutLoaded(true);
+              setSnapLoadError(null);
+            } catch (payError) {
+              console.error("Midtrans pay fallback error:", payError);
+              setSnapLoadError(
+                "Payment gateway failed to initialize and the fallback payment flow could not start. Please refresh or use the payment link."
+              );
+            }
+          } else {
+            setSnapLoadError("Payment gateway failed to initialize. Please refresh or use the payment link.");
+          }
         }
         setSaving(false);
         setIsRetrying(false);
