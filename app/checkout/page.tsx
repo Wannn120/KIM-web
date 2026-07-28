@@ -297,47 +297,46 @@ export default function CheckoutPage() {
 
     const container = document.querySelector("#snap-container");
 
-    try {
-      const containerEl = container as HTMLElement | null;
-      if (containerEl) {
-        try {
-          containerEl.scrollIntoView({ behavior: "smooth", block: "center" });
-        } catch {}
-      }
-
+    const runCheckout = async () => {
       try {
-        snap.reset?.();
-      } catch (resetError) {
-        console.warn("Midtrans reset warning:", resetError);
-      }
-
-      try {
-        const clientKey = snapClientKey;
-        if (!clientKey) {
-          throw new Error("Missing Midtrans client key.");
+        const containerEl = container as HTMLElement | null;
+        if (containerEl) {
+          try {
+            containerEl.scrollIntoView({ behavior: "smooth", block: "center" });
+          } catch {}
         }
-        snap.init?.(clientKey);
-      } catch (initError) {
-        console.warn("Midtrans init warning:", initError);
-      }
 
-      async function waitForIframe(timeoutMs = 3000) {
-        const start = Date.now();
-        while (Date.now() - start < timeoutMs) {
-          const iframe = document.querySelector('#snap-container iframe');
-          if (iframe) return true;
-          // also check for common popup iframe selectors
-          const popup = document.querySelector('iframe[src*="midtrans"]') || document.querySelector('iframe[src*="snap"]');
-          if (popup) return true;
-          // sleep
-          // eslint-disable-next-line no-await-in-loop
-          await new Promise((r) => setTimeout(r, 250));
-        }
-        return false;
-      }
-
-      if (container) {
         try {
+          snap.reset?.();
+        } catch (resetError) {
+          console.warn("Midtrans reset warning:", resetError);
+        }
+
+        try {
+          const clientKey = snapClientKey;
+          if (!clientKey) {
+            throw new Error("Missing Midtrans client key.");
+          }
+          snap.init?.(clientKey);
+        } catch (initError) {
+          console.warn("Midtrans init warning:", initError);
+        }
+
+        async function waitForIframe(timeoutMs = 3000) {
+          const start = Date.now();
+          while (Date.now() - start < timeoutMs) {
+            const iframe = document.querySelector('#snap-container iframe');
+            if (iframe) return true;
+            // also check for common popup iframe selectors
+            const popup = document.querySelector('iframe[src*="midtrans"]') || document.querySelector('iframe[src*="snap"]');
+            if (popup) return true;
+            // sleep
+            await new Promise((r) => setTimeout(r, 250));
+          }
+          return false;
+        }
+
+        if (container) {
           if (typeof snap.embed === 'function') {
             try {
               snap.embed(snapToken, { embedId: '#snap-container' }, callbacks);
@@ -383,39 +382,39 @@ export default function CheckoutPage() {
           } else {
             setSnapLoadError('Payment gateway failed to initialize. Please refresh or use the payment link.');
           }
-        } catch (error) {
-          console.error('Midtrans checkout error:', error);
-          setSnapLoadError('Unable to load the payment checkout. Please refresh the page and try again.');
+
+          setSaving(false);
+          setIsRetrying(false);
+          return;
         }
+
+        if (typeof snap.pay === "function") {
+          try {
+            snap.pay(snapToken, callbacks);
+            setEmbedCheckoutLoaded(true);
+            setSnapLoadError(null);
+          } catch (error) {
+            console.error("Midtrans pay error:", error);
+            setSnapLoadError("Payment link failed to open. Please refresh or try again later.");
+          }
+          setSaving(false);
+          setIsRetrying(false);
+          return;
+        }
+
+        setSnapLoadError("This payment method is not available right now. Please refresh or try again later.");
         setSaving(false);
         setIsRetrying(false);
-        return;
-      }
-
-      if (typeof snap.pay === "function") {
-        try {
-          snap.pay(snapToken, callbacks);
-          setEmbedCheckoutLoaded(true);
-          setSnapLoadError(null);
-        } catch (error) {
-          console.error("Midtrans pay error:", error);
-          setSnapLoadError("Payment link failed to open. Please refresh or try again later.");
-        }
+      } catch (error) {
+        console.error("Midtrans checkout error:", error);
+        setSnapLoadError("Unable to load the payment checkout. Please refresh the page and try again.");
         setSaving(false);
         setIsRetrying(false);
-        return;
       }
+    };
 
-      setSnapLoadError("This payment method is not available right now. Please refresh or try again later.");
-      setSaving(false);
-      setIsRetrying(false);
-    } catch (error) {
-      console.error("Midtrans checkout error:", error);
-      setSnapLoadError("Unable to load the payment checkout. Please refresh the page and try again.");
-      setSaving(false);
-      setIsRetrying(false);
-    }
-  }, [snapToken, snapReady, snapScriptLoaded, embedCheckoutLoaded, snapClientKey, currentTransactionId, retryCheckoutCount, router]);
+    runCheckout();
+  }, [snapToken, snapReady, snapScriptLoaded, embedCheckoutLoaded, snapClientKey, currentTransactionId, retryCheckoutCount, snapUrl, router]);
 
   const handleCheckout = async () => {
     if (!hasValidBookingDetails) {
