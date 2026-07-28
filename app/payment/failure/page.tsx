@@ -4,8 +4,6 @@ import { getPaymentTransaction, reconcilePaymentStatus } from "@/lib/payment-ser
 
 export const dynamic = "force-dynamic";
 
-const AUTO_REDIRECT_MS = 8000;
-
 function getSearchParam(value: string | string[] | undefined) {
   if (Array.isArray(value)) {
     return value[0] ?? "";
@@ -38,7 +36,6 @@ export default async function PaymentFailurePage({
   return (
     <main className="flex-1 px-6 py-16 lg:px-8">
       <div className="mx-auto max-w-4xl">
-        {isFailed ? <meta httpEquiv="refresh" content={`${AUTO_REDIRECT_MS / 1000};url=/`} /> : null}
         <AnimatedCard className="p-8 text-center">
           <div className="mx-auto mb-6 flex h-28 w-28 items-center justify-center rounded-full bg-rose-500/15 text-7xl text-rose-300">
             ✕

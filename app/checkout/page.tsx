@@ -253,7 +253,7 @@ export default function CheckoutPage() {
   }, [configLoading, hasSnapClientKey, snapScriptUrl, snapClientKey, retryCheckoutCount]);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !snapToken || embedCheckoutLoaded) {
+    if (typeof window === "undefined" || !snapToken) {
       return;
     }
 
@@ -261,7 +261,7 @@ export default function CheckoutPage() {
     const snap = getSnap(win);
     if (!snap) {
       if (snapReady) {
-        setSnapLoadError("Payment gateway failed to initialize. Please refresh the page or try again.");
+        setSnapLoadError("Payment gateway failed to initialize. Please refresh or use the payment link.");
       }
       return;
     }
@@ -283,7 +283,7 @@ export default function CheckoutPage() {
         }
       },
       onClose: () => {
-        router.push("/booking-history");
+        setSnapLoadError("Payment checkout was closed. Please retry or use the payment link.");
       },
     };
 
@@ -298,19 +298,29 @@ export default function CheckoutPage() {
         }
 
       if (typeof snap.embed === "function" && container) {
+        try {
           snap.embed(snapToken, "#snap-container", callbacks);
-        setEmbedCheckoutLoaded(true);
+          setEmbedCheckoutLoaded(true);
+          setSnapLoadError(null);
+        } catch (error) {
+          console.error("Midtrans embed error:", error);
+          setSnapLoadError("Payment gateway failed to initialize. Please refresh or use the payment link.");
+        }
         setSaving(false);
-        setSnapLoadError(null);
         setIsRetrying(false);
         return;
       }
 
       if (typeof snap.pay === "function") {
-        snap.pay(snapToken, callbacks);
-        setEmbedCheckoutLoaded(true);
+        try {
+          snap.pay(snapToken, callbacks);
+          setEmbedCheckoutLoaded(true);
+          setSnapLoadError(null);
+        } catch (error) {
+          console.error("Midtrans pay error:", error);
+          setSnapLoadError("Payment link failed to open. Please refresh or try again later.");
+        }
         setSaving(false);
-        setSnapLoadError(null);
         setIsRetrying(false);
         return;
       }
