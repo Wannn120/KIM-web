@@ -27,6 +27,9 @@ interface FieldFormState {
 
 export default function FieldManagerClient({ adminName, useMain = true }: { adminName: string; useMain?: boolean }) {
   const [fields, setFields] = useState<FieldItem[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<FieldItem | null>(null);
@@ -41,15 +44,21 @@ export default function FieldManagerClient({ adminName, useMain = true }: { admi
     isActive: true,
   });
 
-  const fetchFields = async () => {
+  const fetchFields = async (pageParam = 1, q = "") => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch("/api/admin/fields", { cache: "no-store" });
+      const params = new URLSearchParams();
+      params.set("page", String(pageParam));
+      params.set("limit", String(6));
+      if (q) params.set("q", q);
+      const response = await fetch(`/api/admin/fields?${params.toString()}`, { cache: "no-store" });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Unable to load fields");
       setFields(data.data || []);
+      setPage(data.page || pageParam);
+      setTotalPages(data.totalPages || 1);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -58,7 +67,7 @@ export default function FieldManagerClient({ adminName, useMain = true }: { admi
   };
 
   useEffect(() => {
-    fetchFields();
+    fetchFields(page, query);
   }, []);
 
   const resetForm = () => {
@@ -73,6 +82,18 @@ export default function FieldManagerClient({ adminName, useMain = true }: { admi
       status: "ACTIVE",
       isActive: true,
     });
+  };
+
+  const handleSearch = async () => {
+    setPage(1);
+    await fetchFields(1, query.trim());
+  };
+
+  const goToPage = async (p: number) => {
+    if (p < 1) p = 1;
+    if (p > totalPages) p = totalPages;
+    setPage(p);
+    await fetchFields(p, query);
   };
 
   const handleChange = (field: string, value: string | number | boolean) => {
@@ -161,9 +182,11 @@ export default function FieldManagerClient({ adminName, useMain = true }: { admi
                 <h2 className="text-2xl font-semibold text-white">Field list</h2>
                 <p className="mt-2 text-sm text-[color:var(--muted)]">CRUD table untuk semua lapangan.</p>
               </div>
-              <button onClick={resetForm} className="btn-secondary px-4 py-2">
-                New field
-              </button>
+              <div className="flex items-center gap-2">
+                <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search name or location" className="rounded-3xl border border-white/10 bg-[color:var(--background)] px-3 py-2 text-sm text-white" />
+                <button onClick={handleSearch} className="btn-secondary px-4 py-2">Search</button>
+                <button onClick={resetForm} className="btn-secondary px-4 py-2">New field</button>
+              </div>
             </div>
 
             {error ? (
@@ -213,6 +236,16 @@ export default function FieldManagerClient({ adminName, useMain = true }: { admi
                   ) : null}
                 </tbody>
               </table>
+            </div>
+            <div className="mt-4 flex items-center justify-between px-4">
+              <div className="text-sm text-[color:var(--muted)]">Total: {loading ? "..." : `${fields.length} items on this page`}</div>
+              <div className="flex gap-2">
+                <button onClick={() => goToPage(page - 1)} disabled={page <= 1} className="rounded px-3 py-1 bg-white/5">Prev</button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                  <button key={p} onClick={() => goToPage(p)} className={`rounded px-3 py-1 ${p === page ? 'bg-[color:var(--accent)] text-black' : 'bg-white/5'}`}>{p}</button>
+                ))}
+                <button onClick={() => goToPage(page + 1)} disabled={page >= totalPages} className="rounded px-3 py-1 bg-white/5">Next</button>
+              </div>
             </div>
           </section>
 

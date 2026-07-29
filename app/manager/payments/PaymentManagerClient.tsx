@@ -34,6 +34,10 @@ export default function PaymentManagerClient({ adminName, useMain = true }: { ad
   const [payments, setPayments] = useState<PaymentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [query, setQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
   const [editing, setEditing] = useState<PaymentItem | null>(null);
   const [formState, setFormState] = useState<PaymentFormState>({
     bookingId: "",
@@ -46,15 +50,22 @@ export default function PaymentManagerClient({ adminName, useMain = true }: { ad
     expiredAt: "",
   });
 
-  const fetchPayments = async () => {
+  const fetchPayments = async (pageParam = 1, q = "", status = "") => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch("/api/admin/payments", { cache: "no-store" });
+      const params = new URLSearchParams();
+      params.set("page", String(pageParam));
+      params.set("limit", String(6));
+      if (q) params.set("q", q);
+      if (status) params.set("status", status);
+      const response = await fetch(`/api/admin/payments?${params.toString()}`, { cache: "no-store" });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Unable to load payments");
       setPayments(data.data || []);
+      setPage(data.page || pageParam);
+      setTotalPages(data.totalPages || 1);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -63,8 +74,20 @@ export default function PaymentManagerClient({ adminName, useMain = true }: { ad
   };
 
   useEffect(() => {
-    fetchPayments();
+    fetchPayments(page, query, filterStatus);
   }, []);
+
+  const handleSearch = async () => {
+    setPage(1);
+    await fetchPayments(1, query.trim(), filterStatus);
+  };
+
+  const goToPage = async (p: number) => {
+    if (p < 1) p = 1;
+    if (p > totalPages) p = totalPages;
+    setPage(p);
+    await fetchPayments(p, query, filterStatus);
+  };
 
   const resetForm = () => {
     setEditing(null);
@@ -170,9 +193,15 @@ export default function PaymentManagerClient({ adminName, useMain = true }: { ad
                 <h2 className="text-2xl font-semibold text-white">Payment records</h2>
                 <p className="mt-2 text-sm text-[color:var(--muted)]">Create, edit, and delete payment entries.</p>
               </div>
-              <button onClick={resetForm} className="btn-secondary px-4 py-2">
-                New payment
-              </button>
+              <div className="flex items-center gap-2">
+                <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search transaction" className="rounded-3xl border border-white/10 bg-[color:var(--background)] px-3 py-2 text-sm text-white" />
+                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-3xl border border-white/10 bg-[color:var(--background)] px-3 py-2 text-sm text-white">
+                  <option value="">All</option>
+                  {statusOptions.map((s) => (<option key={s} value={s}>{s}</option>))}
+                </select>
+                <button onClick={handleSearch} className="btn-secondary px-4 py-2">Filter</button>
+                <button onClick={resetForm} className="btn-secondary px-4 py-2">New payment</button>
+              </div>
             </div>
             {error ? (
               <div className="mt-4 rounded-3xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">{error}</div>
@@ -218,6 +247,16 @@ export default function PaymentManagerClient({ adminName, useMain = true }: { ad
                   ) : null}
                 </tbody>
               </table>
+            </div>
+            <div className="mt-4 flex items-center justify-between px-4">
+              <div className="text-sm text-[color:var(--muted)]">Total: {loading ? "..." : `${payments.length} items on this page`}</div>
+              <div className="flex gap-2">
+                <button onClick={() => goToPage(page - 1)} disabled={page <= 1} className="rounded px-3 py-1 bg-white/5">Prev</button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                  <button key={p} onClick={() => goToPage(p)} className={`rounded px-3 py-1 ${p === page ? 'bg-[color:var(--accent)] text-black' : 'bg-white/5'}`}>{p}</button>
+                ))}
+                <button onClick={() => goToPage(page + 1)} disabled={page >= totalPages} className="rounded px-3 py-1 bg-white/5">Next</button>
+              </div>
             </div>
           </section>
 

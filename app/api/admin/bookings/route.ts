@@ -52,15 +52,42 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, message: "Insufficient privileges." }, { status: 403 });
     }
 
+    const url = new URL(request.url);
+    const page = Math.max(Number(url.searchParams.get("page") || "1"), 1);
+    const limit = Math.max(Number(url.searchParams.get("limit") || "6"), 1);
+    const q = (url.searchParams.get("q") || "").trim();
+    const fieldId = url.searchParams.get("fieldId") || undefined;
+    const date = url.searchParams.get("date") || undefined;
+    const status = url.searchParams.get("status") || undefined;
+
+    const where: Record<string, unknown> = {};
+    if (q) {
+      where.OR = [
+        { customerName: { contains: q, mode: "insensitive" } },
+        { customerPhone: { contains: q, mode: "insensitive" } },
+      ];
+    }
+    if (fieldId) where.fieldId = fieldId;
+    if (status) where.status = status;
+    if (date) {
+      const range = getDateRange(date);
+      if (range) where.bookingDate = { gte: range.start, lt: range.end };
+    }
+
+    const total = await prisma.booking.count({ where });
     const bookings = await prisma.booking.findMany({
+      where,
       orderBy: { createdAt: "desc" },
       include: {
         field: { select: { id: true, name: true, location: true } },
         payments: { orderBy: { createdAt: "desc" }, take: 1 },
       },
+      skip: (page - 1) * limit,
+      take: limit,
     });
 
-    return NextResponse.json({ success: true, data: bookings });
+    const totalPages = Math.max(Math.ceil(total / limit), 1);
+    return NextResponse.json({ success: true, data: bookings, total, page, limit, totalPages });
   } catch (error) {
     console.error("[ADMIN] Booking list error:", error);
     return NextResponse.json({ success: false, message: "Unable to list bookings." }, { status: 500 });
