@@ -13,8 +13,20 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, message: "Insufficient privileges." }, { status: 403 });
     }
 
-    const fields = await prisma.field.findMany({ orderBy: { createdAt: "desc" } });
-    return NextResponse.json({ success: true, data: fields });
+    const url = new URL(request.url);
+    const page = Math.max(Number(url.searchParams.get("page") || "1"), 1);
+    const limit = Math.max(Number(url.searchParams.get("limit") || "6"), 1);
+    const q = (url.searchParams.get("q") || "").trim();
+    const status = url.searchParams.get("status") || undefined;
+
+    const where: Record<string, unknown> = {};
+    if (q) where.OR = [{ name: { contains: q, mode: "insensitive" } }, { location: { contains: q, mode: "insensitive" } }];
+    if (status) where.status = status;
+
+    const total = await prisma.field.count({ where });
+    const fields = await prisma.field.findMany({ where, orderBy: { createdAt: "desc" }, skip: (page - 1) * limit, take: limit });
+    const totalPages = Math.max(Math.ceil(total / limit), 1);
+    return NextResponse.json({ success: true, data: fields, total, page, limit, totalPages });
   } catch (error) {
     console.error("[ADMIN] Error listing fields:", error);
     return NextResponse.json({ success: false, message: "Unable to list fields." }, { status: 500 });

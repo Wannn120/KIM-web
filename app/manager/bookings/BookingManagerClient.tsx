@@ -38,6 +38,10 @@ export default function BookingManagerClient({ adminName, useMain = true }: { ad
   const [fields, setFields] = useState<Array<{ id: string; name: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [query, setQuery] = useState("");
+  const [filterDate, setFilterDate] = useState("");
   const [editing, setEditing] = useState<BookingItem | null>(null);
   const [formState, setFormState] = useState<BookingFormState>({
     customerName: "",
@@ -50,14 +54,20 @@ export default function BookingManagerClient({ adminName, useMain = true }: { ad
     notes: "",
   });
 
-  const fetchData = async () => {
+  const fetchData = async (pageParam = 1, q = "", date = "") => {
     setLoading(true);
     setError(null);
 
     try {
+      const bookingParams = new URLSearchParams();
+      bookingParams.set("page", String(pageParam));
+      bookingParams.set("limit", String(6));
+      if (q) bookingParams.set("q", q);
+      if (date) bookingParams.set("date", date);
+
       const [bookingsRes, fieldsRes] = await Promise.all([
-        fetch("/api/admin/bookings", { cache: "no-store" }),
-        fetch("/api/admin/fields", { cache: "no-store" }),
+        fetch(`/api/admin/bookings?${bookingParams.toString()}`, { cache: "no-store" }),
+        fetch(`/api/admin/fields?limit=1000`, { cache: "no-store" }),
       ]);
 
       const bookingsJson = await bookingsRes.json();
@@ -67,6 +77,8 @@ export default function BookingManagerClient({ adminName, useMain = true }: { ad
       if (!fieldsRes.ok) throw new Error(fieldsJson.message || "Unable to load fields");
 
       setBookings(bookingsJson.data || []);
+      setPage(bookingsJson.page || pageParam);
+      setTotalPages(bookingsJson.totalPages || 1);
       setFields(
         (fieldsJson.data || []).map((field: { id: string; name: string }) => ({ id: field.id, name: field.name }))
       );
@@ -78,8 +90,20 @@ export default function BookingManagerClient({ adminName, useMain = true }: { ad
   };
 
   useEffect(() => {
-    fetchData();
+    fetchData(page, query, filterDate);
   }, []);
+
+  const handleSearch = async () => {
+    setPage(1);
+    await fetchData(1, query.trim(), filterDate);
+  };
+
+  const goToPage = async (p: number) => {
+    if (p < 1) p = 1;
+    if (p > totalPages) p = totalPages;
+    setPage(p);
+    await fetchData(p, query, filterDate);
+  };
 
   const resetForm = () => {
     setEditing(null);
@@ -177,9 +201,12 @@ export default function BookingManagerClient({ adminName, useMain = true }: { ad
                 <h2 className="text-2xl font-semibold text-white">Booking list</h2>
                 <p className="mt-2 text-sm text-[color:var(--muted)]">Operational booking table with quick edit and delete actions.</p>
               </div>
-              <button onClick={resetForm} className="btn-secondary px-4 py-2">
-                New booking
-              </button>
+              <div className="flex items-center gap-2">
+                <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search customer or phone" className="rounded-3xl border border-white/10 bg-[color:var(--background)] px-3 py-2 text-sm text-white" />
+                <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="rounded-3xl border border-white/10 bg-[color:var(--background)] px-3 py-2 text-sm text-white" />
+                <button onClick={handleSearch} className="btn-secondary px-4 py-2">Filter</button>
+                <button onClick={resetForm} className="btn-secondary px-4 py-2">New booking</button>
+              </div>
             </div>
 
             {error ? (
@@ -227,6 +254,16 @@ export default function BookingManagerClient({ adminName, useMain = true }: { ad
                   ) : null}
                 </tbody>
               </table>
+            </div>
+            <div className="mt-4 flex items-center justify-between px-4">
+              <div className="text-sm text-[color:var(--muted)]">Total: {loading ? "..." : `${bookings.length} items on this page`}</div>
+              <div className="flex gap-2">
+                <button onClick={() => goToPage(page - 1)} disabled={page <= 1} className="rounded px-3 py-1 bg-white/5">Prev</button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                  <button key={p} onClick={() => goToPage(p)} className={`rounded px-3 py-1 ${p === page ? 'bg-[color:var(--accent)] text-black' : 'bg-white/5'}`}>{p}</button>
+                ))}
+                <button onClick={() => goToPage(page + 1)} disabled={page >= totalPages} className="rounded px-3 py-1 bg-white/5">Next</button>
+              </div>
             </div>
           </section>
 

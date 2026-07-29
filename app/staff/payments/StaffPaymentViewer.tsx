@@ -20,25 +20,48 @@ export default function StaffPaymentViewer({ adminName, useMain = true }: { admi
   const [payments, setPayments] = useState<StaffPaymentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [query, setQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+
+  const fetchPayments = async (pageParam = 1, q = "", status = "") => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams();
+      params.set("page", String(pageParam));
+      params.set("limit", String(6));
+      if (q) params.set("q", q);
+      if (status) params.set("status", status);
+      const response = await fetch(`/api/admin/payments?${params.toString()}`, { cache: "no-store" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Unable to load payments");
+      setPayments(data.data || []);
+      setPage(data.page || pageParam);
+      setTotalPages(data.totalPages || 1);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchPayments = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await fetch("/api/admin/payments", { cache: "no-store" });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || "Unable to load payments");
-        setPayments(data.data || []);
-      } catch (err) {
-        setError((err as Error).message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPayments();
+    fetchPayments(page, query, filterStatus);
   }, []);
+
+  const handleSearch = async () => {
+    setPage(1);
+    await fetchPayments(1, query.trim(), filterStatus);
+  };
+
+  const goToPage = async (p: number) => {
+    if (p < 1) p = 1;
+    if (p > totalPages) p = totalPages;
+    setPage(p);
+    await fetchPayments(p, query, filterStatus);
+  };
 
   const content = (
     <div className="mx-auto max-w-7xl space-y-8" id="staff-payments">
@@ -57,7 +80,19 @@ export default function StaffPaymentViewer({ adminName, useMain = true }: { admi
         </div>
 
         <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-6">
-          <h2 className="text-2xl font-semibold text-white">Payment records</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-semibold text-white">Payment records</h2>
+            <div className="flex items-center gap-2">
+              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search transaction" className="rounded-3xl border border-white/10 bg-[color:var(--background)] px-3 py-2 text-sm text-white" />
+              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-3xl border border-white/10 bg-[color:var(--background)] px-3 py-2 text-sm text-white">
+                <option value="">All</option>
+                <option value="pending">pending</option>
+                <option value="success">success</option>
+                <option value="failed">failed</option>
+              </select>
+              <button onClick={handleSearch} className="btn-secondary px-3 py-1">Filter</button>
+            </div>
+          </div>
           {error ? (
             <div className="mt-4 rounded-3xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">{error}</div>
           ) : null}
@@ -93,6 +128,13 @@ export default function StaffPaymentViewer({ adminName, useMain = true }: { admi
                 ) : null}
               </tbody>
             </table>
+          </div>
+          <div className="mt-4 flex items-center justify-end gap-2">
+            <button onClick={() => goToPage(page - 1)} disabled={page <= 1} className="rounded px-3 py-1 bg-white/5">Prev</button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <button key={p} onClick={() => goToPage(p)} className={`rounded px-3 py-1 ${p === page ? 'bg-[color:var(--accent)] text-black' : 'bg-white/5'}`}>{p}</button>
+            ))}
+            <button onClick={() => goToPage(page + 1)} disabled={page >= totalPages} className="rounded px-3 py-1 bg-white/5">Next</button>
           </div>
         </section>
       </div>

@@ -16,15 +16,31 @@ export async function GET(request: Request) {
     if (!hasAdminPermission(admin, "canReadPayments") && !hasAdminPermission(admin, "canManagePayments")) {
       return NextResponse.json({ success: false, message: "Insufficient privileges." }, { status: 403 });
     }
+    const url = new URL(request.url);
+    const page = Math.max(Number(url.searchParams.get("page") || "1"), 1);
+    const limit = Math.max(Number(url.searchParams.get("limit") || "6"), 1);
+    const q = (url.searchParams.get("q") || "").trim();
+    const bookingId = url.searchParams.get("bookingId") || undefined;
+    const status = url.searchParams.get("status") || undefined;
 
+    const where: Record<string, unknown> = {};
+    if (q) where.OR = [{ transactionId: { contains: q, mode: "insensitive" } }];
+    if (bookingId) where.bookingId = bookingId;
+    if (status) where.status = status;
+
+    const total = await prisma.payment.count({ where });
     const payments = await prisma.payment.findMany({
+      where,
       orderBy: { createdAt: "desc" },
       include: {
         booking: { select: { id: true, customerName: true, customerPhone: true, bookingDate: true } },
       },
+      skip: (page - 1) * limit,
+      take: limit,
     });
 
-    return NextResponse.json({ success: true, data: payments });
+    const totalPages = Math.max(Math.ceil(total / limit), 1);
+    return NextResponse.json({ success: true, data: payments, total, page, limit, totalPages });
   } catch (error) {
     console.error("[ADMIN] Payment list error:", error);
     return NextResponse.json({ success: false, message: "Unable to list payments." }, { status: 500 });
