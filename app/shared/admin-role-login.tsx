@@ -4,7 +4,7 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatedCard } from "@/components/animated-card";
 
-export function createRoleLoginPage(defaultEmail: string, defaultPassword: string, targetPath: string, title: string, subtitle: string) {
+export function createRoleLoginPage(targetPath: string, title: string, subtitle: string) {
   return function RoleLoginPage() {
     const router = useRouter();
     const [email, setEmail] = useState("");
