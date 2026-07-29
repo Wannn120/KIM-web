@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AnimatedCard } from "@/components/animated-card";
+import { InvoiceActions } from "@/components/invoice-actions";
 import { getPaymentTransaction, reconcilePaymentStatus } from "@/lib/payment-service";
 
 export const dynamic = "force-dynamic";
@@ -100,38 +101,14 @@ export default async function PaymentSuccessPage({
           </div>
 
           {payment?.invoice?.invoiceNumber ? (
-            <div className="mt-6">
-              <div className="rounded-3xl border border-white/10 bg-black/10 p-6">
-                <h2 className="text-xl font-semibold text-white">Invoice details</h2>
-                <p className="mt-2 text-sm text-[color:var(--muted)]">Copy the invoice number or print/save the page to PDF.</p>
-                <div className="mt-6 grid gap-3 text-sm text-[color:var(--muted)] sm:grid-cols-2">
-                  <div className="rounded-2xl bg-white/5 p-4 text-left">
-                    <p className="text-sm text-[color:var(--muted)]">Invoice number</p>
-                    <p className="mt-1 text-lg font-semibold text-white">{payment.invoice.invoiceNumber}</p>
-                  </div>
-                  <div className="rounded-2xl bg-white/5 p-4 text-left">
-                    <p className="text-sm text-[color:var(--muted)]">Service</p>
-                    <p className="mt-1 text-lg font-semibold text-white">Field booking</p>
-                  </div>
-                </div>
-                <div className="mt-6 flex flex-wrap gap-3">
-                  <button
-                    type="button"
-                    onClick={() => navigator.clipboard.writeText(payment.invoice?.invoiceNumber ?? "")}
-                    className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white"
-                  >
-                    Copy invoice number
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => window.print()}
-                    className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white"
-                  >
-                    Save as PDF / Print
-                  </button>
-                </div>
-              </div>
-            </div>
+            <InvoiceActions
+              invoiceNumber={payment.invoice.invoiceNumber}
+              customerName={payment.invoice.customerName ?? payment.booking.customerName}
+              customerEmail={payment.invoice.customerEmail ?? payment.booking.customerEmail ?? undefined}
+              amount={payment.invoice.total ?? payment.amount}
+              bookingDate={payment.booking.bookingDate.toISOString().slice(0, 10)}
+              bookingTime={`${payment.booking.startTime} - ${payment.booking.endTime}`}
+            />
           ) : null}
 
           <div className="mt-10 grid gap-4 sm:grid-cols-2">

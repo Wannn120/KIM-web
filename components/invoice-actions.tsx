@@ -81,12 +81,19 @@ export function InvoiceActions({
           >
             Copy invoice details
           </button>
+          <a
+            href={`/api/invoices/download?invoiceNumber=${encodeURIComponent(invoiceNumber)}`}
+            download={`invoice-${invoiceNumber}.pdf`}
+            className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white"
+          >
+            Download invoice PDF
+          </a>
           <button
             type="button"
             onClick={printInvoice}
-            className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white"
+            className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white"
           >
-            Save as PDF / Print
+            Print
           </button>
         </div>
       </div>
