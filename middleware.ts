@@ -96,7 +96,7 @@ export async function middleware(request: NextRequest) {
     }
 
     const normalizedRole = normalizeAdminRole(payload.role);
-    if (normalizedRole !== requestedPanel) {
+    if (isProtectedPanelRoute && normalizedRole !== requestedPanel) {
       const redirectUrl = new URL(getPanelLoginPath(normalizedRole), request.url);
       return NextResponse.redirect(redirectUrl);
     }

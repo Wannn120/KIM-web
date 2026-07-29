@@ -9,7 +9,14 @@ export const dynamic = "force-dynamic";
 export default async function StaffPage() {
   const cookieStore = await cookies();
   const token = cookieStore.get("admin-session")?.value ?? "";
-  const admin = await getAuthenticatedAdminFromToken(token);
+
+  let admin = null;
+  try {
+    admin = await getAuthenticatedAdminFromToken(token);
+  } catch (error) {
+    console.error("[STAFF] Authentication check failed:", error);
+    redirect("/staff/login");
+  }
 
   if (!admin) {
     redirect("/staff/login");
@@ -24,5 +31,20 @@ export default async function StaffPage() {
     return getDefaultAdminSummary();
   });
 
-  return <AdminDashboard admin={admin} summary={summary} />;
+  try {
+    return <AdminDashboard admin={admin} summary={summary} />;
+  } catch (error) {
+    console.error("[STAFF] Unable to render dashboard:", error);
+    return (
+      <main className="flex-1 px-6 py-16 lg:px-8">
+        <div className="mx-auto max-w-3xl rounded-[2rem] border border-amber-500/20 bg-[color:var(--surface)] p-10">
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-amber-300">Dashboard unavailable</p>
+          <h1 className="mt-4 text-3xl font-semibold text-white">The admin dashboard could not be rendered.</h1>
+          <p className="mt-4 text-sm leading-7 text-[color:var(--muted)]">
+            A temporary data issue prevented the dashboard from loading correctly. Please refresh the page or try again shortly.
+          </p>
+        </div>
+      </main>
+    );
+  }
 }

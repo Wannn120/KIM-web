@@ -97,9 +97,9 @@ function getDefaultPermissions(role: AdminRole): AdminPermissions {
         canManageBookings: true,
         canManagePayments: true,
         canManageSchedule: true,
-        canManageCMS: false,
+        canManageCMS: true,
         canManageAdmins: false,
-        canViewReports: true,
+        canViewReports: false,
         canVerifyPayments: true,
         canCreateBookings: true,
         canReadBookings: true,
@@ -194,9 +194,9 @@ async function ensureDefaultRolePermissions() {
       canManageBookings: true,
       canManagePayments: true,
       canManageSchedule: true,
-      canManageCMS: false,
+      canManageCMS: true,
       canManageAdmins: false,
-      canViewReports: true,
+      canViewReports: false,
       canVerifyPayments: true,
       canCreateBookings: true,
       canReadBookings: true,
@@ -345,12 +345,27 @@ export async function authenticateAdmin(email: string, password: string) {
 }
 
 function isMissingRolePermissionTableError(error: unknown) {
-  return (
-    error instanceof Prisma.PrismaClientKnownRequestError &&
-    error.code === "P2021" &&
-    typeof error.meta?.cause === "string" &&
-    error.meta.cause.includes("admin_role_permission")
-  );
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const maybeCode = (error as { code?: unknown }).code;
+  const maybeMetaCause = (error as { meta?: { cause?: unknown } }).meta?.cause;
+  const maybeMessage = (error as { message?: unknown }).message;
+
+  if (maybeCode !== "P2021") {
+    return false;
+  }
+
+  if (typeof maybeMetaCause === "string" && maybeMetaCause.includes("admin_role_permission")) {
+    return true;
+  }
+
+  if (typeof maybeMessage === "string" && maybeMessage.includes("admin_role_permission")) {
+    return true;
+  }
+
+  return false;
 }
 
 export async function getAuthenticatedAdminFromToken(token: string) {
@@ -377,6 +392,7 @@ export async function getAuthenticatedAdminFromToken(token: string) {
     });
   } catch (error) {
     if (isMissingRolePermissionTableError(error)) {
+      console.warn("Missing admin_role_permission table; falling back to default admin permissions.");
       session = await prisma.adminSession.findUnique({
         where: { tokenHash },
         include: { adminUser: true },
