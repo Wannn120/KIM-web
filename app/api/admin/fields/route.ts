@@ -9,7 +9,9 @@ export async function GET(request: Request) {
     const token = match ? decodeURIComponent(match[1]) : "";
     const admin = await getAuthenticatedAdminFromToken(token);
     if (!admin) return NextResponse.json({ success: false, message: "Admin session not found." }, { status: 401 });
-    if (!hasAdminPermission(admin, "canManageFields")) return NextResponse.json({ success: false, message: "Insufficient privileges." }, { status: 403 });
+    if (!hasAdminPermission(admin, "canReadFields") && !hasAdminPermission(admin, "canManageFields")) {
+      return NextResponse.json({ success: false, message: "Insufficient privileges." }, { status: 403 });
+    }
 
     const fields = await prisma.field.findMany({ orderBy: { createdAt: "desc" } });
     return NextResponse.json({ success: true, data: fields });
