@@ -1,19 +1,30 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import { AnimatedCard } from "@/components/animated-card";
 
 export function createRoleLoginPage(targetPath: string, title: string, subtitle: string) {
   return function RoleLoginPage() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const emailRef = useRef<HTMLInputElement>(null);
+    const passwordRef = useRef<HTMLInputElement>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
+    const submitLogin = async (event?: FormEvent<HTMLFormElement>) => {
+      if (event) {
+        event.preventDefault();
+      }
       setLoading(true);
       setError(null);
+
+      const nextEmail = emailRef.current?.value.trim() ?? "";
+      const nextPassword = passwordRef.current?.value.trim() ?? "";
+
+      if (!nextEmail || !nextPassword) {
+        setError("Email dan password harus diisi.");
+        setLoading(false);
+        return;
+      }
 
       try {
         const response = await fetch("/api/admin/login", {
@@ -22,7 +33,7 @@ export function createRoleLoginPage(targetPath: string, title: string, subtitle:
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ email, password }),
+          body: JSON.stringify({ email: nextEmail, password: nextPassword }),
         });
 
         const data = await response.json();
@@ -30,7 +41,10 @@ export function createRoleLoginPage(targetPath: string, title: string, subtitle:
           throw new Error(data.message || "Unable to sign in.");
         }
 
-        window.location.assign(targetPath);
+        if (typeof window !== "undefined") {
+          window.location.assign(targetPath);
+          window.location.href = targetPath;
+        }
       } catch (caught) {
         setError((caught as Error).message);
       } finally {
@@ -51,15 +65,15 @@ export function createRoleLoginPage(targetPath: string, title: string, subtitle:
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={submitLogin} method="post" className="space-y-5">
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-[color:var(--muted)]">Email</label>
                   <input
+                    ref={emailRef}
                     name="email"
                     type="email"
                     autoComplete="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
+                    defaultValue=""
                     placeholder="name@domain.com"
                     className="w-full rounded-3xl border border-white/10 bg-[color:var(--background)] px-4 py-3 text-white outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent)/20]"
                   />
@@ -67,11 +81,11 @@ export function createRoleLoginPage(targetPath: string, title: string, subtitle:
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-[color:var(--muted)]">Password</label>
                   <input
+                    ref={passwordRef}
                     name="password"
                     type="password"
                     autoComplete="current-password"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
+                    defaultValue=""
                     placeholder="Masukkan password Anda"
                     className="w-full rounded-3xl border border-white/10 bg-[color:var(--background)] px-4 py-3 text-white outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent)/20]"
                   />

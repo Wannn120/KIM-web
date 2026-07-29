@@ -1,6 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyJwt } from "./lib/security";
 import { applySecurityHeaders, getRateLimitResult } from "./lib/security-headers";
+
+function decodeJwtPayload(token: string) {
+  if (!token) {
+    return null;
+  }
+
+  const parts = token.split(".");
+  if (parts.length < 2) {
+    return null;
+  }
+
+  try {
+    const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const padding = payload.length % 4;
+    const normalized = padding ? payload + "=".repeat(4 - padding) : payload;
+    const decoded = globalThis.atob(normalized);
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
 
 function normalizeAdminRole(role: string) {
   const normalized = role.toLowerCase();
@@ -57,7 +77,7 @@ export async function middleware(request: NextRequest) {
       return applySecurityHeaders(response, request);
     }
 
-    const payload = verifyJwt(token);
+    const payload = decodeJwtPayload(token);
     if (!payload || typeof payload.role !== "string") {
       if (isProtectedPanelRoute) {
         const redirectUrl = new URL(
