@@ -29,6 +29,7 @@ interface BookingFormState {
   startTime: string;
   endTime: string;
   fieldId: string;
+  fieldName?: string;
   notes: string;
 }
 
