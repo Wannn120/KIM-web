@@ -17,6 +17,104 @@ function normalizePaymentStatus(status: string): PaymentStatus {
   return "pending";
 }
 
+function parseTimeToMinutes(timeValue: string) {
+  const [hourText, minuteText] = timeValue.split(":");
+  const hour = Number(hourText);
+  const minute = Number(minuteText ?? "0");
+  if (Number.isNaN(hour) || Number.isNaN(minute)) {
+    return NaN;
+  }
+  return hour * 60 + minute;
+}
+
+function formatMinutesToTime(totalMinutes: number) {
+  const safeMinutes = Math.max(0, totalMinutes);
+  const hour = Math.floor(safeMinutes / 60);
+  const minute = safeMinutes % 60;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+function getRequestedScheduleBlocks(startTime: string, endTime: string) {
+  const startMinutes = parseTimeToMinutes(startTime);
+  const endMinutes = parseTimeToMinutes(endTime);
+
+  if (Number.isNaN(startMinutes) || Number.isNaN(endMinutes) || endMinutes <= startMinutes) {
+    return [] as Array<{ start: string; end: string }>;
+  }
+
+  const blocks: Array<{ start: string; end: string }> = [];
+  for (let cursor = startMinutes; cursor < endMinutes; cursor += 60) {
+    const nextCursor = Math.min(cursor + 60, endMinutes);
+    blocks.push({
+      start: formatMinutesToTime(cursor),
+      end: formatMinutesToTime(nextCursor),
+    });
+  }
+
+  return blocks;
+}
+
+async function restoreBookingSchedule(bookingId: string) {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    select: {
+      fieldId: true,
+      bookingDate: true,
+      startTime: true,
+      endTime: true,
+    },
+  });
+
+  if (!booking) {
+    return;
+  }
+
+  const requestedBlocks = getRequestedScheduleBlocks(booking.startTime, booking.endTime);
+  if (requestedBlocks.length === 0) {
+    return;
+  }
+
+  await prisma.fieldSchedule.updateMany({
+    where: {
+      fieldId: booking.fieldId,
+      date: booking.bookingDate,
+      startTime: { in: requestedBlocks.map((block) => block.start) },
+    },
+    data: { isAvailable: true },
+  });
+}
+
+async function restoreBookingSchedules(bookingIds: string[]) {
+  if (bookingIds.length === 0) {
+    return;
+  }
+
+  const bookings = await prisma.booking.findMany({
+    where: { id: { in: bookingIds } },
+    select: {
+      id: true,
+      fieldId: true,
+      bookingDate: true,
+      startTime: true,
+      endTime: true,
+    },
+  });
+
+  await prisma.$transaction(
+    bookings.map((booking) => {
+      const requestedBlocks = getRequestedScheduleBlocks(booking.startTime, booking.endTime);
+      return prisma.fieldSchedule.updateMany({
+        where: {
+          fieldId: booking.fieldId,
+          date: booking.bookingDate,
+          startTime: { in: requestedBlocks.map((block) => block.start) },
+        },
+        data: { isAvailable: true },
+      });
+    })
+  );
+}
+
 function buildInvoiceNumber() {
   const now = new Date();
   const date = now.toISOString().slice(0, 10).replace(/-/g, "");
@@ -191,6 +289,8 @@ export async function expirePendingPayments() {
       data: { status: "issued", updatedAt: now },
     }),
   ]);
+
+  await restoreBookingSchedules(bookingIds);
 }
 
 export async function getPaymentTransaction(transactionId: string) {
@@ -253,16 +353,23 @@ export async function processWebhookEvent(transactionId: string, status: Payment
     data: updateData,
   });
 
-  const nextBookingStatus: BookingStatus = normalized === "success"
-    ? "confirmed"
-    : normalized === "refunded"
-    ? "refunded"
-    : "cancelled";
+  let nextBookingStatus: BookingStatus = "cancelled";
+  if (normalized === "success") {
+    nextBookingStatus = "confirmed";
+  } else if (normalized === "refunded") {
+    nextBookingStatus = "refunded";
+  } else if (normalized === "expired") {
+    nextBookingStatus = "expired";
+  }
 
   await prisma.booking.update({
     where: { id: booking.id },
     data: { status: nextBookingStatus },
   });
+
+  if (["expired", "failed", "cancelled"].includes(normalized)) {
+    await restoreBookingSchedule(booking.id);
+  }
 
   await prisma.invoice.upsert({
     where: { bookingId: booking.id },
