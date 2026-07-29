@@ -32,6 +32,7 @@ function getProtectedPanelRole(pathname: string) {
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const ip = request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip") ?? "unknown";
+  console.log("[middleware]", { pathname, hasToken: Boolean(request.cookies.get("admin-session")?.value) });
   const rateLimit = getRateLimitResult(`global:${ip}`);
 
   if (!rateLimit.allowed) {
@@ -64,11 +65,11 @@ export async function middleware(request: NextRequest) {
       return applySecurityHeaders(response, request);
     }
 
-    const expectedRole = getProtectedPanelRole(pathname);
-    if (expectedRole) {
-      const payload = decodeJwtPayload(token);
-      const currentRole = typeof payload?.role === "string" ? payload.role : null;
-      if (currentRole && currentRole !== expectedRole) {
+    const payload = decodeJwtPayload(token);
+    const currentRole = typeof payload?.role === "string" ? payload.role : null;
+    if (isProtectedPanelRoute) {
+      const expectedRole = getProtectedPanelRole(pathname);
+      if (currentRole && expectedRole && currentRole !== expectedRole) {
         const redirectUrl = new URL(
           currentRole === "super_admin"
             ? "/superadmin/login"

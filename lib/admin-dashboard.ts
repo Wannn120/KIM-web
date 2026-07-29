@@ -22,6 +22,17 @@ export function getDefaultAdminSummary(): AdminSummary {
   };
 }
 
+function isMissingTableError(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const maybeCode = (error as { code?: unknown }).code;
+  const maybeMessage = (error as { message?: unknown }).message;
+
+  return maybeCode === "P2021" || (typeof maybeMessage === "string" && maybeMessage.includes("does not exist"));
+}
+
 export async function getAdminSummary(): Promise<AdminSummary> {
   const fallback = getDefaultAdminSummary();
 
@@ -51,7 +62,9 @@ export async function getAdminSummary(): Promise<AdminSummary> {
       });
       revenueToday = Number(revenueTodayResult._sum.amount ?? 0);
     } catch (error) {
-      console.error("[ADMIN] Unable to load today's revenue summary:", error);
+      if (!isMissingTableError(error)) {
+        console.error("[ADMIN] Unable to load today's revenue summary:", error);
+      }
     }
 
     try {
@@ -61,7 +74,9 @@ export async function getAdminSummary(): Promise<AdminSummary> {
       });
       revenueThisMonth = Number(revenueMonthResult._sum.amount ?? 0);
     } catch (error) {
-      console.error("[ADMIN] Unable to load monthly revenue summary:", error);
+      if (!isMissingTableError(error)) {
+        console.error("[ADMIN] Unable to load monthly revenue summary:", error);
+      }
     }
 
     try {
@@ -72,7 +87,9 @@ export async function getAdminSummary(): Promise<AdminSummary> {
         },
       });
     } catch (error) {
-      console.error("[ADMIN] Unable to load today's booking count:", error);
+      if (!isMissingTableError(error)) {
+        console.error("[ADMIN] Unable to load today's booking count:", error);
+      }
     }
 
     try {
@@ -83,7 +100,9 @@ export async function getAdminSummary(): Promise<AdminSummary> {
         },
       });
     } catch (error) {
-      console.error("[ADMIN] Unable to load monthly booking count:", error);
+      if (!isMissingTableError(error)) {
+        console.error("[ADMIN] Unable to load monthly booking count:", error);
+      }
     }
 
     try {
@@ -99,7 +118,9 @@ export async function getAdminSummary(): Promise<AdminSummary> {
       });
       peakHours = peakRows.map((r) => ({ hour: r.startTime, bookings: r._count.startTime }));
     } catch (error) {
-      console.error("[ADMIN] Unable to load peak hours summary:", error);
+      if (!isMissingTableError(error)) {
+        console.error("[ADMIN] Unable to load peak hours summary:", error);
+      }
     }
 
     try {
@@ -119,7 +140,9 @@ export async function getAdminSummary(): Promise<AdminSummary> {
         mostBookedField = { name: field?.name ?? "Unknown", bookings: fieldRows[0]._count.fieldId };
       }
     } catch (error) {
-      console.error("[ADMIN] Unable to load most-booked-field summary:", error);
+      if (!isMissingTableError(error)) {
+        console.error("[ADMIN] Unable to load most-booked-field summary:", error);
+      }
     }
 
     try {
@@ -127,7 +150,9 @@ export async function getAdminSummary(): Promise<AdminSummary> {
       activeCustomers = await prisma.customer.count({ where: { status: "ACTIVE" } });
       newCustomersThisMonth = await prisma.customer.count({ where: { createdAt: { gte: startOfMonth } } });
     } catch (error) {
-      console.error("[ADMIN] Unable to load customer stats summary:", error);
+      if (!isMissingTableError(error)) {
+        console.error("[ADMIN] Unable to load customer stats summary:", error);
+      }
     }
 
     return {

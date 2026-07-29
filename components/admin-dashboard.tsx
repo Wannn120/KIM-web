@@ -9,25 +9,54 @@ export default function AdminDashboard({
   admin: AuthenticatedAdmin;
   summary: AdminSummary;
 }) {
-  const quickLinks = [
-    {
-      label: "SQL editor",
-      path: "/sql-editor",
-      visible: admin.permissions.canManageAdmins,
-    },
-    {
-      label: "View bookings",
-      path: "/book",
-      visible: true,
-    },
-  ];
+  const quickLinks =
+    admin.role === "staff"
+      ? [
+          {
+            label: "Booking history",
+            path: "/booking-history",
+            visible: true,
+          },
+          {
+            label: "Book a field",
+            path: "/book",
+            visible: true,
+          },
+          {
+            label: "Field availability",
+            path: "/fields",
+            visible: true,
+          },
+        ]
+      : [
+          {
+            label: "SQL editor",
+            path: "/sql-editor",
+            visible: admin.permissions.canManageAdmins,
+          },
+          {
+            label: "Manage fields",
+            path: "/fields",
+            visible: admin.permissions.canManageFields,
+          },
+          {
+            label: "View bookings",
+            path: "/book",
+            visible: true,
+          },
+          {
+            label: "Booking history",
+            path: "/booking-history",
+            visible: true,
+          },
+        ];
 
   const roleSummaryText =
     admin.role === "super_admin"
-      ? "Full access to dashboard, statistics, and admin tools."
+      ? "Full administrative access, including sensitive user management and revenue insights."
       : admin.role === "manager"
-      ? "Manage bookings and operational visibility with limited admin access."
-      : "Read-only access for operational monitoring and booking overview.";
+      ? "Can manage bookings, fields, schedules, payments, and operational content, while keeping admin-user management restricted."
+      : "Read-only access for booking history, field availability, and operational overview. No access to sensitive admin-user management.";
 
   return (
     <main className="flex-1 px-6 py-16 lg:px-8">
