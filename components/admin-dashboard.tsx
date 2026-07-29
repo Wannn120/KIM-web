@@ -11,21 +11,6 @@ export default function AdminDashboard({
 }) {
   const quickLinks = [
     {
-      label: "Field management",
-      path: "/admin/fields",
-      visible: admin.permissions.canManageFields,
-    },
-    {
-      label: "Booking management",
-      path: "/admin/bookings",
-      visible: admin.permissions.canManageBookings,
-    },
-    {
-      label: "Payment verification",
-      path: "/admin/payments",
-      visible: admin.permissions.canManagePayments,
-    },
-    {
       label: "SQL editor",
       path: "/sql-editor",
       visible: admin.permissions.canManageAdmins,
