@@ -98,7 +98,7 @@ function getDefaultPermissions(role: AdminRole): AdminPermissions {
         canManageSchedule: true,
         canManageCMS: true,
         canManageAdmins: false,
-        canViewReports: true,
+        canViewReports: false,
         canVerifyPayments: true,
         canCreateBookings: true,
         canReadBookings: true,
@@ -107,7 +107,7 @@ function getDefaultPermissions(role: AdminRole): AdminPermissions {
     default:
       return {
         canManageFields: false,
-        canManageBookings: true,
+        canManageBookings: false,
         canManagePayments: false,
         canManageSchedule: false,
         canManageCMS: false,
@@ -182,7 +182,7 @@ async function ensureDefaultRolePermissions() {
       canManageSchedule: true,
       canManageCMS: true,
       canManageAdmins: false,
-      canViewReports: true,
+      canViewReports: false,
       canVerifyPayments: true,
       canCreateBookings: true,
       canReadBookings: true,
@@ -192,7 +192,7 @@ async function ensureDefaultRolePermissions() {
     {
       role: ADMIN_ROLES.staff,
       canManageFields: false,
-      canManageBookings: true,
+      canManageBookings: false,
       canManagePayments: false,
       canManageSchedule: false,
       canManageCMS: false,

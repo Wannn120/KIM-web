@@ -5,6 +5,13 @@ import { Prisma } from "@prisma/client";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const cookieHeader = request.headers.get("cookie") || "";
+    const match = cookieHeader.match(/admin-session=([^;]+)/);
+    const token = match ? decodeURIComponent(match[1]) : "";
+    const admin = await getAuthenticatedAdminFromToken(token);
+    if (!admin) return NextResponse.json({ success: false, message: "Not authenticated." }, { status: 401 });
+    if (!hasAdminPermission(admin, "canManageFields")) return NextResponse.json({ success: false, message: "Insufficient privileges." }, { status: 403 });
+
     const paramsResolved = await params;
     const id = paramsResolved.id;
     const field = await prisma.field.findUnique({ where: { id } });
