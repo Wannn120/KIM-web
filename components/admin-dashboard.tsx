@@ -49,7 +49,16 @@ export default function AdminDashboard({
                 </span>
               </div>
             </div>
-            <Link href="/admin/login" className="btn-secondary">
+            <Link
+              href={
+                admin.role === "super_admin"
+                  ? "/superadmin/login"
+                  : admin.role === "manager"
+                  ? "/manager/login"
+                  : "/staff/login"
+              }
+              className="btn-secondary"
+            >
               Back to sign in
             </Link>
           </div>

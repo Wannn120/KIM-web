@@ -12,7 +12,7 @@ export default async function ManagerPage() {
   const admin = await getAuthenticatedAdminFromToken(token);
 
   if (!admin) {
-    redirect("/admin/login?role=manager");
+    redirect("/manager/login");
   }
 
   if (!isAdminRoleAllowed(admin.role, ["manager"])) {

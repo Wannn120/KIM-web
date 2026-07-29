@@ -12,7 +12,7 @@ export default async function StaffPage() {
   const admin = await getAuthenticatedAdminFromToken(token);
 
   if (!admin) {
-    redirect("/admin/login?role=staff");
+    redirect("/staff/login");
   }
 
   if (!isAdminRoleAllowed(admin.role, ["staff"])) {

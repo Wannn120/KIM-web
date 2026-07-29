@@ -12,7 +12,7 @@ export default async function SuperadminPage() {
   const admin = await getAuthenticatedAdminFromToken(token);
 
   if (!admin) {
-    redirect("/admin/login?role=super_admin");
+    redirect("/superadmin/login");
   }
 
   if (!isAdminRoleAllowed(admin.role, ["super_admin"])) {
