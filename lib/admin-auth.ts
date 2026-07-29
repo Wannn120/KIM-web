@@ -144,6 +144,19 @@ function mapRolePermissions(
   };
 }
 
+export function getAdminPanelPath(role: string) {
+  const normalizedRole = normalizeAdminRole(role);
+
+  switch (normalizedRole) {
+    case ADMIN_ROLES.superAdmin:
+      return "/superadmin";
+    case ADMIN_ROLES.manager:
+      return "/manager";
+    default:
+      return "/staff";
+  }
+}
+
 export function isAdminRoleAllowed(role: string, allowedRoles: AdminRole[]) {
   const normalizedRole = normalizeAdminRole(role);
   return allowedRoles.includes(normalizedRole);
