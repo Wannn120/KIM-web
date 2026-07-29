@@ -30,7 +30,7 @@ interface PaymentFormState {
   expiredAt: string;
 }
 
-export default function PaymentManagerClient({ adminName }: { adminName: string }) {
+export default function PaymentManagerClient({ adminName, useMain = true }: { adminName: string; useMain?: boolean }) {
   const [payments, setPayments] = useState<PaymentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -147,8 +147,8 @@ export default function PaymentManagerClient({ adminName }: { adminName: string 
   const paymentMethods = useMemo(() => ["Midtrans", "QRIS", "GoPay", "Dana", "ShopeePay", "OVO", "BCA", "BNI", "Mandiri", "Offline"], []);
   const providers = useMemo(() => ["Midtrans", "QRIS", "GoPay", "Dana", "ShopeePay", "OVO", "BCA", "BNI", "Mandiri", "Offline"], []);
 
-  return (
-    <main className="flex-1 px-6 py-16 lg:px-8">
+  const content = (
+    <div className="mx-auto max-w-7xl space-y-8" id="payments">
       <div className="mx-auto max-w-7xl space-y-8">
         <div className="rounded-[2rem] border border-white/10 bg-[color:var(--surface-strong)] p-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -286,6 +286,8 @@ export default function PaymentManagerClient({ adminName }: { adminName: string 
           </section>
         </div>
       </div>
-    </main>
+    </div>
   );
+
+  return useMain ? <main className="flex-1 px-6 py-16 lg:px-8">{content}</main> : content;
 }

@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 import { getAuthenticatedAdminFromToken, getAdminPanelPath, isAdminRoleAllowed } from "@/lib/admin-auth";
 import { getAdminSummary, getDefaultAdminSummary } from "@/lib/admin-dashboard";
 import AdminDashboard from "@/components/admin-dashboard";
+import FieldManagerClient from "@/app/manager/fields/FieldManagerClient";
+import BookingManagerClient from "@/app/manager/bookings/BookingManagerClient";
+import PaymentManagerClient from "@/app/manager/payments/PaymentManagerClient";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +35,14 @@ export default async function ManagerPage() {
   });
 
   try {
-    return <AdminDashboard admin={admin} summary={summary} />;
+    return (
+      <>
+        <AdminDashboard admin={admin} summary={summary} />
+        <FieldManagerClient adminName={admin.name} useMain={false} />
+        <BookingManagerClient adminName={admin.name} useMain={false} />
+        <PaymentManagerClient adminName={admin.name} useMain={false} />
+      </>
+    );
   } catch (error) {
     console.error("[MANAGER] Unable to render dashboard:", error);
     return (
