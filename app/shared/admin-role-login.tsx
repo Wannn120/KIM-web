@@ -1,12 +1,10 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
 import { AnimatedCard } from "@/components/animated-card";
 
 export function createRoleLoginPage(targetPath: string, title: string, subtitle: string) {
   return function RoleLoginPage() {
-    const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
@@ -20,7 +18,10 @@ export function createRoleLoginPage(targetPath: string, title: string, subtitle:
       try {
         const response = await fetch("/api/admin/login", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({ email, password }),
         });
 
@@ -29,7 +30,7 @@ export function createRoleLoginPage(targetPath: string, title: string, subtitle:
           throw new Error(data.message || "Unable to sign in.");
         }
 
-        router.push(targetPath);
+        window.location.assign(targetPath);
       } catch (caught) {
         setError((caught as Error).message);
       } finally {
@@ -54,6 +55,9 @@ export function createRoleLoginPage(targetPath: string, title: string, subtitle:
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-[color:var(--muted)]">Email</label>
                   <input
+                    name="email"
+                    type="email"
+                    autoComplete="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     placeholder="name@domain.com"
@@ -63,7 +67,9 @@ export function createRoleLoginPage(targetPath: string, title: string, subtitle:
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-[color:var(--muted)]">Password</label>
                   <input
+                    name="password"
                     type="password"
+                    autoComplete="current-password"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     placeholder="Masukkan password Anda"

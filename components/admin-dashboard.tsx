@@ -15,7 +15,19 @@ export default function AdminDashboard({
       path: "/sql-editor",
       visible: admin.permissions.canManageAdmins,
     },
+    {
+      label: "View bookings",
+      path: "/book",
+      visible: true,
+    },
   ];
+
+  const roleSummaryText =
+    admin.role === "super_admin"
+      ? "Full access to dashboard, statistics, and admin tools."
+      : admin.role === "manager"
+      ? "Manage bookings and operational visibility with limited admin access."
+      : "Read-only access for operational monitoring and booking overview.";
 
   return (
     <main className="flex-1 px-6 py-16 lg:px-8">
@@ -33,6 +45,7 @@ export default function AdminDashboard({
                   Authenticated session active
                 </span>
               </div>
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-[color:var(--muted)]">{roleSummaryText}</p>
             </div>
             <Link
               href={
@@ -124,12 +137,18 @@ export default function AdminDashboard({
             <div className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-6">
               <h2 className="text-xl font-semibold text-white">Peak hours</h2>
               <div className="mt-4 space-y-3">
-                {summary.peakHours.map((entry) => (
-                  <div key={entry.hour} className="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3 text-sm text-[color:var(--muted)]">
-                    <span>{entry.hour}</span>
-                    <span className="text-white">{entry.bookings} bookings</span>
-                  </div>
-                ))}
+                {summary.peakHours.length > 0 ? (
+                  summary.peakHours.map((entry) => (
+                    <div key={entry.hour} className="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3 text-sm text-[color:var(--muted)]">
+                      <span>{entry.hour}</span>
+                      <span className="text-white">{entry.bookings} bookings</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-[color:var(--muted)]">
+                    Belum ada data booking untuk ditampilkan.
+                  </p>
+                )}
               </div>
             </div>
             <div className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-6">
