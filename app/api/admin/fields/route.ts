@@ -2,8 +2,15 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedAdminFromToken, hasAdminPermission } from "@/lib/admin-auth";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const cookieHeader = request.headers.get("cookie") || "";
+    const match = cookieHeader.match(/admin-session=([^;]+)/);
+    const token = match ? decodeURIComponent(match[1]) : "";
+    const admin = await getAuthenticatedAdminFromToken(token);
+    if (!admin) return NextResponse.json({ success: false, message: "Admin session not found." }, { status: 401 });
+    if (!hasAdminPermission(admin, "canManageFields")) return NextResponse.json({ success: false, message: "Insufficient privileges." }, { status: 403 });
+
     const fields = await prisma.field.findMany({ orderBy: { createdAt: "desc" } });
     return NextResponse.json({ success: true, data: fields });
   } catch (error) {
