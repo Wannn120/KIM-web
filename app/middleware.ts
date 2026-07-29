@@ -11,7 +11,11 @@ export async function middleware(request: NextRequest) {
     return applySecurityHeaders(response, request);
   }
 
-  const isAdminRoute = pathname.startsWith("/admin") && !pathname.startsWith("/admin/login");
+  const isAdminRoute =
+    (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) ||
+    pathname.startsWith("/staff") ||
+    pathname.startsWith("/manager") ||
+    pathname.startsWith("/superadmin");
   const isAdminApiRoute = pathname.startsWith("/api/admin") && !pathname.startsWith("/api/admin/login");
 
   if (isAdminRoute || isAdminApiRoute) {
