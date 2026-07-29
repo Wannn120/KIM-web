@@ -11,7 +11,7 @@ export default async function Page() {
   const admin = await getAuthenticatedAdminFromToken(token);
 
   if (!admin || !admin.permissions.canManageAdmins) {
-    redirect("/admin/login?role=super_admin");
+    redirect("/superadmin/login");
   }
 
   return <SqlEditorClient initialAdminName={admin.name ?? null} />;

@@ -12,10 +12,9 @@ export async function middleware(request: NextRequest) {
   }
 
   const isAdminRoute =
-    (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) ||
-    pathname.startsWith("/staff") ||
-    pathname.startsWith("/manager") ||
-    pathname.startsWith("/superadmin");
+    (pathname.startsWith("/staff") && !pathname.startsWith("/staff/login")) ||
+    (pathname.startsWith("/manager") && !pathname.startsWith("/manager/login")) ||
+    (pathname.startsWith("/superadmin") && !pathname.startsWith("/superadmin/login"));
   const isAdminApiRoute = pathname.startsWith("/api/admin") && !pathname.startsWith("/api/admin/login");
 
   if (isAdminRoute || isAdminApiRoute) {
@@ -23,7 +22,14 @@ export async function middleware(request: NextRequest) {
     const token = request.cookies.get("admin-session")?.value;
     if (!token) {
       if (isAdminRoute) {
-        const redirectUrl = new URL("/admin/login", request.url);
+        const redirectUrl = new URL(
+          pathname.startsWith("/staff")
+            ? "/staff/login"
+            : pathname.startsWith("/manager")
+            ? "/manager/login"
+            : "/superadmin/login",
+          request.url,
+        );
         return NextResponse.redirect(redirectUrl);
       }
 
