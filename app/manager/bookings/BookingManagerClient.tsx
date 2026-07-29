@@ -32,7 +32,7 @@ interface BookingFormState {
   notes: string;
 }
 
-export default function BookingManagerClient({ adminName }: { adminName: string }) {
+export default function BookingManagerClient({ adminName, useMain = true }: { adminName: string; useMain?: boolean }) {
   const [bookings, setBookings] = useState<BookingItem[]>([]);
   const [fields, setFields] = useState<Array<{ id: string; name: string }>>([]);
   const [loading, setLoading] = useState(true);
@@ -153,8 +153,8 @@ export default function BookingManagerClient({ adminName }: { adminName: string 
     }
   };
 
-  return (
-    <main className="flex-1 px-6 py-16 lg:px-8">
+  const content = (
+    <div className="mx-auto max-w-7xl space-y-8" id="bookings">
       <div className="mx-auto max-w-7xl space-y-8">
         <div className="rounded-[2rem] border border-white/10 bg-[color:var(--surface-strong)] p-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -285,6 +285,8 @@ export default function BookingManagerClient({ adminName }: { adminName: string 
           </section>
         </div>
       </div>
-    </main>
+    </div>
   );
+
+  return useMain ? <main className="flex-1 px-6 py-16 lg:px-8">{content}</main> : content;
 }

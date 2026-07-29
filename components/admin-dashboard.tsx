@@ -9,105 +9,7 @@ export default function AdminDashboard({
   admin: AuthenticatedAdmin;
   summary: AdminSummary;
 }) {
-  const quickLinks =
-    admin.role === "staff"
-      ? [
-          {
-            label: "Booking history",
-            path: "/booking-history",
-            visible: true,
-          },
-          {
-            label: "Book a field",
-            path: "/book",
-            visible: true,
-          },
-          {
-            label: "Field availability",
-            path: "/fields",
-            visible: true,
-          },
-        ]
-      : admin.role === "manager"
-      ? [
-          {
-            label: "Manage fields",
-            path: "/manager/fields",
-            visible: admin.permissions.canManageFields,
-          },
-          {
-            label: "Manage bookings",
-            path: "/manager/bookings",
-            visible: admin.permissions.canManageBookings,
-          },
-          {
-            label: "Manage payments",
-            path: "/manager/payments",
-            visible: admin.permissions.canManagePayments,
-          },
-          {
-            label: "Booking history",
-            path: "/booking-history",
-            visible: true,
-          },
-          {
-            label: "Book a field",
-            path: "/book",
-            visible: true,
-          },
-          {
-            label: "Field availability",
-            path: "/fields",
-            visible: true,
-          },
-        ]
-      : [
-          {
-            label: "SQL editor",
-            path: "/sql-editor",
-            visible: admin.permissions.canManageAdmins,
-          },
-          {
-            label: "Manage fields",
-            path: "/superadmin/fields",
-            visible: admin.permissions.canManageFields,
-          },
-          {
-            label: "Manage bookings",
-            path: "/superadmin/bookings",
-            visible: admin.permissions.canManageBookings,
-          },
-          {
-            label: "Manage payments",
-            path: "/superadmin/payments",
-            visible: admin.permissions.canManagePayments,
-          },
-          {
-            label: "Booking history",
-            path: "/booking-history",
-            visible: true,
-          },
-          {
-            label: "Bookings",
-            path: "/staff/bookings",
-            visible: admin.permissions.canReadBookings,
-          },
-          {
-            label: "Payments",
-            path: "/staff/payments",
-            visible: admin.permissions.canReadPayments,
-          },
-          {
-            label: "Book a field",
-            path: "/book",
-            visible: true,
-          },
-          {
-            label: "Field availability",
-            path: "/fields",
-            visible: true,
-          },
-        ];
+  // Quick access removed: RBAC provides in-page CRUD/viewer access for each role.
 
   const roleSummaryText =
     admin.role === "super_admin"
@@ -133,6 +35,23 @@ export default function AdminDashboard({
                 </span>
               </div>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-[color:var(--muted)]">{roleSummaryText}</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {admin.permissions.canReadFields || admin.permissions.canManageFields ? (
+                  <a href="#fields" className="rounded-full bg-white/5 px-3 py-1 text-sm text-white hover:bg-white/10">Fields</a>
+                ) : null}
+                {admin.permissions.canReadBookings || admin.permissions.canManageBookings ? (
+                  <a href="#bookings" className="rounded-full bg-white/5 px-3 py-1 text-sm text-white hover:bg-white/10">Bookings</a>
+                ) : null}
+                {admin.permissions.canReadPayments || admin.permissions.canManagePayments ? (
+                  <a href="#payments" className="rounded-full bg-white/5 px-3 py-1 text-sm text-white hover:bg-white/10">Payments</a>
+                ) : null}
+                {admin.role === "staff" && admin.permissions.canReadBookings ? (
+                  <a href="#staff-bookings" className="rounded-full bg-white/5 px-3 py-1 text-sm text-white hover:bg-white/10">Staff bookings</a>
+                ) : null}
+                {admin.role === "staff" && admin.permissions.canReadPayments ? (
+                  <a href="#staff-payments" className="rounded-full bg-white/5 px-3 py-1 text-sm text-white hover:bg-white/10">Staff payments</a>
+                ) : null}
+              </div>
             </div>
             <Link
               href={
@@ -219,28 +138,7 @@ export default function AdminDashboard({
           </div>
         ) : null}
 
-        <div className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-6">
-          <h2 className="text-xl font-semibold text-white">Quick access</h2>
-          <div className="mt-4 grid gap-3">
-            {quickLinks.filter((item) => item.visible).map((item) => (
-              <Link
-                key={item.path}
-                href={item.path}
-                className="rounded-3xl border border-white/10 bg-[color:var(--background)] px-4 py-3 text-sm text-white transition hover:border-[color:var(--accent)]"
-              >
-                {item.label}
-              </Link>
-            ))}
-            {quickLinks.filter((item) => !item.visible).map((item) => (
-              <div
-                key={item.path}
-                className="rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[color:var(--muted)]"
-              >
-                {item.label} (locked)
-              </div>
-            ))}
-          </div>
-        </div>
+          {/* Quick access removed — RBAC exposes CRUD/viewer sections inline per role */}
 
         {admin.permissions.canViewReports ? (
           <div className="grid gap-6 lg:grid-cols-2">

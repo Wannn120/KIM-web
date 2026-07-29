@@ -19,7 +19,7 @@ interface StaffBookingItem {
   };
 }
 
-export default function StaffBookingViewer({ adminName }: { adminName: string }) {
+export default function StaffBookingViewer({ adminName, useMain = true }: { adminName: string; useMain?: boolean }) {
   const [bookings, setBookings] = useState<StaffBookingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,8 +43,8 @@ export default function StaffBookingViewer({ adminName }: { adminName: string })
     fetchBookings();
   }, []);
 
-  return (
-    <main className="flex-1 px-6 py-16 lg:px-8">
+  const content = (
+    <div className="mx-auto max-w-7xl space-y-8" id="staff-bookings">
       <div className="mx-auto max-w-7xl space-y-8">
         <div className="rounded-[2rem] border border-white/10 bg-[color:var(--surface-strong)] p-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -99,6 +99,8 @@ export default function StaffBookingViewer({ adminName }: { adminName: string })
           </div>
         </section>
       </div>
-    </main>
+    </div>
   );
+
+  return useMain ? <main className="flex-1 px-6 py-16 lg:px-8">{content}</main> : content;
 }

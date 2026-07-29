@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { getAuthenticatedAdminFromToken, getAdminPanelPath, isAdminRoleAllowed } from "@/lib/admin-auth";
 import { getAdminSummary, getDefaultAdminSummary } from "@/lib/admin-dashboard";
 import AdminDashboard from "@/components/admin-dashboard";
+import StaffBookingViewer from "@/app/staff/bookings/StaffBookingViewer";
+import StaffPaymentViewer from "@/app/staff/payments/StaffPaymentViewer";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +34,13 @@ export default async function StaffPage() {
   });
 
   try {
-    return <AdminDashboard admin={admin} summary={summary} />;
+    return (
+      <>
+        <AdminDashboard admin={admin} summary={summary} />
+        <StaffBookingViewer adminName={admin.name} useMain={false} />
+        <StaffPaymentViewer adminName={admin.name} useMain={false} />
+      </>
+    );
   } catch (error) {
     console.error("[STAFF] Unable to render dashboard:", error);
     return (
