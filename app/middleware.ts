@@ -1,19 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyJwt } from "./lib/security";
-import { applySecurityHeaders, getRateLimitResult } from "./lib/security-headers";
+import { applySecurityHeaders, getRateLimitResult } from "@/lib/security-headers";
 
-function normalizeAdminRole(role: string) {
-  const normalized = role.toLowerCase();
-  if (normalized === "manager") return "manager";
-  if (normalized === "super_admin") return "super_admin";
-  return "staff";
+function decodeJwtPayload(token: string) {
+  if (!token) {
+    return null;
+  }
+
+  const parts = token.split(".");
+  if (parts.length < 2) {
+    return null;
+  }
+
+  try {
+    const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const padding = payload.length % 4;
+    const normalized = padding ? payload + "=".repeat(4 - padding) : payload;
+    const decoded = globalThis.atob(normalized);
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
 }
 
-function getPanelLoginPath(role: string) {
-  const normalizedRole = normalizeAdminRole(role);
-  if (normalizedRole === "manager") return "/manager/login";
-  if (normalizedRole === "super_admin") return "/superadmin/login";
-  return "/staff/login";
+function getProtectedPanelRole(pathname: string) {
+  if (pathname.startsWith("/superadmin") && !pathname.startsWith("/superadmin/login")) return "super_admin";
+  if (pathname.startsWith("/manager") && !pathname.startsWith("/manager/login")) return "manager";
+  if (pathname.startsWith("/staff") && !pathname.startsWith("/staff/login")) return "staff";
+  return null;
 }
 
 export async function middleware(request: NextRequest) {
@@ -34,18 +47,12 @@ export async function middleware(request: NextRequest) {
 
   if (isProtectedPanelRoute || isAdminApiRoute) {
     const token = request.cookies.get("admin-session")?.value;
-    const requestedPanel = pathname.startsWith("/staff")
-      ? "staff"
-      : pathname.startsWith("/manager")
-      ? "manager"
-      : "super_admin";
-
     if (!token) {
       if (isProtectedPanelRoute) {
         const redirectUrl = new URL(
-          requestedPanel === "staff"
+          pathname.startsWith("/staff")
             ? "/staff/login"
-            : requestedPanel === "manager"
+            : pathname.startsWith("/manager")
             ? "/manager/login"
             : "/superadmin/login",
           request.url,
@@ -57,28 +64,21 @@ export async function middleware(request: NextRequest) {
       return applySecurityHeaders(response, request);
     }
 
-    const payload = verifyJwt(token);
-    if (!payload || typeof payload.role !== "string") {
-      if (isProtectedPanelRoute) {
+    const expectedRole = getProtectedPanelRole(pathname);
+    if (expectedRole) {
+      const payload = decodeJwtPayload(token);
+      const currentRole = typeof payload?.role === "string" ? payload.role : null;
+      if (currentRole && currentRole !== expectedRole) {
         const redirectUrl = new URL(
-          requestedPanel === "staff"
-            ? "/staff/login"
-            : requestedPanel === "manager"
+          currentRole === "super_admin"
+            ? "/superadmin/login"
+            : currentRole === "manager"
             ? "/manager/login"
-            : "/superadmin/login",
+            : "/staff/login",
           request.url,
         );
         return NextResponse.redirect(redirectUrl);
       }
-
-      const response = NextResponse.json({ success: false, message: "Invalid admin session." }, { status: 401 });
-      return applySecurityHeaders(response, request);
-    }
-
-    const normalizedRole = normalizeAdminRole(payload.role);
-    if (normalizedRole !== requestedPanel) {
-      const redirectUrl = new URL(getPanelLoginPath(normalizedRole), request.url);
-      return NextResponse.redirect(redirectUrl);
     }
   }
 

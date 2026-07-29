@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createJwt, verifyJwt, setSecureCookie, clearSecureCookie } from "@/lib/security";
+import { Prisma } from "@prisma/client";
 
 const DEFAULT_ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@klatenminisoccer.id";
 const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "admin123";
@@ -96,9 +97,9 @@ function getDefaultPermissions(role: AdminRole): AdminPermissions {
         canManageBookings: true,
         canManagePayments: true,
         canManageSchedule: true,
-        canManageCMS: true,
+        canManageCMS: false,
         canManageAdmins: false,
-        canViewReports: false,
+        canViewReports: true,
         canVerifyPayments: true,
         canCreateBookings: true,
         canReadBookings: true,
@@ -113,8 +114,8 @@ function getDefaultPermissions(role: AdminRole): AdminPermissions {
         canManageCMS: false,
         canManageAdmins: false,
         canViewReports: false,
-        canVerifyPayments: true,
-        canCreateBookings: true,
+        canVerifyPayments: false,
+        canCreateBookings: false,
         canReadBookings: true,
         canManageSettings: false,
       };
@@ -122,7 +123,7 @@ function getDefaultPermissions(role: AdminRole): AdminPermissions {
 }
 
 function mapRolePermissions(
-  rolePermission: Awaited<ReturnType<typeof prisma.adminRolePermission.findUnique>> | null,
+  rolePermission: { [key: string]: unknown } | null,
   role: AdminRole,
 ): AdminPermissions {
   if (!rolePermission) {
@@ -130,17 +131,17 @@ function mapRolePermissions(
   }
 
   return {
-    canManageFields: rolePermission.canManageFields,
-    canManageBookings: rolePermission.canManageBookings,
-    canManagePayments: rolePermission.canManagePayments,
-    canManageSchedule: rolePermission.canManageSchedule,
-    canManageCMS: rolePermission.canManageCMS,
-    canManageAdmins: rolePermission.canManageAdmins,
-    canViewReports: rolePermission.canViewReports,
-    canVerifyPayments: rolePermission.canVerifyPayments,
-    canCreateBookings: rolePermission.canCreateBookings,
-    canReadBookings: rolePermission.canReadBookings,
-    canManageSettings: rolePermission.canManageSettings,
+    canManageFields: Boolean(rolePermission.canManageFields),
+    canManageBookings: Boolean(rolePermission.canManageBookings),
+    canManagePayments: Boolean(rolePermission.canManagePayments),
+    canManageSchedule: Boolean(rolePermission.canManageSchedule),
+    canManageCMS: Boolean(rolePermission.canManageCMS),
+    canManageAdmins: Boolean(rolePermission.canManageAdmins),
+    canViewReports: Boolean(rolePermission.canViewReports),
+    canVerifyPayments: Boolean(rolePermission.canVerifyPayments),
+    canCreateBookings: Boolean(rolePermission.canCreateBookings),
+    canReadBookings: Boolean(rolePermission.canReadBookings),
+    canManageSettings: Boolean(rolePermission.canManageSettings),
   };
 }
 
@@ -193,9 +194,9 @@ async function ensureDefaultRolePermissions() {
       canManageBookings: true,
       canManagePayments: true,
       canManageSchedule: true,
-      canManageCMS: true,
+      canManageCMS: false,
       canManageAdmins: false,
-      canViewReports: false,
+      canViewReports: true,
       canVerifyPayments: true,
       canCreateBookings: true,
       canReadBookings: true,
@@ -211,8 +212,8 @@ async function ensureDefaultRolePermissions() {
       canManageCMS: false,
       canManageAdmins: false,
       canViewReports: false,
-      canVerifyPayments: true,
-      canCreateBookings: true,
+      canVerifyPayments: false,
+      canCreateBookings: false,
       canReadBookings: true,
       canManageSettings: false,
       isActive: true,
@@ -343,6 +344,15 @@ export async function authenticateAdmin(email: string, password: string) {
   };
 }
 
+function isMissingRolePermissionTableError(error: unknown) {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2021" &&
+    typeof error.meta?.cause === "string" &&
+    error.meta.cause.includes("admin_role_permission")
+  );
+}
+
 export async function getAuthenticatedAdminFromToken(token: string) {
   if (!token) {
     return null;
@@ -354,22 +364,58 @@ export async function getAuthenticatedAdminFromToken(token: string) {
   }
 
   const tokenHash = hashSecret(token);
-  const session = await prisma.adminSession.findUnique({
-    where: { tokenHash },
-    include: { adminUser: { include: { rolePermission: true } } },
-  });
+
+  type SessionWithUserAndPermissions = Prisma.AdminSessionGetPayload<{
+    include: { adminUser: { include: { rolePermission: true } } };
+  }>;
+
+  let session: SessionWithUserAndPermissions | null = null;
+  try {
+    session = await prisma.adminSession.findUnique({
+      where: { tokenHash },
+      include: { adminUser: { include: { rolePermission: true } } },
+    });
+  } catch (error) {
+    if (isMissingRolePermissionTableError(error)) {
+      session = await prisma.adminSession.findUnique({
+        where: { tokenHash },
+        include: { adminUser: true },
+      }) as SessionWithUserAndPermissions | null;
+    } else {
+      throw error;
+    }
+  }
 
   if (!session || !session.adminUser || session.expiresAt < new Date()) {
     return null;
   }
 
-  const role = normalizeAdminRole(session.adminUser.role);
-  const permissions = mapRolePermissions(session.adminUser.rolePermission, role);
+  const adminUser = session.adminUser as {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    rolePermission?: {
+      canManageFields: boolean;
+      canManageBookings: boolean;
+      canManagePayments: boolean;
+      canManageSchedule: boolean;
+      canManageCMS: boolean;
+      canManageAdmins: boolean;
+      canViewReports: boolean;
+      canVerifyPayments: boolean;
+      canCreateBookings: boolean;
+      canReadBookings: boolean;
+      canManageSettings: boolean;
+    } | null;
+  };
+  const role = normalizeAdminRole(adminUser.role);
+  const permissions = mapRolePermissions(adminUser.rolePermission ?? null, role);
 
   return {
-    id: session.adminUser.id,
-    name: session.adminUser.name,
-    email: session.adminUser.email,
+    id: adminUser.id,
+    name: adminUser.name,
+    email: adminUser.email,
     role,
     permissions,
   };
