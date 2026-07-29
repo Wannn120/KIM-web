@@ -5,6 +5,8 @@ export interface AdminSummary {
   revenueThisMonth: number;
   bookingsToday: number;
   bookingsThisMonth: number;
+  pendingBookings: number;
+  pendingPayments: number;
   peakHours: Array<{ hour: string; bookings: number }>;
   mostBookedField: { name: string; bookings: number } | null;
   customerStats: { totalCustomers: number; activeCustomers: number; newCustomersThisMonth: number };
@@ -16,6 +18,8 @@ export function getDefaultAdminSummary(): AdminSummary {
     revenueThisMonth: 0,
     bookingsToday: 0,
     bookingsThisMonth: 0,
+    pendingBookings: 0,
+    pendingPayments: 0,
     peakHours: [],
     mostBookedField: null,
     customerStats: { totalCustomers: 0, activeCustomers: 0, newCustomersThisMonth: 0 },
@@ -51,6 +55,8 @@ export async function getAdminSummary(): Promise<AdminSummary> {
     let bookingsThisMonth = 0;
     let peakHours: Array<{ hour: string; bookings: number }> = [];
     let mostBookedField: { name: string; bookings: number } | null = null;
+    let pendingBookings = 0;
+    let pendingPayments = 0;
     let totalCustomers = 0;
     let activeCustomers = 0;
     let newCustomersThisMonth = 0;
@@ -76,6 +82,26 @@ export async function getAdminSummary(): Promise<AdminSummary> {
     } catch (error) {
       if (!isMissingTableError(error)) {
         console.error("[ADMIN] Unable to load monthly revenue summary:", error);
+      }
+    }
+
+    try {
+      pendingBookings = await prisma.booking.count({
+        where: { status: "pending" },
+      });
+    } catch (error) {
+      if (!isMissingTableError(error)) {
+        console.error("[ADMIN] Unable to load pending bookings summary:", error);
+      }
+    }
+
+    try {
+      pendingPayments = await prisma.payment.count({
+        where: { status: "pending" },
+      });
+    } catch (error) {
+      if (!isMissingTableError(error)) {
+        console.error("[ADMIN] Unable to load pending payments summary:", error);
       }
     }
 
@@ -160,6 +186,8 @@ export async function getAdminSummary(): Promise<AdminSummary> {
       revenueThisMonth,
       bookingsToday,
       bookingsThisMonth,
+      pendingBookings,
+      pendingPayments,
       peakHours,
       mostBookedField,
       customerStats: { totalCustomers, activeCustomers, newCustomersThisMonth },

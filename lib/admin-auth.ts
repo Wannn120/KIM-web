@@ -44,15 +44,17 @@ export type AdminRole = (typeof ADMIN_ROLES)[keyof typeof ADMIN_ROLES];
 
 export interface AdminPermissions {
   canManageFields: boolean;
+  canReadFields: boolean;
   canManageBookings: boolean;
+  canReadBookings: boolean;
   canManagePayments: boolean;
+  canReadPayments: boolean;
   canManageSchedule: boolean;
   canManageCMS: boolean;
   canManageAdmins: boolean;
   canViewReports: boolean;
   canVerifyPayments: boolean;
   canCreateBookings: boolean;
-  canReadBookings: boolean;
   canManageSettings: boolean;
 }
 
@@ -80,43 +82,49 @@ function getDefaultPermissions(role: AdminRole): AdminPermissions {
     case ADMIN_ROLES.superAdmin:
       return {
         canManageFields: true,
+        canReadFields: true,
         canManageBookings: true,
+        canReadBookings: true,
         canManagePayments: true,
+        canReadPayments: true,
         canManageSchedule: true,
         canManageCMS: true,
         canManageAdmins: true,
         canViewReports: true,
         canVerifyPayments: true,
         canCreateBookings: true,
-        canReadBookings: true,
         canManageSettings: true,
       };
     case ADMIN_ROLES.manager:
       return {
         canManageFields: true,
+        canReadFields: true,
         canManageBookings: true,
+        canReadBookings: true,
         canManagePayments: true,
+        canReadPayments: true,
         canManageSchedule: true,
         canManageCMS: true,
         canManageAdmins: false,
         canViewReports: false,
         canVerifyPayments: true,
         canCreateBookings: true,
-        canReadBookings: true,
         canManageSettings: false,
       };
     default:
       return {
         canManageFields: false,
+        canReadFields: true,
         canManageBookings: false,
+        canReadBookings: true,
         canManagePayments: false,
+        canReadPayments: true,
         canManageSchedule: false,
         canManageCMS: false,
         canManageAdmins: false,
         canViewReports: false,
         canVerifyPayments: false,
         canCreateBookings: false,
-        canReadBookings: true,
         canManageSettings: false,
       };
   }
@@ -132,15 +140,23 @@ function mapRolePermissions(
 
   return {
     canManageFields: Boolean(rolePermission.canManageFields),
+    canReadFields:
+      rolePermission.canReadFields !== undefined
+        ? Boolean(rolePermission.canReadFields)
+        : Boolean(rolePermission.canManageFields),
     canManageBookings: Boolean(rolePermission.canManageBookings),
+    canReadBookings: Boolean(rolePermission.canReadBookings),
     canManagePayments: Boolean(rolePermission.canManagePayments),
+    canReadPayments:
+      rolePermission.canReadPayments !== undefined
+        ? Boolean(rolePermission.canReadPayments)
+        : Boolean(rolePermission.canManagePayments),
     canManageSchedule: Boolean(rolePermission.canManageSchedule),
     canManageCMS: Boolean(rolePermission.canManageCMS),
     canManageAdmins: Boolean(rolePermission.canManageAdmins),
     canViewReports: Boolean(rolePermission.canViewReports),
     canVerifyPayments: Boolean(rolePermission.canVerifyPayments),
     canCreateBookings: Boolean(rolePermission.canCreateBookings),
-    canReadBookings: Boolean(rolePermission.canReadBookings),
     canManageSettings: Boolean(rolePermission.canManageSettings),
   };
 }
@@ -177,14 +193,15 @@ async function ensureDefaultRolePermissions() {
       role: ADMIN_ROLES.superAdmin,
       canManageFields: true,
       canManageBookings: true,
+      canReadBookings: true,
       canManagePayments: true,
+      canReadPayments: true,
       canManageSchedule: true,
       canManageCMS: true,
       canManageAdmins: true,
       canViewReports: true,
       canVerifyPayments: true,
       canCreateBookings: true,
-      canReadBookings: true,
       canManageSettings: true,
       isActive: true,
     },
@@ -192,14 +209,15 @@ async function ensureDefaultRolePermissions() {
       role: ADMIN_ROLES.manager,
       canManageFields: true,
       canManageBookings: true,
+      canReadBookings: true,
       canManagePayments: true,
+      canReadPayments: true,
       canManageSchedule: true,
       canManageCMS: true,
       canManageAdmins: false,
       canViewReports: false,
       canVerifyPayments: true,
       canCreateBookings: true,
-      canReadBookings: true,
       canManageSettings: false,
       isActive: true,
     },
@@ -207,14 +225,15 @@ async function ensureDefaultRolePermissions() {
       role: ADMIN_ROLES.staff,
       canManageFields: false,
       canManageBookings: false,
+      canReadBookings: true,
       canManagePayments: false,
+      canReadPayments: true,
       canManageSchedule: false,
       canManageCMS: false,
       canManageAdmins: false,
       canViewReports: false,
       canVerifyPayments: false,
       canCreateBookings: false,
-      canReadBookings: true,
       canManageSettings: false,
       isActive: true,
     },
@@ -413,6 +432,7 @@ export async function getAuthenticatedAdminFromToken(token: string) {
     role: string;
     rolePermission?: {
       canManageFields: boolean;
+      canReadFields: boolean;
       canManageBookings: boolean;
       canManagePayments: boolean;
       canManageSchedule: boolean;

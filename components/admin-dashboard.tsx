@@ -28,6 +28,39 @@ export default function AdminDashboard({
             visible: true,
           },
         ]
+      : admin.role === "manager"
+      ? [
+          {
+            label: "Manage fields",
+            path: "/manager/fields",
+            visible: admin.permissions.canManageFields,
+          },
+          {
+            label: "Manage bookings",
+            path: "/manager/bookings",
+            visible: admin.permissions.canManageBookings,
+          },
+          {
+            label: "Manage payments",
+            path: "/manager/payments",
+            visible: admin.permissions.canManagePayments,
+          },
+          {
+            label: "Booking history",
+            path: "/booking-history",
+            visible: true,
+          },
+          {
+            label: "Book a field",
+            path: "/book",
+            visible: true,
+          },
+          {
+            label: "Field availability",
+            path: "/fields",
+            visible: true,
+          },
+        ]
       : [
           {
             label: "SQL editor",
@@ -36,17 +69,42 @@ export default function AdminDashboard({
           },
           {
             label: "Manage fields",
-            path: "/fields",
+            path: "/superadmin/fields",
             visible: admin.permissions.canManageFields,
           },
           {
-            label: "View bookings",
-            path: "/book",
-            visible: true,
+            label: "Manage bookings",
+            path: "/superadmin/bookings",
+            visible: admin.permissions.canManageBookings,
+          },
+          {
+            label: "Manage payments",
+            path: "/superadmin/payments",
+            visible: admin.permissions.canManagePayments,
           },
           {
             label: "Booking history",
             path: "/booking-history",
+            visible: true,
+          },
+          {
+            label: "Bookings",
+            path: "/staff/bookings",
+            visible: admin.permissions.canReadBookings,
+          },
+          {
+            label: "Payments",
+            path: "/staff/payments",
+            visible: admin.permissions.canReadPayments,
+          },
+          {
+            label: "Book a field",
+            path: "/book",
+            visible: true,
+          },
+          {
+            label: "Field availability",
+            path: "/fields",
             visible: true,
           },
         ];
@@ -137,6 +195,29 @@ export default function AdminDashboard({
             </div>
           )}
         </div>
+
+        {!admin.permissions.canViewReports ? (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-6">
+              <p className="text-sm text-[color:var(--muted)]">Bookings today</p>
+              <p className="mt-3 text-3xl font-semibold text-white">{summary.bookingsToday}</p>
+            </div>
+            <div className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-6">
+              <p className="text-sm text-[color:var(--muted)]">Bookings this month</p>
+              <p className="mt-3 text-3xl font-semibold text-white">{summary.bookingsThisMonth}</p>
+            </div>
+            <div className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-6">
+              <p className="text-sm text-[color:var(--muted)]">Pending bookings</p>
+              <p className="mt-3 text-3xl font-semibold text-white">{summary.pendingBookings}</p>
+            </div>
+            {admin.permissions.canReadPayments ? (
+              <div className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-6">
+                <p className="text-sm text-[color:var(--muted)]">Pending payments</p>
+                <p className="mt-3 text-3xl font-semibold text-white">{summary.pendingPayments}</p>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-6">
           <h2 className="text-xl font-semibold text-white">Quick access</h2>
