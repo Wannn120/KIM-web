@@ -1,23 +1,33 @@
 import type { Field } from "@/types";
 import { prisma } from "@/lib/prisma";
+import { DEFAULT_FIELD_NAME, DEFAULT_FIELD } from "@/lib/venue";
+import { facilityImages } from "@/lib/mock-data";
+import type { FacilityImage } from "@/types";
 
 export async function getFields(): Promise<Field[]> {
-  const fields = await prisma.field.findMany({
-    orderBy: {
-      name: "asc",
-    },
-  });
+  return [DEFAULT_FIELD];
+}
 
-  return fields.map((field) => ({
-    id: field.id,
-    name: field.name,
-    location: field.location,
-    price: Number(field.price),
-    type: field.type,
-    size: field.size,
-    rating: Number(field.rating),
-    imageUrl: field.imageUrl ?? undefined,
-  }));
+export async function getVenueFeatures(): Promise<FacilityImage[]> {
+  try {
+    const records = await prisma.venueFeature.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: "asc" },
+    });
+    return records.length > 0
+      ? records.map((feature) => ({
+          id: feature.id,
+          title: feature.name,
+          description: feature.description,
+          imageUrl: feature.imageUrl,
+          isActive: feature.isActive,
+          sortOrder: feature.sortOrder,
+        }))
+      : facilityImages;
+  } catch (error) {
+    console.error("[DATA] Unable to load venue features:", error);
+    return facilityImages;
+  }
 }
 
 export async function getUpcomingBookings(limit = 5) {
@@ -28,13 +38,6 @@ export async function getUpcomingBookings(limit = 5) {
       },
       bookingDate: {
         gte: new Date(),
-      },
-    },
-    include: {
-      field: {
-        select: {
-          name: true,
-        },
       },
     },
     orderBy: [
@@ -49,13 +52,6 @@ export async function getReviews(): Promise<import("@/types").Review[]> {
   const records = await prisma.review.findMany({
     orderBy: {
       createdAt: "desc",
-    },
-    include: {
-      field: {
-        select: {
-          name: true,
-        },
-      },
     },
   });
 
@@ -75,11 +71,11 @@ export type BookedSlot = {
   status: string;
 };
 
-export function mapBookingsToSlots(bookings: Array<{ bookingDate: Date; startTime: string; endTime: string; fieldId: string; field?: { name?: string } | null; status: string }>): BookedSlot[] {
+export function mapBookingsToSlots(bookings: Array<{ bookingDate: Date; startTime: string; endTime: string; status: string }>): BookedSlot[] {
   return bookings.map((booking) => ({
     date: booking.bookingDate.toISOString().slice(0, 10),
     time: `${booking.startTime} - ${booking.endTime}`,
-    field: booking.field?.name ?? booking.fieldId,
+    field: DEFAULT_FIELD_NAME,
     status: booking.status === "pending" ? "Booked" : booking.status,
   }));
 }

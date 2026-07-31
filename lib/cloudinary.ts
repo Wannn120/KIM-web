@@ -15,7 +15,7 @@ function parseCloudinaryUrl(url: string) {
     }
 
     return { cloud_name, api_key, api_secret };
-  } catch (error) {
+  } catch {
     return null;
   }
 }

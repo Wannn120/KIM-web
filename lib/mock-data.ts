@@ -8,8 +8,7 @@ export const siteContent: SiteContent = {
     "Satu lapangan premium dengan jadwal per jam, booking mudah, dan suasana lapangan terbaik untuk komunitas futsal dan mini soccer.",
   ctaPrimary: "Pesan sekarang",
   ctaSecondary: "Lihat riwayat booking",
-  backgroundImageUrl:
-    "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1200&q=80",
+  backgroundImageUrl: "https://res.cloudinary.com/ljbxjpox/image/upload/v1785465835/utama_cifncb.jpg",
   contactEmail: "info@klatenminisoccer.id",
   contactPhone: "+62 821-1234-5678",
 };
@@ -18,22 +17,22 @@ export const facilityImages: FacilityImage[] = [
   {
     title: "Lapangan premium",
     description: "Surface terbaik untuk 5v5 dan mini soccer.",
-    imageUrl: "https://images.unsplash.com/photo-1521412644187-c49fa049e84d?auto=format&fit=crop&w=1000&q=80",
+    imageUrl: "https://res.cloudinary.com/ljbxjpox/image/upload/v1785465834/lapangan_premium_aqejyy.jpg",
   },
   {
     title: "Lampu malam",
     description: "Jadwal per jam hingga malam hari.",
-    imageUrl: "https://images.unsplash.com/photo-1518640467707-6811f4a6ab73?auto=format&fit=crop&w=1000&q=80",
+    imageUrl: "https://res.cloudinary.com/ljbxjpox/image/upload/v1785465837/lampu_malam_xntenr.jpg",
   },
   {
     title: "Fasilitas sewa",
-    description: "Sepatu, bola, dan ruang ganti rapi.",
-    imageUrl: "https://images.unsplash.com/photo-1502355972-2231b2794a2d?auto=format&fit=crop&w=1000&q=80",
+    description: "Loker, sepatu, bola, dan ruang ganti yang tertata rapi.",
+    imageUrl: "https://res.cloudinary.com/ljbxjpox/image/upload/v1785465837/fasilitas_sewa_o0uptk.jpg",
   },
   {
     title: "Citarasa komunitas",
     description: "Tempat berkumpul dan pertandingan seru.",
-    imageUrl: "https://images.unsplash.com/photo-1521412644187-c49fa049e84d?auto=format&fit=crop&w=1000&q=80",
+    imageUrl: "https://res.cloudinary.com/ljbxjpox/image/upload/v1785465837/citarasa_komunitas_ey2pmm.jpg",
   },
 ];
 

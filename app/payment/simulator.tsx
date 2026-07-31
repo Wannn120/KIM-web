@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const paymentOptions = [
   "QRIS",
@@ -231,7 +232,7 @@ export function PaymentSimulator({ bookingId, amount, fieldName, bookingDate, bo
             </div>
             {paymentMethod === "QRIS" ? (
               <div className="space-y-4 text-center">
-                <img src={fakeQrCode} alt="Fake QR code" className="mx-auto h-48 w-48 rounded-3xl border border-white/10 bg-white/5" />
+                <Image src={fakeQrCode} alt="Fake QR code" width={192} height={192} unoptimized className="mx-auto h-48 w-48 rounded-3xl border border-white/10 bg-white/5" />
                 <p className="text-sm text-[color:var(--muted)]">Use the QR code to simulate a payment on any wallet app.</p>
               </div>
             ) : (

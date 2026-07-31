@@ -45,7 +45,7 @@ export default function StaffFieldViewer({ adminName }: { adminName: string }) {
 
   useEffect(() => {
     fetchFields(page, query);
-  }, []);
+  }, [page, query]);
 
   const handleSearch = async () => {
     setPage(1);

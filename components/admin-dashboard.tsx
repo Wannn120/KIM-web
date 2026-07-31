@@ -45,6 +45,21 @@ export default function AdminDashboard({
                 {admin.permissions.canReadPayments || admin.permissions.canManagePayments ? (
                   <a href="#payments" className="rounded-full bg-white/5 px-3 py-1 text-sm text-white hover:bg-white/10">Payments</a>
                 ) : null}
+                {admin.permissions.canReadInvoices ? (
+                  <Link href={admin.role === "super_admin" ? "/superadmin/invoices" : admin.role === "manager" ? "/manager/invoices" : "/staff/invoices"} className="rounded-full bg-white/5 px-3 py-1 text-sm text-white hover:bg-white/10">Invoices</Link>
+                ) : null}
+                {admin.permissions.canReadReviews ? (
+                  <Link href={admin.role === "super_admin" ? "/superadmin/reviews" : admin.role === "manager" ? "/manager/reviews" : "/staff/reviews"} className="rounded-full bg-white/5 px-3 py-1 text-sm text-white hover:bg-white/10">Reviews</Link>
+                ) : null}
+                {admin.permissions.canManageSettings ? (
+                  <Link href={admin.role === "super_admin" ? "/superadmin/settings" : "/manager/settings"} className="rounded-full bg-white/5 px-3 py-1 text-sm text-white hover:bg-white/10">Settings</Link>
+                ) : null}
+                {admin.permissions.canManageAdmins ? (
+                  <Link href="/superadmin/users" className="rounded-full bg-white/5 px-3 py-1 text-sm text-white hover:bg-white/10">Admin users</Link>
+                ) : null}
+                {admin.permissions.canViewReports && admin.role === "super_admin" ? (
+                  <Link href="/superadmin/audit-logs" className="rounded-full bg-white/5 px-3 py-1 text-sm text-white hover:bg-white/10">Audit logs</Link>
+                ) : null}
                 {admin.role === "staff" && admin.permissions.canReadBookings ? (
                   <a href="#staff-bookings" className="rounded-full bg-white/5 px-3 py-1 text-sm text-white hover:bg-white/10">Staff bookings</a>
                 ) : null}

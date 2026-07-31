@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedAdminFromToken, hasAdminPermission } from "@/lib/admin-auth";
+import { DEFAULT_FIELD_ID } from "@/lib/venue";
 
 function getCookieToken(request: Request) {
   const cookieHeader = request.headers.get("cookie") || "";
@@ -56,7 +57,6 @@ export async function GET(request: Request) {
     const page = Math.max(Number(url.searchParams.get("page") || "1"), 1);
     const limit = Math.max(Number(url.searchParams.get("limit") || "6"), 1);
     const q = (url.searchParams.get("q") || "").trim();
-    const fieldId = url.searchParams.get("fieldId") || undefined;
     const date = url.searchParams.get("date") || undefined;
     const status = url.searchParams.get("status") || undefined;
 
@@ -67,7 +67,6 @@ export async function GET(request: Request) {
         { customerPhone: { contains: q, mode: "insensitive" } },
       ];
     }
-    if (fieldId) where.fieldId = fieldId;
     if (status) where.status = status;
     if (date) {
       const range = getDateRange(date);
@@ -79,15 +78,19 @@ export async function GET(request: Request) {
       where,
       orderBy: { createdAt: "desc" },
       include: {
-        field: { select: { id: true, name: true, location: true } },
         payments: { orderBy: { createdAt: "desc" }, take: 1 },
       },
       skip: (page - 1) * limit,
       take: limit,
     });
 
+    const normalizedBookings = bookings.map((booking) => ({
+      ...booking,
+      fieldName: "Lapangan Klaten International",
+    }));
+
     const totalPages = Math.max(Math.ceil(total / limit), 1);
-    return NextResponse.json({ success: true, data: bookings, total, page, limit, totalPages });
+    return NextResponse.json({ success: true, data: normalizedBookings, total, page, limit, totalPages });
   } catch (error) {
     console.error("[ADMIN] Booking list error:", error);
     return NextResponse.json({ success: false, message: "Unable to list bookings." }, { status: 500 });
@@ -113,8 +116,12 @@ export async function POST(request: Request) {
     const customerEmail = typeof body.customerEmail === "string" ? body.customerEmail.trim() : "";
     const notes = typeof body.notes === "string" ? body.notes.trim() : null;
 
-    if (!fieldId || !bookingDate || !startTime || !endTime || !customerName || !customerPhone) {
+    if (!bookingDate || !startTime || !endTime || !customerName || !customerPhone) {
       return NextResponse.json({ success: false, message: "Missing required booking details." }, { status: 400 });
+    }
+
+    if (fieldId && fieldId !== DEFAULT_FIELD_ID) {
+      return NextResponse.json({ success: false, message: "The selected field is not available." }, { status: 404 });
     }
 
     const range = getDateRange(bookingDate);
@@ -122,62 +129,42 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: "Invalid booking date." }, { status: 400 });
     }
 
-    const field = await prisma.field.findUnique({ where: { id: fieldId }, select: { id: true, price: true } });
-    if (!field) {
-      return NextResponse.json({ success: false, message: "Field not found." }, { status: 404 });
-    }
-
     const blocks = getRequestedScheduleBlocks(startTime, endTime);
     if (blocks.length === 0) {
       return NextResponse.json({ success: false, message: "Invalid booking time range." }, { status: 400 });
     }
 
-    const scheduleBlocks = await prisma.fieldSchedule.findMany({
+    const overlappingBooking = await prisma.booking.findFirst({
       where: {
-        fieldId: field.id,
-        date: { gte: range.start, lt: range.end },
-        startTime: { in: blocks.map((block) => block.start) },
-        isAvailable: true,
+        bookingDate: range.start,
+        status: {
+          notIn: ["cancelled", "expired"],
+        },
+        startTime: { lt: endTime },
+        endTime: { gt: startTime },
       },
-      select: { startTime: true },
     });
 
-    const availableStarts = new Set(scheduleBlocks.map((block) => block.startTime));
-    const hasCompleteAvailability = blocks.every((block) => availableStarts.has(block.start));
-    if (!hasCompleteAvailability) {
+    if (overlappingBooking) {
       return NextResponse.json({ success: false, message: "Requested slot is not available." }, { status: 409 });
     }
 
     const durationHours = Math.max(Math.ceil((parseTimeToMinutes(endTime) - parseTimeToMinutes(startTime)) / 60), 1);
-    const totalPrice = field.price * durationHours;
+    const totalPrice = 110000 * durationHours;
 
-    const booking = await prisma.$transaction(async (tx) => {
-      const created = await tx.booking.create({
-        data: {
-          fieldId: field.id,
-          bookingDate: range.start,
-          startTime,
-          endTime,
-          durationHours,
-          totalPrice,
-          customerName,
-          customerPhone,
-          customerEmail,
-          status: "confirmed",
-          notes,
-        },
-      });
-
-      await tx.fieldSchedule.updateMany({
-        where: {
-          fieldId: field.id,
-          date: range.start,
-          startTime: { in: blocks.map((block) => block.start) },
-        },
-        data: { isAvailable: false },
-      });
-
-      return created;
+    const booking = await prisma.booking.create({
+      data: {
+        bookingDate: range.start,
+        startTime,
+        endTime,
+        durationHours,
+        totalPrice,
+        customerName,
+        customerPhone,
+        customerEmail,
+        status: "confirmed",
+        notes,
+      },
     });
 
     return NextResponse.json({ success: true, data: booking }, { status: 201 });

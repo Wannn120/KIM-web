@@ -13,12 +13,6 @@ enum AdminRole {
   staff
 }
 
-enum FieldStatus {
-  ACTIVE
-  MAINTENANCE
-  INACTIVE
-}
-
 enum BookingStatus {
   pending
   confirmed
@@ -58,121 +52,16 @@ enum InvoiceStatus {
   refunded
 }
 
-enum WebContentType {
-  HERO
-  ABOUT
-  GALLERY
-  FAQ
-  CONTACT
-  PAGE
-}
+// `Field` model removed: application is single-venue and no longer stores per-field data in DB.
 
-enum ScheduleBlockType {
-  BLOCK
-  HOLIDAY
-  MAINTENANCE
-}
+// FieldSchedule removed; availability derived from bookings/payments.
 
-enum CustomerStatus {
-  ACTIVE
-  INACTIVE
-}
+// TimeSlot model removed (not used in single-venue setup).
 
-model Field {
-  id                 String      @id @default(uuid()) @map("id")
-  name               String      @map("name")
-  location           String      @map("location")
-  description        String?     @map("description")
-  price              Int         @map("price")
-  type               String      @map("type")
-  size               String      @map("size")
-  capacity           Int         @map("capacity")
-  facilities         Json?       @map("facilities")
-  rating             Float       @default(0) @map("rating")
-  imageUrl           String?     @map("image_url")
-  cloudinaryPublicId String?     @map("cloudinary_public_id")
-  isFeatured         Boolean     @default(false) @map("is_featured")
-  isActive           Boolean     @default(true) @map("is_active")
-  status             FieldStatus @default(ACTIVE) @map("status")
-  createdAt          DateTime    @default(now()) @map("created_at")
-  updatedAt          DateTime    @updatedAt @map("updated_at")
-
-  bookings      Booking[]
-  schedules     FieldSchedule[]
-  timeSlots     TimeSlot[]
-  scheduleBlocks ScheduleBlock[]
-  reviews       Review[]
-
-  @@map("field")
-}
-
-model FieldSchedule {
-  id          String   @id @default(uuid()) @map("id")
-  fieldId     String   @map("field_id")
-  field       Field    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
-  date        DateTime @map("date")
-  startTime   String   @map("start_time")
-  endTime     String   @map("end_time")
-  isAvailable Boolean  @default(true) @map("is_available")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  @@unique([fieldId, date, startTime])
-  @@map("field_schedule")
-}
-
-model TimeSlot {
-  id             String   @id @default(uuid()) @map("id")
-  fieldId        String   @map("field_id")
-  field          Field    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
-  label          String?  @map("label")
-  startTime      String   @map("start_time")
-  endTime        String   @map("end_time")
-  durationMinutes Int     @map("duration_minutes")
-  isActive       Boolean  @default(true) @map("is_active")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
-
-  @@map("time_slot")
-}
-
-model ScheduleBlock {
-  id           String           @id @default(uuid()) @map("id")
-  fieldId      String           @map("field_id")
-  field        Field            @relation(fields: [fieldId], references: [id], onDelete: Cascade)
-  startDate    DateTime         @map("start_date")
-  endDate      DateTime         @map("end_date")
-  title        String           @map("title")
-  reason       String?          @map("reason")
-  blockType    ScheduleBlockType @default(BLOCK) @map("block_type")
-  createdById  String?          @map("created_by_id")
-  createdBy    AdminUser?       @relation(fields: [createdById], references: [id], onDelete: SetNull)
-  isActive     Boolean          @default(true) @map("is_active")
-  createdAt    DateTime         @default(now()) @map("created_at")
-  updatedAt    DateTime         @updatedAt @map("updated_at")
-
-  @@map("schedule_block")
-}
-
-model Customer {
-  id            String         @id @default(uuid()) @map("id")
-  name          String         @map("name")
-  email         String         @unique @map("email")
-  phone         String         @map("phone")
-  totalSpend    Int            @default(0) @map("total_spend")
-  lastBookingAt DateTime?      @map("last_booking_at")
-  status        CustomerStatus @default(ACTIVE) @map("status")
-  isActive      Boolean        @default(true) @map("is_active")
-  createdAt     DateTime       @default(now()) @map("created_at")
-  updatedAt     DateTime       @updatedAt @map("updated_at")
-
-  @@map("customer")
-}
+// ScheduleBlock removed (use Booking.status for blocked slots if needed).
 
 model Booking {
   id            String        @id @default(uuid()) @map("id")
-  fieldId       String        @map("field_id")
-  field         Field         @relation(fields: [fieldId], references: [id], onDelete: Cascade)
   // approvedById and approvedBy removed to match production DB (column not present)
   bookingDate   DateTime      @map("booking_date")
   startTime     String        @map("start_time")
@@ -191,6 +80,7 @@ model Booking {
   invoice       Invoice?
   reviews       Review[]
 
+  @@unique([bookingDate, startTime])
   @@map("booking")
 }
 
@@ -241,8 +131,6 @@ model Invoice {
 
 model Review {
   id           String   @id @default(uuid()) @map("id")
-  fieldId      String?  @map("field_id")
-  field        Field?   @relation(fields: [fieldId], references: [id], onDelete: SetNull)
   bookingId    String?  @map("booking_id")
   booking      Booking? @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   customerName String   @map("customer_name")
@@ -262,41 +150,9 @@ model AuditLog {
   changes        String?   @map("changes")
   ipAddress      String?   @map("ip_address")
   referenceEmail String?   @map("reference_email")
-  adminUserId    String?   @map("admin_user_id")
-  adminUser      AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
   createdAt      DateTime  @default(now()) @map("created_at")
 
   @@map("audit_log")
-}
-
-model WebContent {
-  id         String         @id @default(uuid()) @map("id")
-  type       WebContentType @map("type")
-  key        String?        @unique @map("key")
-  title      String         @map("title")
-  body       String?        @map("body")
-  metadata   Json?          @map("metadata")
-  imageUrl   String?        @map("image_url")
-  slug       String?        @unique @map("slug")
-  isActive   Boolean        @default(true) @map("is_active")
-  order      Int            @default(0) @map("order")
-  createdAt  DateTime       @default(now()) @map("created_at")
-  updatedAt  DateTime       @updatedAt @map("updated_at")
-
-  @@map("web_content")
-}
-
-model ReportLog {
-  id           String    @id @default(uuid()) @map("id")
-  generatedById String?  @map("generated_by_id")
-  generatedBy  AdminUser? @relation(fields: [generatedById], references: [id], onDelete: SetNull)
-  reportType   String    @map("report_type")
-  format       String    @map("format")
-  filters      Json?     @map("filters")
-  fileUrl      String?   @map("file_url")
-  createdAt    DateTime  @default(now()) @map("created_at")
-
-  @@map("report_log")
 }
 
 model AdminSetting {
@@ -310,45 +166,18 @@ model AdminSetting {
   @@map("admin_setting")
 }
 
-model AdminRolePermission {
-  id                  String     @id @default(uuid()) @map("id")
-  role                AdminRole  @unique @map("role")
-  canManageFields     Boolean    @default(false) @map("can_manage_fields")
-  canManageBookings   Boolean    @default(false) @map("can_manage_bookings")
-  canManagePayments   Boolean    @default(false) @map("can_manage_payments")
-  canManageSchedule   Boolean    @default(false) @map("can_manage_schedule")
-  canManageCMS        Boolean    @default(false) @map("can_manage_cms")
-  canManageAdmins     Boolean    @default(false) @map("can_manage_admins")
-  canViewReports      Boolean    @default(false) @map("can_view_reports")
-  canVerifyPayments   Boolean    @default(false) @map("can_verify_payments")
-  canCreateBookings   Boolean    @default(false) @map("can_create_bookings")
-  canReadBookings     Boolean    @default(true)  @map("can_read_bookings")
-  canManageSettings   Boolean    @default(false) @map("can_manage_settings")
-  isActive            Boolean    @default(true)  @map("is_active")
-  createdAt           DateTime   @default(now()) @map("created_at")
-  updatedAt           DateTime   @updatedAt @map("updated_at")
-
-  adminUsers          AdminUser[]
-
-  @@map("admin_role_permission")
-}
-
 model AdminUser {
   id              String     @id @default(uuid()) @map("id")
   name            String     @map("name")
   email           String     @unique @map("email")
   passwordHash    String     @map("password_hash")
   role            AdminRole  @default(staff) @map("role")
-  rolePermission  AdminRolePermission? @relation(fields: [role], references: [role])
   isActive        Boolean    @default(true) @map("is_active")
   lastLoginAt     DateTime?  @map("last_login_at")
   createdAt       DateTime   @default(now()) @map("created_at")
   updatedAt       DateTime   @updatedAt @map("updated_at")
 
   sessions       AdminSession[]
-  auditLogs      AuditLog[]
-  scheduleBlocks ScheduleBlock[]
-  reportLogs     ReportLog[]
 
   @@map("admin_user")
 }
@@ -362,4 +191,19 @@ model AdminSession {
   createdAt   DateTime  @default(now()) @map("created_at")
 
   @@map("admin_session")
+}
+
+model VenueFeature {
+  id          String   @id @default(uuid()) @map("id")
+  name        String   @map("name")
+  description String   @map("description")
+  imageUrl    String   @map("image_url")
+  imagePublicId String? @map("image_public_id")
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([isActive, sortOrder])
+  @@map("venue_feature")
 }

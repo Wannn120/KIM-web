@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AnimatedCard } from "@/components/animated-card";
 import { InvoiceActions } from "@/components/invoice-actions";
 import { getPaymentTransaction, reconcilePaymentStatus } from "@/lib/payment-service";
+import { DEFAULT_FIELD_NAME } from "@/lib/venue";
 
 export const dynamic = "force-dynamic";
 
@@ -89,7 +90,7 @@ export default async function PaymentSuccessPage({
               <div className="flex justify-between"><span>Method</span><span className="text-white">{payment?.paymentMethod ?? "—"}</span></div>
               <div className="flex justify-between"><span>Amount</span><span className="text-white">Rp {payment?.amount?.toLocaleString("id-ID") ?? "0"}</span></div>
               <div className="flex justify-between"><span>Provider</span><span className="text-white">{payment?.provider ?? "—"}</span></div>
-              <div className="flex justify-between"><span>Field</span><span className="text-white">{payment?.booking?.field?.name ?? payment?.booking?.fieldId ?? "—"}</span></div>
+              <div className="flex justify-between"><span>Field</span><span className="text-white">{DEFAULT_FIELD_NAME}</span></div>
             </div>
           </div>
 

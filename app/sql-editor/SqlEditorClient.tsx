@@ -20,10 +20,8 @@ export default function SqlEditorClient({ initialAdminName }: { initialAdminName
   b.start_time,
   b.end_time,
   b.total_price,
-  b.status,
-  f.name AS field_name
+  b.status
 FROM booking b
-JOIN field f ON b.field_id = f.id
 ORDER BY b.booking_date DESC;`,
     "Today's Bookings": `SELECT 
   b.id,
@@ -31,10 +29,8 @@ ORDER BY b.booking_date DESC;`,
   b.booking_date,
   b.start_time,
   b.end_time,
-  f.name AS field_name,
   b.status
 FROM booking b
-JOIN field f ON b.field_id = f.id
 WHERE DATE(b.booking_date) = CURRENT_DATE
 ORDER BY b.start_time;`,
     "Payment Summary": `SELECT 
@@ -44,35 +40,19 @@ ORDER BY b.start_time;`,
   p.status,
   p.paid_at,
   b.customer_name,
-  b.customer_email,
-  f.name AS field_name
+  b.customer_email
 FROM payment p
 JOIN booking b ON p.booking_id = b.id
-JOIN field f ON b.field_id = f.id
 ORDER BY p.created_at DESC;`,
-    "Fields List": `SELECT 
-  id,
-  name,
-  location,
-  price,
-  type,
-  capacity,
-  rating,
-  is_active
-FROM field
-ORDER BY name;`,
-    "Available Slots": `SELECT 
-  fs.field_id,
-  f.name AS field_name,
-  fs.date,
-  fs.start_time,
-  fs.end_time,
-  fs.is_available
-FROM field_schedule fs
-JOIN field f ON fs.field_id = f.id
-WHERE fs.date >= CURRENT_DATE
-  AND fs.is_available = true
-ORDER BY fs.date, fs.start_time
+    "Fields List": `SELECT 'Klaten International Minisoccer' AS name, 'Klaten' AS location, 110000 AS price;`,
+    "Unavailable Slots (booked)": `SELECT
+  booking_date AS date,
+  start_time,
+  end_time,
+  status
+FROM booking
+WHERE booking_date >= CURRENT_DATE
+ORDER BY booking_date, start_time
 LIMIT 50;`,
     "Revenue Report": `SELECT 
   DATE(b.booking_date) AS booking_date,

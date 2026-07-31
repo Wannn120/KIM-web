@@ -1,16 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { DEFAULT_FIELD_NAME } from "@/lib/venue";
 
 export async function GET() {
   try {
     const reviews = await prisma.review.findMany({
-      include: {
-        field: {
-          select: {
-            name: true,
-          },
-        },
-      },
       orderBy: {
         createdAt: "desc",
       },
@@ -22,7 +16,7 @@ export async function GET() {
       data: reviews.map((review) => ({
         id: review.id,
         customerName: review.customerName,
-        fieldName: review.field?.name ?? null,
+        fieldName: DEFAULT_FIELD_NAME,
         rating: review.rating,
         comment: review.comment,
         date: review.createdAt.toISOString(),
@@ -41,7 +35,6 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const customerName = typeof body?.customerName === "string" ? body.customerName.trim() : "";
-    const fieldId = typeof body?.fieldId === "string" ? body.fieldId : undefined;
     const bookingId = typeof body?.bookingId === "string" ? body.bookingId : undefined;
     const rating = Number(body?.rating ?? 5);
     const comment = typeof body?.comment === "string" ? body.comment.trim() : "";
@@ -58,20 +51,6 @@ export async function POST(request: NextRequest) {
         { success: false, message: "Rating must be between 1 and 5." },
         { status: 400 }
       );
-    }
-
-    if (fieldId) {
-      const field = await prisma.field.findUnique({
-        where: { id: fieldId },
-        select: { id: true },
-      });
-
-      if (!field) {
-        return NextResponse.json(
-          { success: false, message: "Field not found." },
-          { status: 404 }
-        );
-      }
     }
 
     if (bookingId) {
@@ -91,17 +70,9 @@ export async function POST(request: NextRequest) {
     const review = await prisma.review.create({
       data: {
         customerName,
-        fieldId,
         bookingId,
         rating: Math.round(rating),
         comment,
-      },
-      include: {
-        field: {
-          select: {
-            name: true,
-          },
-        },
       },
     });
 
@@ -111,7 +82,7 @@ export async function POST(request: NextRequest) {
       review: {
         id: review.id,
         customerName: review.customerName,
-        fieldName: review.field?.name ?? null,
+        fieldName: DEFAULT_FIELD_NAME,
         rating: review.rating,
         comment: review.comment,
         date: review.createdAt.toISOString(),

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { siteContent } from "@/lib/mock-data";
 
 export function AdminContentEditor() {
@@ -16,14 +17,12 @@ export function AdminContentEditor() {
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 320'%3E%3Crect width='480' height='320' fill='%23152536'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='system-ui, sans-serif' font-size='24' fill='%23ffffff'%3EPreview not available%3C/text%3E%3C/svg%3E";
 
   useEffect(() => {
-    const stored = window.localStorage.getItem("minisoccer-site-content");
-    if (stored) {
-      try {
-        setContent({ ...siteContent, ...JSON.parse(stored) });
-      } catch {
-        setContent(siteContent);
-      }
-    }
+    void fetch("/api/admin/site-content", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((result) => {
+        if (result.success) setContent({ ...siteContent, ...result.data });
+      })
+      .catch(() => setContent(siteContent));
   }, []);
 
   useEffect(() => {
@@ -48,10 +47,21 @@ export function AdminContentEditor() {
     setContent((current) => ({ ...current, [key]: value }));
   };
 
-  const save = () => {
-    window.localStorage.setItem("minisoccer-site-content", JSON.stringify(content));
-    setMessage("Content saved successfully.");
-    setTimeout(() => setMessage(""), 3000);
+  const save = async () => {
+    try {
+      const response = await fetch("/api/admin/site-content", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(content),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.message || "Unable to save content.");
+      setContent({ ...siteContent, ...result.data });
+      setMessage("Content saved successfully.");
+      setTimeout(() => setMessage(""), 3000);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to save content.");
+    }
   };
 
   const uploadImage = async () => {
@@ -111,6 +121,12 @@ export function AdminContentEditor() {
     }
   };
 
+  const selectDroppedImage = (event: React.DragEvent<HTMLLabelElement>) => {
+    event.preventDefault();
+    const file = event.dataTransfer.files?.[0] ?? null;
+    if (file && file.type.startsWith("image/")) setSelectedFile(file);
+  };
+
   return (
     <div className="rounded-[2rem] border border-white/10 card-surface p-6">
       <div className="mb-6">
@@ -167,8 +183,12 @@ export function AdminContentEditor() {
             >
               Upload hero image from URL
             </button>
-            <label className="flex cursor-pointer items-center gap-3 rounded-full border border-[color:rgba(16,185,129,0.18)] bg-[color:rgba(16,185,129,0.06)] px-4 py-2 text-sm text-[color:var(--accent)] transition hover:bg-[color:rgba(16,185,129,0.08)]">
-              <span>Select file</span>
+            <label
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={selectDroppedImage}
+              className="flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl border-2 border-dashed border-[color:rgba(16,185,129,0.28)] bg-[color:rgba(16,185,129,0.06)] px-4 py-2 text-sm text-[color:var(--accent)] transition hover:bg-[color:rgba(16,185,129,0.08)]"
+            >
+              <span>Drag & drop hero image or select file</span>
               <input
                 type="file"
                 accept="image/*"
@@ -193,7 +213,7 @@ export function AdminContentEditor() {
           ) : null}
           {selectedFilePreview ? (
             <div className="mt-3 max-w-[240px] overflow-hidden rounded-3xl border border-[color:var(--border-strong)] bg-[color:var(--surface)]">
-              <img src={selectedFilePreview} alt="Selected preview" className="h-48 w-full object-cover" />
+              <Image src={selectedFilePreview} alt="Selected preview" width={240} height={192} unoptimized className="h-48 w-full object-cover" />
             </div>
           ) : null}
           {uploadUrl ? (
@@ -203,9 +223,12 @@ export function AdminContentEditor() {
                 {uploadUrl}
               </a>
               <div className="mt-2 max-w-[240px] overflow-hidden rounded-3xl border border-[color:var(--border-strong)] bg-[color:var(--surface)]">
-                <img
+                <Image
                   src={uploadedPreviewError ? previewFallback : uploadUrl}
                   alt="Uploaded preview"
+                  width={240}
+                  height={192}
+                  unoptimized
                   className="h-48 w-full object-cover"
                   onError={() => setUploadedPreviewError(true)}
                 />

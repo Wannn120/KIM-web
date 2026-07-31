@@ -150,21 +150,17 @@ export async function getAdminSummary(): Promise<AdminSummary> {
     }
 
     try {
-      const fieldRows = await prisma.booking.groupBy({
-        by: ["fieldId"],
-        _count: { fieldId: true },
+      const mostBookedCount = await prisma.booking.count({
         where: {
           bookingDate: { gte: startOfMonth, lt: endOfMonth },
           status: { in: ["confirmed", "completed"] },
         },
-        orderBy: { _count: { fieldId: "desc" } },
-        take: 1,
       });
 
-      if (fieldRows.length > 0) {
-        const field = await prisma.field.findUnique({ where: { id: fieldRows[0].fieldId } });
-        mostBookedField = { name: field?.name ?? "Unknown", bookings: fieldRows[0]._count.fieldId };
-      }
+      mostBookedField = {
+        name: "Lapangan Klaten International",
+        bookings: mostBookedCount,
+      };
     } catch (error) {
       if (!isMissingTableError(error)) {
         console.error("[ADMIN] Unable to load most-booked-field summary:", error);
@@ -172,9 +168,33 @@ export async function getAdminSummary(): Promise<AdminSummary> {
     }
 
     try {
-      totalCustomers = await prisma.customer.count();
-      activeCustomers = await prisma.customer.count({ where: { status: "ACTIVE" } });
-      newCustomersThisMonth = await prisma.customer.count({ where: { createdAt: { gte: startOfMonth } } });
+      const customerBookings = await prisma.booking.findMany({
+        select: {
+          customerEmail: true,
+          customerPhone: true,
+          createdAt: true,
+          status: true,
+        },
+      });
+      const customerKey = (booking: (typeof customerBookings)[number]) =>
+        booking.customerEmail?.trim().toLowerCase() || booking.customerPhone.trim();
+      const customers = new Map<string, (typeof customerBookings)[number]>();
+
+      for (const booking of customerBookings) {
+        const key = customerKey(booking);
+        const existing = customers.get(key);
+        if (!existing || booking.createdAt < existing.createdAt) {
+          customers.set(key, booking);
+        }
+      }
+
+      totalCustomers = customers.size;
+      activeCustomers = customerBookings
+        .filter((booking) => !["cancelled", "expired"].includes(booking.status))
+        .reduce((keys, booking) => keys.add(customerKey(booking)), new Set<string>()).size;
+      newCustomersThisMonth = [...customers.values()].filter(
+        (booking) => booking.createdAt >= startOfMonth,
+      ).length;
     } catch (error) {
       if (!isMissingTableError(error)) {
         console.error("[ADMIN] Unable to load customer stats summary:", error);

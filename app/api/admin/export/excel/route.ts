@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getAuthenticatedAdmin, hasAdminPermission } from "@/lib/admin-auth";
+import { DEFAULT_FIELD_NAME } from "@/lib/venue";
 
 export async function GET(request: NextRequest) {
   const admin = await getAuthenticatedAdmin(request);
@@ -13,8 +14,7 @@ export async function GET(request: NextRequest) {
 
   const csv = [
     "date,field,bookings,revenue",
-    "2026-07-07,Elite Turf 1,24,1800000",
-    "2026-07-06,Club Arena,18,1500000",
+    `2026-07-07,${DEFAULT_FIELD_NAME},24,1800000`,
   ].join("\n");
 
   return new NextResponse(csv, {

@@ -2,7 +2,6 @@ import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createJwt, verifyJwt, setSecureCookie, clearSecureCookie } from "@/lib/security";
-import { Prisma } from "@prisma/client";
 
 const DEFAULT_ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@klatenminisoccer.id";
 const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "admin123";
@@ -49,6 +48,10 @@ export interface AdminPermissions {
   canReadBookings: boolean;
   canManagePayments: boolean;
   canReadPayments: boolean;
+  canManageInvoices: boolean;
+  canReadInvoices: boolean;
+  canManageReviews: boolean;
+  canReadReviews: boolean;
   canManageSchedule: boolean;
   canManageCMS: boolean;
   canManageAdmins: boolean;
@@ -87,6 +90,10 @@ function getDefaultPermissions(role: AdminRole): AdminPermissions {
         canReadBookings: true,
         canManagePayments: true,
         canReadPayments: true,
+        canManageInvoices: true,
+        canReadInvoices: true,
+        canManageReviews: true,
+        canReadReviews: true,
         canManageSchedule: true,
         canManageCMS: true,
         canManageAdmins: true,
@@ -103,22 +110,30 @@ function getDefaultPermissions(role: AdminRole): AdminPermissions {
         canReadBookings: true,
         canManagePayments: true,
         canReadPayments: true,
+        canManageInvoices: true,
+        canReadInvoices: true,
+        canManageReviews: true,
+        canReadReviews: true,
         canManageSchedule: true,
         canManageCMS: true,
         canManageAdmins: false,
         canViewReports: false,
         canVerifyPayments: true,
         canCreateBookings: true,
-        canManageSettings: false,
+        canManageSettings: true,
       };
     default:
       return {
         canManageFields: false,
-        canReadFields: true,
+        canReadFields: false,
         canManageBookings: false,
         canReadBookings: true,
         canManagePayments: false,
         canReadPayments: true,
+        canManageInvoices: false,
+        canReadInvoices: false,
+        canManageReviews: false,
+        canReadReviews: true,
         canManageSchedule: false,
         canManageCMS: false,
         canManageAdmins: false,
@@ -128,37 +143,6 @@ function getDefaultPermissions(role: AdminRole): AdminPermissions {
         canManageSettings: false,
       };
   }
-}
-
-function mapRolePermissions(
-  rolePermission: { [key: string]: unknown } | null,
-  role: AdminRole,
-): AdminPermissions {
-  if (!rolePermission) {
-    return getDefaultPermissions(role);
-  }
-
-  return {
-    canManageFields: Boolean(rolePermission.canManageFields),
-    canReadFields:
-      rolePermission.canReadFields !== undefined
-        ? Boolean(rolePermission.canReadFields)
-        : Boolean(rolePermission.canManageFields),
-    canManageBookings: Boolean(rolePermission.canManageBookings),
-    canReadBookings: Boolean(rolePermission.canReadBookings),
-    canManagePayments: Boolean(rolePermission.canManagePayments),
-    canReadPayments:
-      rolePermission.canReadPayments !== undefined
-        ? Boolean(rolePermission.canReadPayments)
-        : Boolean(rolePermission.canManagePayments),
-    canManageSchedule: Boolean(rolePermission.canManageSchedule),
-    canManageCMS: Boolean(rolePermission.canManageCMS),
-    canManageAdmins: Boolean(rolePermission.canManageAdmins),
-    canViewReports: Boolean(rolePermission.canViewReports),
-    canVerifyPayments: Boolean(rolePermission.canVerifyPayments),
-    canCreateBookings: Boolean(rolePermission.canCreateBookings),
-    canManageSettings: Boolean(rolePermission.canManageSettings),
-  };
 }
 
 export function getAdminPanelPath(role: string) {
@@ -187,70 +171,7 @@ export function hasAdminPermission(admin: AuthenticatedAdmin | null, permission:
   return admin.permissions[permission] === true;
 }
 
-async function ensureDefaultRolePermissions() {
-  const rolePermissions = [
-    {
-      role: ADMIN_ROLES.superAdmin,
-      canManageFields: true,
-      canManageBookings: true,
-      canReadBookings: true,
-      canManagePayments: true,
-      canReadPayments: true,
-      canManageSchedule: true,
-      canManageCMS: true,
-      canManageAdmins: true,
-      canViewReports: true,
-      canVerifyPayments: true,
-      canCreateBookings: true,
-      canManageSettings: true,
-      isActive: true,
-    },
-    {
-      role: ADMIN_ROLES.manager,
-      canManageFields: true,
-      canManageBookings: true,
-      canReadBookings: true,
-      canManagePayments: true,
-      canReadPayments: true,
-      canManageSchedule: true,
-      canManageCMS: true,
-      canManageAdmins: false,
-      canViewReports: false,
-      canVerifyPayments: true,
-      canCreateBookings: true,
-      canManageSettings: false,
-      isActive: true,
-    },
-    {
-      role: ADMIN_ROLES.staff,
-      canManageFields: false,
-      canManageBookings: false,
-      canReadBookings: true,
-      canManagePayments: false,
-      canReadPayments: true,
-      canManageSchedule: false,
-      canManageCMS: false,
-      canManageAdmins: false,
-      canViewReports: false,
-      canVerifyPayments: false,
-      canCreateBookings: false,
-      canManageSettings: false,
-      isActive: true,
-    },
-  ];
-
-  for (const rolePermission of rolePermissions) {
-    await prisma.adminRolePermission.upsert({
-      where: { role: rolePermission.role },
-      update: rolePermission,
-      create: rolePermission,
-    });
-  }
-}
-
 async function ensureSeededAdminUsers() {
-  await ensureDefaultRolePermissions();
-
   for (const seededAdmin of SEEDED_ADMIN_CREDENTIALS) {
     const existing = await prisma.adminUser.findUnique({
       where: { email: seededAdmin.email.toLowerCase() },
@@ -363,30 +284,6 @@ export async function authenticateAdmin(email: string, password: string) {
   };
 }
 
-function isMissingRolePermissionTableError(error: unknown) {
-  if (!error || typeof error !== "object") {
-    return false;
-  }
-
-  const maybeCode = (error as { code?: unknown }).code;
-  const maybeMetaCause = (error as { meta?: { cause?: unknown } }).meta?.cause;
-  const maybeMessage = (error as { message?: unknown }).message;
-
-  if (maybeCode !== "P2021") {
-    return false;
-  }
-
-  if (typeof maybeMetaCause === "string" && maybeMetaCause.includes("admin_role_permission")) {
-    return true;
-  }
-
-  if (typeof maybeMessage === "string" && maybeMessage.includes("admin_role_permission")) {
-    return true;
-  }
-
-  return false;
-}
-
 export async function getAuthenticatedAdminFromToken(token: string) {
   if (!token) {
     return null;
@@ -399,54 +296,18 @@ export async function getAuthenticatedAdminFromToken(token: string) {
 
   const tokenHash = hashSecret(token);
 
-  type SessionWithUserAndPermissions = Prisma.AdminSessionGetPayload<{
-    include: { adminUser: { include: { rolePermission: true } } };
-  }>;
-
-  let session: SessionWithUserAndPermissions | null = null;
-  try {
-    session = await prisma.adminSession.findUnique({
-      where: { tokenHash },
-      include: { adminUser: { include: { rolePermission: true } } },
-    });
-  } catch (error) {
-    if (isMissingRolePermissionTableError(error)) {
-      console.warn("Missing admin_role_permission table; falling back to default admin permissions.");
-      session = await prisma.adminSession.findUnique({
-        where: { tokenHash },
-        include: { adminUser: true },
-      }) as SessionWithUserAndPermissions | null;
-    } else {
-      throw error;
-    }
-  }
+  const session = await prisma.adminSession.findUnique({
+    where: { tokenHash },
+    include: { adminUser: true },
+  });
 
   if (!session || !session.adminUser || session.expiresAt < new Date()) {
     return null;
   }
 
-  const adminUser = session.adminUser as {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-    rolePermission?: {
-      canManageFields: boolean;
-      canReadFields: boolean;
-      canManageBookings: boolean;
-      canManagePayments: boolean;
-      canManageSchedule: boolean;
-      canManageCMS: boolean;
-      canManageAdmins: boolean;
-      canViewReports: boolean;
-      canVerifyPayments: boolean;
-      canCreateBookings: boolean;
-      canReadBookings: boolean;
-      canManageSettings: boolean;
-    } | null;
-  };
+  const adminUser = session.adminUser;
   const role = normalizeAdminRole(adminUser.role);
-  const permissions = mapRolePermissions(adminUser.rolePermission ?? null, role);
+  const permissions = getDefaultPermissions(role);
 
   return {
     id: adminUser.id,

@@ -49,7 +49,7 @@ export default function StaffPaymentViewer({ adminName, useMain = true }: { admi
 
   useEffect(() => {
     fetchPayments(page, query, filterStatus);
-  }, []);
+  }, [page, query, filterStatus]);
 
   const handleSearch = async () => {
     setPage(1);

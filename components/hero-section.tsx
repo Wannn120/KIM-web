@@ -1,23 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { siteContent, facilityImages } from "@/lib/mock-data";
+import { siteContent } from "@/lib/mock-data";
+import type { FacilityImage } from "@/types";
 
-export function HeroSection() {
-  const [content, setContent] = useState(siteContent);
-
-  useEffect(() => {
-    const stored = window.localStorage.getItem("minisoccer-site-content");
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setContent({ ...siteContent, ...parsed });
-      } catch {
-        setContent(siteContent);
-      }
-    }
-  }, []);
+export function HeroSection({ facilities, content = siteContent }: { facilities: FacilityImage[]; content?: typeof siteContent }) {
 
   return (
     <section
@@ -62,8 +49,8 @@ export function HeroSection() {
           </div>
 
           <div className="mt-14 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {facilityImages.map((facility) => (
-              <div key={facility.title} className="rounded-[2rem] border border-[color:var(--border-strong)] bg-[color:var(--surface)] p-4 shadow-sm backdrop-blur-xl">
+            {facilities.map((facility) => (
+              <div key={facility.id ?? facility.title} className="rounded-[2rem] border border-[color:var(--border-strong)] bg-[color:var(--surface)] p-4 shadow-sm backdrop-blur-xl">
                 <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-[color:var(--surface)] sm:aspect-[16/9]">
                   <Image src={facility.imageUrl} alt={facility.title} fill sizes="(max-width: 768px) 100vw, 25vw" loading="lazy" className="object-cover" />
                 </div>

@@ -47,7 +47,7 @@ function getSelectedRange(slots: AvailabilitySlot[]) {
 
 export function BookingForm({ fields }: { fields: Field[] }) {
   const router = useRouter();
-  const [selectedFieldId, setSelectedFieldId] = useState(fields[0]?.id ?? "");
+  const selectedField = fields[0];
   const [selectedDate, setSelectedDate] = useState(getTodayIso());
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
   const [selectedSlots, setSelectedSlots] = useState<AvailabilitySlot[]>([]);
@@ -56,13 +56,8 @@ export function BookingForm({ fields }: { fields: Field[] }) {
   const [error, setError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const selectedField = useMemo(
-    () => fields.find((field) => field.id === selectedFieldId) ?? fields[0],
-    [fields, selectedFieldId]
-  );
-
   useEffect(() => {
-    if (!selectedFieldId || !selectedDate) {
+    if (!selectedDate || !selectedField?.id) {
       return;
     }
 
@@ -72,7 +67,7 @@ export function BookingForm({ fields }: { fields: Field[] }) {
     setSlots([]);
     setSelectedSlots([]);
 
-    fetch(`/api/fields/${selectedFieldId}/availability?date=${selectedDate}`, {
+    fetch(`/api/fields/${selectedField.id}/availability?date=${selectedDate}`, {
       cache: "no-store",
       signal: controller.signal,
     })
@@ -102,7 +97,7 @@ export function BookingForm({ fields }: { fields: Field[] }) {
       });
 
     return () => controller.abort();
-  }, [selectedFieldId, selectedDate]);
+  }, [selectedField?.id, selectedDate]);
 
   const selectedIds = useMemo(() => new Set(selectedSlots.map((slot) => slot.id)), [selectedSlots]);
   const selectedRange = useMemo(() => getSelectedRange(selectedSlots), [selectedSlots]);
@@ -144,7 +139,6 @@ export function BookingForm({ fields }: { fields: Field[] }) {
     setSubmitError(null);
 
     const query = new URLSearchParams({
-      fieldId: selectedField.id,
       fieldName: selectedField.name,
       bookingDate: selectedDate,
       startTime: selectedRange.startTime,
@@ -158,8 +152,6 @@ export function BookingForm({ fields }: { fields: Field[] }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fieldId: selectedField.id,
-          fieldName: selectedField.name,
           bookingDate: selectedDate,
           startTime: selectedRange.startTime,
           endTime: selectedRange.endTime,
@@ -196,31 +188,22 @@ export function BookingForm({ fields }: { fields: Field[] }) {
         </div>
       </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2">
-        <div>
-          <label className="block text-sm font-medium text-[color:var(--muted)]">Select field</label>
-          <select
-            value={selectedFieldId}
-            onChange={(event) => setSelectedFieldId(event.target.value)}
-            className="mt-2 w-full rounded-3xl border border-white/10 bg-[color:var(--background)] px-4 py-3 text-white outline-none focus:border-[color:var(--accent)]"
-          >
-            {fields.map((field) => (
-              <option key={field.id} value={field.id} className="bg-[color:var(--background)] text-white">
-                {field.name} • {field.location}
-              </option>
-            ))}
-          </select>
+      <div className="mt-8">
+        <div className="rounded-3xl border border-white/10 bg-[color:var(--background)] p-4">
+          <p className="text-sm font-medium text-[color:var(--muted)]">Field</p>
+          <p className="mt-2 text-base font-semibold text-white">{selectedField?.name}</p>
+          <p className="text-sm text-[color:var(--muted)]">{selectedField?.location}</p>
         </div>
+      </div>
 
-        <div>
-          <label className="block text-sm font-medium text-[color:var(--muted)]">Booking date</label>
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(event) => setSelectedDate(event.target.value)}
-            className="mt-2 w-full rounded-3xl border border-white/10 bg-[color:var(--background)] px-4 py-3 text-white outline-none focus:border-[color:var(--accent)]"
-          />
-        </div>
+      <div className="mt-4 sm:mt-8">
+        <label className="block text-sm font-medium text-[color:var(--muted)]">Booking date</label>
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={(event) => setSelectedDate(event.target.value)}
+          className="mt-2 w-full rounded-3xl border border-white/10 bg-[color:var(--background)] px-4 py-3 text-white outline-none focus:border-[color:var(--accent)]"
+        />
       </div>
 
       <div className="mt-8">

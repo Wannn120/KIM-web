@@ -3,6 +3,7 @@ import { DemoPaymentProvider, PaymentMethod, PaymentStatus, PaymentTransactionIn
 import { BookingStatus } from "@/lib/booking-engine";
 import { sendNotification } from "@/lib/notifications";
 import { createMidtransTransaction } from "@/lib/midtrans";
+import { DEFAULT_FIELD_NAME } from "@/lib/venue";
 
 const paymentProvider = new DemoPaymentProvider();
 
@@ -15,104 +16,6 @@ function normalizePaymentStatus(status: string): PaymentStatus {
   if (["cancel", "cancelled"].includes(lower)) return "cancelled";
   if (["refund", "refunded"].includes(lower)) return "refunded";
   return "pending";
-}
-
-function parseTimeToMinutes(timeValue: string) {
-  const [hourText, minuteText] = timeValue.split(":");
-  const hour = Number(hourText);
-  const minute = Number(minuteText ?? "0");
-  if (Number.isNaN(hour) || Number.isNaN(minute)) {
-    return NaN;
-  }
-  return hour * 60 + minute;
-}
-
-function formatMinutesToTime(totalMinutes: number) {
-  const safeMinutes = Math.max(0, totalMinutes);
-  const hour = Math.floor(safeMinutes / 60);
-  const minute = safeMinutes % 60;
-  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
-}
-
-function getRequestedScheduleBlocks(startTime: string, endTime: string) {
-  const startMinutes = parseTimeToMinutes(startTime);
-  const endMinutes = parseTimeToMinutes(endTime);
-
-  if (Number.isNaN(startMinutes) || Number.isNaN(endMinutes) || endMinutes <= startMinutes) {
-    return [] as Array<{ start: string; end: string }>;
-  }
-
-  const blocks: Array<{ start: string; end: string }> = [];
-  for (let cursor = startMinutes; cursor < endMinutes; cursor += 60) {
-    const nextCursor = Math.min(cursor + 60, endMinutes);
-    blocks.push({
-      start: formatMinutesToTime(cursor),
-      end: formatMinutesToTime(nextCursor),
-    });
-  }
-
-  return blocks;
-}
-
-async function restoreBookingSchedule(bookingId: string) {
-  const booking = await prisma.booking.findUnique({
-    where: { id: bookingId },
-    select: {
-      fieldId: true,
-      bookingDate: true,
-      startTime: true,
-      endTime: true,
-    },
-  });
-
-  if (!booking) {
-    return;
-  }
-
-  const requestedBlocks = getRequestedScheduleBlocks(booking.startTime, booking.endTime);
-  if (requestedBlocks.length === 0) {
-    return;
-  }
-
-  await prisma.fieldSchedule.updateMany({
-    where: {
-      fieldId: booking.fieldId,
-      date: booking.bookingDate,
-      startTime: { in: requestedBlocks.map((block) => block.start) },
-    },
-    data: { isAvailable: true },
-  });
-}
-
-async function restoreBookingSchedules(bookingIds: string[]) {
-  if (bookingIds.length === 0) {
-    return;
-  }
-
-  const bookings = await prisma.booking.findMany({
-    where: { id: { in: bookingIds } },
-    select: {
-      id: true,
-      fieldId: true,
-      bookingDate: true,
-      startTime: true,
-      endTime: true,
-    },
-  });
-
-  await prisma.$transaction(
-    bookings.map((booking) => {
-      const requestedBlocks = getRequestedScheduleBlocks(booking.startTime, booking.endTime);
-      return prisma.fieldSchedule.updateMany({
-        where: {
-          fieldId: booking.fieldId,
-          date: booking.bookingDate,
-          startTime: { in: requestedBlocks.map((block) => block.start) },
-        },
-        data: { isAvailable: true },
-      });
-    })
-  );
 }
 
 function buildInvoiceNumber() {
@@ -132,7 +35,6 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
 
   const booking = await prisma.booking.findUnique({
     where: { id: input.bookingId },
-    include: { field: true },
   });
 
   if (!booking) {
@@ -174,8 +76,8 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
     },
     item_details: [
       {
-        id: booking.fieldId,
-        name: booking.field?.name ?? "Field booking",
+        id: input.bookingId,
+        name: DEFAULT_FIELD_NAME,
         price: input.amount,
         quantity: 1,
       },
@@ -290,7 +192,6 @@ export async function expirePendingPayments() {
     }),
   ]);
 
-  await restoreBookingSchedules(bookingIds);
 }
 
 export async function getPaymentTransaction(transactionId: string) {
@@ -299,7 +200,7 @@ export async function getPaymentTransaction(transactionId: string) {
   const payment = await prisma.payment.findUnique({
     where: { transactionId },
     include: {
-      booking: { include: { field: true } },
+      booking: true,
       invoice: true,
     },
   });
@@ -320,7 +221,7 @@ export async function processWebhookEvent(transactionId: string, status: Payment
 
   const payment = await prisma.payment.findUnique({
     where: { transactionId },
-    include: { booking: { include: { field: true } } },
+    include: { booking: true },
   });
 
   if (!payment) {
@@ -367,10 +268,6 @@ export async function processWebhookEvent(transactionId: string, status: Payment
     data: { status: nextBookingStatus },
   });
 
-  if (["expired", "failed", "cancelled"].includes(normalized)) {
-    await restoreBookingSchedule(booking.id);
-  }
-
   await prisma.invoice.upsert({
     where: { bookingId: booking.id },
     update: {
@@ -404,7 +301,7 @@ export async function processWebhookEvent(transactionId: string, status: Payment
       invoiceNumber: invoice?.invoiceNumber,
       amount: payment.amount,
       customerName: booking.customerName,
-      fieldName: booking.field?.name ?? booking.fieldId,
+      fieldName: DEFAULT_FIELD_NAME,
       startAt: `${booking.bookingDate.toISOString().slice(0, 10)} ${booking.startTime}`,
       endAt: `${booking.bookingDate.toISOString().slice(0, 10)} ${booking.endTime}`,
       email: booking.customerEmail ?? undefined,

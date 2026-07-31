@@ -5,8 +5,9 @@ import { HeroSection } from "@/components/hero-section";
 import { ReviewSection } from "@/components/review-section";
 import { FieldCard } from "@/components/field-card";
 import { SectionHeading } from "@/components/section-heading";
-import { getFields, getReviews } from "@/lib/data";
+import { getFields, getReviews, getVenueFeatures } from "@/lib/data";
 import { siteConfig } from "@/lib/site-config";
+import { getSiteContent } from "@/lib/site-content";
 
 export const metadata: Metadata = {
   title: "Booking Lapangan Mini Soccer di Klaten",
@@ -30,6 +31,8 @@ async function loadReviews() {
 export default async function Home() {
   let fields: Field[] = [];
   let reviews: Review[] = [];
+  const features = await getVenueFeatures();
+  const content = await getSiteContent();
   
   try {
     fields = await loadFields();
@@ -60,7 +63,7 @@ export default async function Home() {
   return (
     <main className="flex-1">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-      <HeroSection />
+      <HeroSection facilities={features} content={content} />
 
       <section aria-labelledby="featured-fields-heading" className="rounded-[3rem] border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-4 py-16 shadow-[0_24px_80px_rgba(15,23,42,0.06)] sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
