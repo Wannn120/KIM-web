@@ -36,7 +36,7 @@ export function applySecurityHeaders(response: NextResponse, request?: NextReque
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://app.sandbox.midtrans.com https://app.midtrans.com https://snap-assets.sandbox.midtrans.com https://snap-assets.midtrans.com https://api.sandbox.midtrans.com https://api.midtrans.com https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "img-src 'self' data: https://snap-assets.sandboxmidtrans.com https://snap-assets.sandbox.midtrans.com https://snap-assets.midtrans.com https://api.sandbox.midtrans.com https://api.midtrans.com https://pay.google.com https://g.alicdn.com",
+    "img-src 'self' data: https://res.cloudinary.com https://snap-assets.sandboxmidtrans.com https://snap-assets.sandbox.midtrans.com https://snap-assets.midtrans.com https://api.sandbox.midtrans.com https://api.midtrans.com https://pay.google.com https://g.alicdn.com",
     "connect-src 'self' https://app.sandbox.midtrans.com https://app.midtrans.com https://api.sandbox.midtrans.com https://api.midtrans.com https://snap-assets.sandbox.midtrans.com",
     "frame-src https://app.sandbox.midtrans.com https://app.midtrans.com",
     "child-src https://app.sandbox.midtrans.com https://app.midtrans.com",
