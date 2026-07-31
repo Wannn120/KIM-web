@@ -198,6 +198,19 @@ a {
   }
 
   .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-full border border-[color:rgba(148,163,184,0.24)] bg-[rgba(255,255,255,0.08)] px-5 py-3 text-sm font-semibold text-[color:var(--foreground)] shadow-[0_18px_48px_rgba(148,163,184,0.08)] transition duration-200 hover:brightness-105 whitespace-nowrap;
+  }
+
+  @keyframes floatingCard {
+    0%, 100% {
+      --card-float: 0px;
+    }
+    50% {
+      --card-float: -8px;
+    }
+  }
+
+  .btn-secondary {
     @apply inline-flex items-center justify-center rounded-full border border-[color:rgba(147,197,253,0.36)] bg-gradient-to-r from-[rgba(219,234,254,0.72)] to-[rgba(255,255,255,0.5)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition duration-200 hover:brightness-105;
   }
 
