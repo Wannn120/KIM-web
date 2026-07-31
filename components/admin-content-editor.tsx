@@ -4,6 +4,16 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { siteContent } from "@/lib/mock-data";
 
+function isValidRemoteImageUrl(url?: string) {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export function AdminContentEditor() {
   const [content, setContent] = useState(siteContent);
   const [message, setMessage] = useState("");
@@ -43,11 +53,17 @@ export function AdminContentEditor() {
     };
   }, [selectedFile]);
 
+  const backgroundUrlIsValid = !content.backgroundImageUrl || isValidRemoteImageUrl(content.backgroundImageUrl);
+
   const updateField = (key: keyof typeof siteContent, value: string) => {
     setContent((current) => ({ ...current, [key]: value }));
   };
 
   const save = async () => {
+    if (content.backgroundImageUrl && !backgroundUrlIsValid) {
+      setMessage("Invalid hero background URL. Use a full https:// image URL or upload a file.");
+      return;
+    }
     try {
       const response = await fetch("/api/admin/site-content", {
         method: "PUT",
@@ -176,6 +192,9 @@ export function AdminContentEditor() {
             onChange={(event) => updateField("backgroundImageUrl", event.target.value)}
             className="w-full rounded-2xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-4 py-3 text-[color:var(--foreground)] outline-none"
           />
+          {!backgroundUrlIsValid ? (
+            <p className="mt-2 text-sm text-amber-300">Invalid hero background URL. Use a full https:// image URL or upload a file.</p>
+          ) : null}
           <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
             <button
               type="button"
@@ -273,7 +292,7 @@ export function AdminContentEditor() {
             />
           </label>
         </div>
-        <button type="button" onClick={save} className="btn-primary">
+        <button type="button" onClick={save} disabled={!backgroundUrlIsValid} className="btn-primary disabled:cursor-not-allowed disabled:opacity-50">
           Save website content
         </button>
         {message ? <p className="text-sm text-emerald-300">{message}</p> : null}
