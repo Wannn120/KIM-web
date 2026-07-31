@@ -59,8 +59,7 @@ export function CurveCarouselItem({ image, offset, isActive, width, height, spac
           priority={isActive}
         />
         <div className="absolute inset-x-0 bottom-0 rounded-b-[2.5rem] bg-gradient-to-t from-black/90 to-transparent p-5 backdrop-blur-sm">
-          <p className="text-[0.65rem] uppercase tracking-[0.3em] text-emerald-300">Foto {String(image.sortOrder + 1).padStart(2, "0")}</p>
-          <h3 className="mt-2 text-sm font-semibold text-white leading-tight line-clamp-2">{image.title}</h3>
+          <h3 className="text-base font-semibold text-white leading-tight line-clamp-2">{image.title}</h3>
         </div>
       </div>
     </motion.button>
