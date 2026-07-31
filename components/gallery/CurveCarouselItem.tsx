@@ -31,8 +31,8 @@ export function CurveCarouselItem({ image, offset, isActive, width, height, spac
       onClick={onSelect}
       whileHover={isActive ? { scale: 1.02, y: -6 } : { scale: 0.92 }}
       whileTap={{ scale: isActive ? 0.98 : 0.88 }}
-      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 focus-visible:outline-none"
-      style={{ width, height, perspective: 1800, zIndex }}
+      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[2.5rem] focus-visible:outline-none"
+      style={{ width, height, perspective: 1800, zIndex, borderRadius: 40 }}
       animate={{
         x,
         y: Math.abs(offset) * 12,
@@ -49,7 +49,6 @@ export function CurveCarouselItem({ image, offset, isActive, width, height, spac
       aria-label={`Tampilkan ${image.title}`}
     >
       <div className="relative h-full overflow-hidden rounded-[2.5rem] border border-white/10 bg-slate-950/80 shadow-[inherit] transition duration-500">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_50%)] opacity-80" />
         <Image
           src={image.imageUrl}
           alt={image.title}
@@ -59,7 +58,9 @@ export function CurveCarouselItem({ image, offset, isActive, width, height, spac
           priority={isActive}
         />
         <div className="absolute inset-x-0 bottom-0 rounded-b-[2.5rem] bg-gradient-to-t from-black/90 to-transparent p-5 backdrop-blur-sm">
-          <h3 className="text-base font-semibold text-white leading-tight line-clamp-2">{image.title}</h3>
+          <h3 className="text-base font-semibold uppercase tracking-[0.08em] text-emerald-200 drop-shadow-[0_12px_18px_rgba(0,0,0,0.35)] leading-tight line-clamp-2">
+            {image.title}
+          </h3>
         </div>
       </div>
     </motion.button>
