@@ -17,50 +17,41 @@ function isValidRemoteImageUrl(url?: string) {
 
 export function HeroSection({ facilities, content = siteContent }: { facilities: FacilityImage[]; content?: typeof siteContent }) {
   const [assetsReady, setAssetsReady] = useState(false);
-  const [backgroundReady, setBackgroundReady] = useState(false);
   const facilityUrls = useMemo(() => facilities.map((facility) => facility.imageUrl).join("|"), [facilities]);
   const heroBackgroundUrl = isValidRemoteImageUrl(content.backgroundImageUrl)
     ? content.backgroundImageUrl
     : siteContent.backgroundImageUrl;
+  const heroBackgroundSource = isValidRemoteImageUrl(content.backgroundImageUrl) ? "DB" : "fallback";
 
   useEffect(() => {
     let cancelled = false;
-    const urls = [heroBackgroundUrl, ...facilities.map((facility) => facility.imageUrl)].filter(Boolean);
+    const facilityUrlsToLoad = facilities.map((facility) => facility.imageUrl).filter(Boolean);
     let completed = 0;
 
-    const finish = (url: string) => {
+    const finishAsset = () => {
       if (cancelled) return;
       completed += 1;
-      if (url === heroBackgroundUrl) {
-        setBackgroundReady(true);
-      }
-      if (completed >= urls.length) {
+      if (completed >= facilityUrlsToLoad.length) {
         setAssetsReady(true);
       }
     };
 
     setAssetsReady(false);
-    setBackgroundReady(false);
-    if (!heroBackgroundUrl) {
-      setBackgroundReady(true);
-    }
-    if (urls.length === 0) {
+    if (facilityUrlsToLoad.length === 0) {
       setAssetsReady(true);
-      setBackgroundReady(true);
       return () => { cancelled = true; };
     }
 
-    const preloaders = urls.map((url) => {
+    const preloaders = facilityUrlsToLoad.map((url) => {
       const image = new window.Image();
-      image.onload = () => finish(url);
-      image.onerror = () => finish(url);
+      image.onload = finishAsset;
+      image.onerror = finishAsset;
       image.src = url;
       return image;
     });
     const timeout = window.setTimeout(() => {
       if (!cancelled) {
         setAssetsReady(true);
-        setBackgroundReady(true);
       }
     }, 15000);
 
@@ -72,9 +63,9 @@ export function HeroSection({ facilities, content = siteContent }: { facilities:
         image.onerror = null;
       });
     };
-  }, [heroBackgroundUrl, facilityUrls, facilities]);
+  }, [facilityUrls, facilities]);
 
-  if (!assetsReady || !backgroundReady) {
+  if (!assetsReady) {
     return (
       <section className="relative -mt-16 overflow-hidden bg-[color:var(--background)] pt-20 sm:pt-24" aria-busy="true" aria-label="Memuat halaman utama">
         <div className="absolute inset-0 hero-skeleton-bg" />
@@ -96,24 +87,30 @@ export function HeroSection({ facilities, content = siteContent }: { facilities:
     <section
       className="relative -mt-16 overflow-hidden bg-[color:var(--background)] pt-20 sm:pt-24"
     >
-      <Image
-        src={heroBackgroundUrl}
-        alt=""
-        fill
-        priority
-        unoptimized
-        sizes="100vw"
+      <div
+        className="pointer-events-none absolute inset-0 z-0 h-full w-full bg-cover bg-center"
+        style={{
+          backgroundImage: `url("${heroBackgroundUrl}")`,
+          backgroundColor: "#0f172a",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "cover",
+        }}
         aria-hidden="true"
-        onLoad={() => setBackgroundReady(true)}
-        onError={() => setBackgroundReady(true)}
-        className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover object-center"
       />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(14,165,233,0.12),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.10),transparent_35%)]" />
       <div className="pointer-events-none absolute left-1/2 top-6 h-96 w-96 -translate-x-1/2 rounded-full hero-accent blur-2xl" />
       <div className="pointer-events-none absolute -left-16 top-10 h-48 w-48 rounded-full hero-glow blur-2xl shadow-[0_0_120px_rgba(255,255,255,0.65)]" />
       <div className="pointer-events-none absolute right-0 top-24 h-72 w-72 rounded-full hero-ring blur-2xl" />
       <div className="pointer-events-none absolute -bottom-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full hero-bottom blur-2xl" />
       <div className="absolute inset-0 hero-overlay" />
       <div className="relative px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
+        <div className="pointer-events-none absolute right-4 top-4 z-10 rounded-3xl border border-white/10 bg-black/40 px-3 py-2 text-xs text-white/80 backdrop-blur-md sm:right-8">
+          Hero image source: {heroBackgroundSource}
+          <div className="mt-1 max-w-[24rem] break-all text-[0.65rem] leading-4 text-white/60">
+            {heroBackgroundUrl}
+          </div>
+        </div>
         <div className="mx-auto max-w-5xl text-center text-[color:var(--foreground)]">
           <p className="text-sm font-semibold uppercase tracking-[0.35em] text-[color:var(--accent-strong)]">
             {content.locationLabel}
