@@ -40,6 +40,7 @@ export interface FacilityImage {
 export interface VenueGalleryImage {
   id: string;
   title: string;
+  description?: string;
   imageUrl: string;
   sortOrder: number;
   isActive: boolean;
