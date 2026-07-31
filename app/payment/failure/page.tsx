@@ -27,7 +27,6 @@ export default async function PaymentFailurePage({
   const payment = transactionId ? await getPaymentTransaction(transactionId).catch(() => null) : null;
   const status = payment?.status ?? "failed";
   const isPending = status === "pending";
-  const isFailed = status === "failed" || status === "cancelled" || status === "expired";
   const refreshUrl = `/payment/failure?transactionId=${encodeURIComponent(transactionId)}`;
   const invoiceNumber = payment?.invoice?.invoiceNumber;
   const invoiceAmount = payment?.amount ? `Rp ${payment.amount.toLocaleString("id-ID")}` : undefined;

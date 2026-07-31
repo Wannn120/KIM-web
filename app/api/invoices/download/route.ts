@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { DEFAULT_FIELD_NAME } from "@/lib/venue";
 
 function escapePdfText(text: string) {
   return text.replace(/([\\()])/g, "\\$1");
@@ -71,7 +72,7 @@ export async function GET(request: Request) {
   const invoice = await prisma.invoice.findUnique({
     where: { invoiceNumber },
     include: {
-      booking: { include: { field: true } },
+      booking: true,
       payment: true,
     },
   });
@@ -111,7 +112,7 @@ export async function GET(request: Request) {
   const bookingLines = [
     writeRect(320, 614, 240, 96),
     writeText("Booking details", 325, 704, 10),
-    writeText(`Field: ${invoice.booking.field?.name ?? invoice.booking.fieldId}`, 325, 688, 12),
+    writeText(`Field: ${DEFAULT_FIELD_NAME}`, 325, 688, 12),
     writeText(`Booking date: ${bookingDate}`, 325, 672, 12),
     writeText(`Time: ${invoice.booking.startTime} - ${invoice.booking.endTime}`, 325, 656, 12),
     writeText(`Booking ID: ${invoice.bookingId}`, 325, 640, 12),

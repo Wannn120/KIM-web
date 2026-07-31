@@ -27,6 +27,7 @@ async function main() {
     await prisma.$queryRawUnsafe(`DROP TABLE IF EXISTS admin_setting CASCADE;`);
     await prisma.$queryRawUnsafe(`DROP TABLE IF EXISTS audit_log CASCADE;`);
     await prisma.$queryRawUnsafe(`DROP TABLE IF EXISTS field CASCADE;`);
+    await prisma.$queryRawUnsafe(`DROP TABLE IF EXISTS venue_feature CASCADE;`);
     
     console.log('✅ Tables dropped successfully');
   } catch (error) {
@@ -37,42 +38,10 @@ async function main() {
   try {
     console.log('Creating tables with correct schema...');
     
-    await prisma.$queryRawUnsafe(`
-      CREATE TABLE field (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        name VARCHAR(255) NOT NULL,
-        location VARCHAR(255) NOT NULL,
-        description TEXT,
-        price INTEGER NOT NULL,
-        type VARCHAR(50),
-        size VARCHAR(50),
-        capacity INTEGER,
-        rating DECIMAL(3, 2) DEFAULT 0,
-        image_url VARCHAR(255),
-        is_active BOOLEAN DEFAULT true,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-    
-    await prisma.$queryRawUnsafe(`
-      CREATE TABLE field_schedule (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        field_id UUID NOT NULL REFERENCES field(id) ON DELETE CASCADE,
-        date DATE NOT NULL,
-        start_time VARCHAR(10) NOT NULL,
-        end_time VARCHAR(10) NOT NULL,
-        is_available BOOLEAN DEFAULT true,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(field_id, date, start_time)
-      );
-    `);
-    
+    // Field and field_schedule are intentionally omitted for single-venue setup.
     await prisma.$queryRawUnsafe(`
       CREATE TABLE booking (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        field_id UUID NOT NULL REFERENCES field(id) ON DELETE CASCADE,
         booking_date DATE NOT NULL,
         start_time VARCHAR(10) NOT NULL,
         end_time VARCHAR(10) NOT NULL,
@@ -84,7 +53,8 @@ async function main() {
         status VARCHAR(50) DEFAULT 'pending',
         notes TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (booking_date, start_time)
       );
     `);
     
@@ -125,7 +95,6 @@ async function main() {
     await prisma.$queryRawUnsafe(`
       CREATE TABLE review (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        field_id UUID REFERENCES field(id) ON DELETE SET NULL,
         booking_id UUID REFERENCES booking(id) ON DELETE CASCADE,
         customer_name VARCHAR(255) NOT NULL,
         rating INTEGER NOT NULL,
@@ -147,33 +116,12 @@ async function main() {
     `);
 
     await prisma.$queryRawUnsafe(`
-      CREATE TABLE admin_role_permission (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        role VARCHAR(50) UNIQUE NOT NULL,
-        can_manage_fields BOOLEAN DEFAULT false,
-        can_manage_bookings BOOLEAN DEFAULT false,
-        can_manage_payments BOOLEAN DEFAULT false,
-        can_manage_schedule BOOLEAN DEFAULT false,
-        can_manage_cms BOOLEAN DEFAULT false,
-        can_manage_admins BOOLEAN DEFAULT false,
-        can_view_reports BOOLEAN DEFAULT false,
-        can_verify_payments BOOLEAN DEFAULT false,
-        can_create_bookings BOOLEAN DEFAULT false,
-        can_read_bookings BOOLEAN DEFAULT true,
-        can_manage_settings BOOLEAN DEFAULT false,
-        is_active BOOLEAN DEFAULT true,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    await prisma.$queryRawUnsafe(`
       CREATE TABLE admin_user (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         name VARCHAR(255) NOT NULL,
         email VARCHAR(255) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
-        role VARCHAR(50) NOT NULL REFERENCES admin_role_permission(role) ON DELETE RESTRICT,
+        role VARCHAR(50) NOT NULL,
         is_active BOOLEAN DEFAULT true,
         last_login_at TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -203,6 +151,20 @@ async function main() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    await prisma.$queryRawUnsafe(`
+      CREATE TABLE venue_feature (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(150) NOT NULL,
+        description TEXT NOT NULL,
+        image_url TEXT NOT NULL,
+        image_public_id VARCHAR(255),
+        sort_order INTEGER DEFAULT 0,
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
     
     console.log('✅ Tables created successfully');
   } catch (error) {
@@ -218,9 +180,7 @@ async function main() {
     await prisma.$queryRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_booking_customer_phone ON booking(customer_phone);`);
     await prisma.$queryRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_booking_booking_date ON booking(booking_date);`);
     await prisma.$queryRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_booking_status ON booking(status);`);
-    await prisma.$queryRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_booking_field_id ON booking(field_id);`);
-    
-    await prisma.$queryRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_review_field_id ON review(field_id);`);
+    // field-related indexes removed (no field table)
     await prisma.$queryRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_review_booking_id ON review(booking_id);`);
     await prisma.$queryRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_admin_setting_key ON admin_setting(key);`);
     
@@ -233,8 +193,7 @@ async function main() {
     await prisma.$queryRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_invoice_payment_id ON invoice(payment_id);`);
     await prisma.$queryRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_invoice_status ON invoice(status);`);
     
-    await prisma.$queryRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_field_is_active ON field(is_active);`);
-    await prisma.$queryRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_field_schedule_available ON field_schedule(is_available);`);
+    // removed field-specific indexes
     await prisma.$queryRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_audit_log_action ON audit_log(action);`);
     await prisma.$queryRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_audit_log_entity_id ON audit_log(entity_id);`);
     await prisma.$queryRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_audit_log_created_at ON audit_log(created_at);`);
@@ -244,131 +203,87 @@ async function main() {
     console.log('Note: Some indexes may already exist');
   }
 
-  // Check if data already exists
-  const existingFields = await prisma.field.findMany();
-  
-  if (existingFields.length === 0) {
-    console.log('Creating fields...');
-    await prisma.field.createMany({
+  // Seed bookings/payments/reviews for single-venue setup
+  const existingBookings = await prisma.booking.findMany();
+  if (existingBookings.length === 0) {
+    console.log('Creating sample bookings...');
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dayAfter = new Date();
+    dayAfter.setDate(dayAfter.getDate() + 2);
+
+    const b1 = await prisma.booking.create({
+      data: {
+        bookingDate: tomorrow,
+        startTime: '18:00',
+        endTime: '20:00',
+        durationHours: 2,
+        totalPrice: 220000,
+        customerName: 'Ahmad Rahman',
+        customerPhone: '08123456789',
+        customerEmail: 'ahmad@email.com',
+        status: 'confirmed',
+      },
+    });
+
+    const b2 = await prisma.booking.create({
+      data: {
+        bookingDate: dayAfter,
+        startTime: '19:00',
+        endTime: '21:00',
+        durationHours: 2,
+        totalPrice: 220000,
+        customerName: 'Budi Santoso',
+        customerPhone: '08987654321',
+        customerEmail: 'budi@email.com',
+        status: 'pending',
+      },
+    });
+
+    // create payments for these bookings
+    await prisma.payment.create({
+      data: {
+        bookingId: b1.id,
+        transactionId: `${b1.id}-${Date.now()}`,
+        amount: b1.totalPrice,
+        paymentMethod: 'Midtrans',
+        provider: 'Midtrans',
+        status: 'success',
+        paidAt: new Date(),
+        expiredAt: new Date(Date.now() + 30 * 60 * 1000),
+      },
+    });
+
+    await prisma.payment.create({
+      data: {
+        bookingId: b2.id,
+        transactionId: `${b2.id}-${Date.now()}`,
+        amount: b2.totalPrice,
+        paymentMethod: 'Midtrans',
+        provider: 'Midtrans',
+        status: 'pending',
+        paidAt: null,
+        expiredAt: new Date(Date.now() + 30 * 60 * 1000),
+      },
+    });
+
+    // reviews
+    await prisma.review.createMany({
       data: [
         {
-          name: 'Lapangan Klaten International',
-          location: 'Klaten',
-          price: 110000,
-          type: 'Mini Soccer',
-          size: '5v5',
-          capacity: 10,
-          rating: 4.9,
-          imageUrl: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1200&q=80',
+          bookingId: b1.id,
+          customerName: 'Ari Putra',
+          rating: 5,
+          comment: 'Lapangan bersih, proses booking cepat, dan pelayanan ramah.',
         },
         {
-          name: 'Lapangan Merdeka A',
-          location: 'Jalan Merdeka No. 123, Klaten',
-          price: 130000,
-          type: 'Futsal',
-          size: '5-aside',
-          capacity: 10,
-          rating: 4.7,
-          imageUrl: 'https://images.unsplash.com/photo-1521412644187-c49fa049e84d?auto=format&fit=crop&w=1200&q=80',
+          bookingId: b2.id,
+          customerName: 'Nina Sari',
+          rating: 4,
+          comment: 'Fasilitas bagus dan suasana nyaman. Parkir bisa ditingkatkan.',
         },
       ],
     });
-  }
-
-  const fields = await prisma.field.findMany();
-  const fieldId = fields[0]?.id;
-
-  if (fieldId) {
-    // Check existing bookings
-    const existingBookings = await prisma.booking.findMany({ where: { fieldId } });
-    
-    if (existingBookings.length === 0) {
-      console.log('Creating bookings...');
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const dayAfter = new Date();
-      dayAfter.setDate(dayAfter.getDate() + 2);
-
-      await prisma.booking.createMany({
-        data: [
-          {
-            fieldId,
-            bookingDate: tomorrow,
-            startTime: '18:00',
-            endTime: '20:00',
-            durationHours: 2,
-            totalPrice: 220000,
-            customerName: 'Ahmad Rahman',
-            customerPhone: '08123456789',
-            customerEmail: 'ahmad@email.com',
-            status: 'confirmed',
-          },
-          {
-            fieldId,
-            bookingDate: dayAfter,
-            startTime: '19:00',
-            endTime: '21:00',
-            durationHours: 2,
-            totalPrice: 220000,
-            customerName: 'Budi Santoso',
-            customerPhone: '08987654321',
-            customerEmail: 'budi@email.com',
-            status: 'pending',
-          },
-        ],
-      });
-    }
-
-    const bookings = await prisma.booking.findMany({
-      where: { fieldId },
-      orderBy: { createdAt: 'asc' },
-      take: 2,
-    });
-
-    for (const booking of bookings) {
-      const existingPayment = await prisma.payment.findFirst({
-        where: { bookingId: booking.id },
-      });
-
-      if (!existingPayment) {
-        console.log('Creating payment for booking...');
-        await prisma.payment.create({
-          data: {
-            bookingId: booking.id,
-            transactionId: `${booking.id}-${Date.now()}`,
-            amount: booking.totalPrice,
-            paymentMethod: 'Midtrans',
-            provider: 'Midtrans',
-            status: booking.status === 'confirmed' ? 'success' : 'pending',
-            paidAt: booking.status === 'confirmed' ? new Date() : null,
-            expiredAt: new Date(Date.now() + 30 * 60 * 1000),
-          },
-        });
-      }
-    }
-
-    // Create reviews
-    const existingReviews = await prisma.review.findMany({ where: { fieldId } });
-    
-    if (existingReviews.length === 0) {
-      console.log('Creating reviews...');
-      await prisma.review.createMany({
-        data: [
-          {
-            fieldId,
-            customerName: 'Ari Putra',
-            rating: 5,
-            comment: 'Lapangan bersih, proses booking cepat, dan pelayanan ramah.',
-          },
-          {
-            fieldId,
-            customerName: 'Nina Sari',
-            rating: 4,
-            comment: 'Fasilitas bagus dan suasana nyaman. Parkir bisa ditingkatkan.',
-          },
-        ],
-      });
-    }
   }
 
   // Create admin settings
@@ -380,60 +295,24 @@ async function main() {
         { key: 'site_title', value: 'Klaten International Minisoccer', description: 'Nama utama situs web' },
         { key: 'contact_email', value: 'info@klatenminisoccer.id', description: 'Email kontak utama' },
         { key: 'contact_phone', value: '+62 821-1234-5678', description: 'Nomor telepon kontak utama' },
+        { key: 'locationLabel', value: 'KLATEN, JAWA TENGAH', description: 'Label lokasi pada hero website' },
+        { key: 'heroTitle', value: 'Klaten International Minisoccer', description: 'Judul utama website' },
+        { key: 'heroSubtitle', value: 'Satu lapangan premium dengan jadwal per jam, booking mudah, dan suasana lapangan terbaik untuk komunitas futsal dan mini soccer.', description: 'Deskripsi utama website' },
+        { key: 'ctaPrimary', value: 'Pesan sekarang', description: 'Teks tombol booking utama' },
+        { key: 'ctaSecondary', value: 'Lihat riwayat booking', description: 'Teks tombol riwayat booking' },
+        { key: 'backgroundImageUrl', value: 'https://res.cloudinary.com/ljbxjpox/image/upload/v1785465835/utama_cifncb.jpg', description: 'Background utama hero website' },
       ],
     });
   }
 
-  const existingRolePermissions = await prisma.adminRolePermission.findMany();
-  if (existingRolePermissions.length === 0) {
-    console.log('Creating default admin roles...');
-    await prisma.adminRolePermission.createMany({
+  const existingFeatures = await prisma.venueFeature.findMany();
+  if (existingFeatures.length === 0) {
+    await prisma.venueFeature.createMany({
       data: [
-        {
-          role: 'super_admin',
-          can_manage_fields: true,
-          can_manage_bookings: true,
-          can_manage_payments: true,
-          can_manage_schedule: true,
-          can_manage_cms: true,
-          can_manage_admins: true,
-          can_view_reports: true,
-          can_verify_payments: true,
-          can_create_bookings: true,
-          can_read_bookings: true,
-          can_manage_settings: true,
-          is_active: true,
-        },
-        {
-          role: 'manager',
-          can_manage_fields: true,
-          can_manage_bookings: true,
-          can_manage_payments: true,
-          can_manage_schedule: true,
-          can_manage_cms: true,
-          can_manage_admins: false,
-          can_view_reports: true,
-          can_verify_payments: true,
-          can_create_bookings: true,
-          can_read_bookings: true,
-          can_manage_settings: false,
-          is_active: true,
-        },
-        {
-          role: 'staff',
-          can_manage_fields: false,
-          can_manage_bookings: true,
-          can_manage_payments: false,
-          can_manage_schedule: false,
-          can_manage_cms: false,
-          can_manage_admins: false,
-          can_view_reports: false,
-          can_verify_payments: true,
-          can_create_bookings: true,
-          can_read_bookings: true,
-          can_manage_settings: false,
-          is_active: true,
-        },
+        { name: 'Lapangan premium', description: 'Surface terbaik untuk 5v5 dan mini soccer.', imageUrl: 'https://res.cloudinary.com/ljbxjpox/image/upload/v1785465834/lapangan_premium_aqejyy.jpg', imagePublicId: 'lapangan_premium_aqejyy', sortOrder: 0 },
+        { name: 'Lampu malam', description: 'Jadwal per jam hingga malam hari.', imageUrl: 'https://res.cloudinary.com/ljbxjpox/image/upload/v1785465837/lampu_malam_xntenr.jpg', imagePublicId: 'lampu_malam_xntenr', sortOrder: 1 },
+        { name: 'Fasilitas sewa', description: 'Loker, sepatu, bola, dan ruang ganti yang tertata rapi.', imageUrl: 'https://res.cloudinary.com/ljbxjpox/image/upload/v1785465837/fasilitas_sewa_o0uptk.jpg', imagePublicId: 'fasilitas_sewa_o0uptk', sortOrder: 2 },
+        { name: 'Citarasa komunitas', description: 'Tempat berkumpul dan pertandingan seru.', imageUrl: 'https://res.cloudinary.com/ljbxjpox/image/upload/v1785465837/citarasa_komunitas_ey2pmm.jpg', imagePublicId: 'citarasa_komunitas_ey2pmm', sortOrder: 3 },
       ],
     });
   }
@@ -446,30 +325,30 @@ async function main() {
         {
           name: 'System Administrator',
           email: 'admin@klatenminisoccer.id',
-          password_hash: crypto.createHash('sha256').update('admin123').digest('hex'),
+          passwordHash: crypto.createHash('sha256').update('admin123').digest('hex'),
           role: 'super_admin',
-          is_active: true,
+          isActive: true,
         },
         {
           name: 'Primary Super Admin',
           email: 'superadmin1@klatenminisoccer.id',
-          password_hash: crypto.createHash('sha256').update('superadmin123').digest('hex'),
+          passwordHash: crypto.createHash('sha256').update('superadmin123').digest('hex'),
           role: 'super_admin',
-          is_active: true,
+          isActive: true,
         },
         {
           name: 'Booking Manager',
           email: 'manager1@klatenminisoccer.id',
-          password_hash: crypto.createHash('sha256').update('manager123').digest('hex'),
+          passwordHash: crypto.createHash('sha256').update('manager123').digest('hex'),
           role: 'manager',
-          is_active: true,
+          isActive: true,
         },
         {
           name: 'Support Staff',
           email: 'staff@klatenminisoccer.id',
-          password_hash: crypto.createHash('sha256').update('staff123').digest('hex'),
+          passwordHash: crypto.createHash('sha256').update('staff123').digest('hex'),
           role: 'staff',
-          is_active: true,
+          isActive: true,
         },
       ],
     });

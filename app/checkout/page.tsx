@@ -1,19 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { AnimatedCard } from "@/components/animated-card";
+import { DEFAULT_FIELD_NAME } from "@/lib/venue";
 
 export const dynamic = "force-dynamic";
-
-function formatDate(iso: string) {
-  const date = new Date(iso);
-  return date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
 
 function formatTimeRange(start: string, end: string) {
   const parseTime = (value: string) => {
@@ -43,42 +35,7 @@ function getSearchParam(value: string | null, fallback = "") {
   return value ?? fallback;
 }
 
-function isUuid(value: string) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-}
-
-interface MidtransSnapObject {
-  pay?: (token: string, callbacks?: {
-    onSuccess?: () => void;
-    onPending?: () => void;
-    onError?: () => void;
-    onClose?: () => void;
-  }) => void;
-  embed?: (
-    token: string,
-    target: string | { embedId: string },
-    callbacks?: {
-      onSuccess?: () => void;
-      onPending?: () => void;
-      onError?: () => void;
-      onClose?: () => void;
-    }
-  ) => void;
-  init?: (clientKey: string) => void;
-  reset?: () => void;
-}
-
-interface MidtransSnapWindow {
-  Snap?: MidtransSnapObject;
-  snap?: MidtransSnapObject;
-}
-
-function getSnap(windowObject: MidtransSnapWindow) {
-  return windowObject.Snap ?? windowObject.snap;
-}
-
 export default function CheckoutPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -86,14 +43,13 @@ export default function CheckoutPage() {
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
 
-  const fieldId = getSearchParam(searchParams.get("fieldId"));
-  const fieldName = getSearchParam(searchParams.get("fieldName"));
+  const fieldName = getSearchParam(searchParams.get("fieldName"), DEFAULT_FIELD_NAME);
   const bookingDate = getSearchParam(searchParams.get("bookingDate"));
   const startTime = getSearchParam(searchParams.get("startTime"));
   const endTime = getSearchParam(searchParams.get("endTime"));
   const amount = Number(getSearchParam(searchParams.get("amount"), "0"));
 
-  const hasValidBookingDetails = Boolean(fieldId && fieldName && bookingDate && startTime && endTime && amount > 0);
+  const hasValidBookingDetails = Boolean(fieldName && bookingDate && startTime && endTime && amount > 0);
   const hasValidCustomerInfo = Boolean(customerName.trim() && customerEmail.trim() && customerPhone.trim());
   const canSubmit = hasValidBookingDetails;
 
@@ -115,7 +71,7 @@ export default function CheckoutPage() {
       const validateResp = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fieldId, fieldName, bookingDate, startTime, endTime, validateOnly: true }),
+        body: JSON.stringify({ fieldName, bookingDate, startTime, endTime, validateOnly: true }),
       });
 
       const validateResult = await validateResp.json().catch(() => null);
@@ -129,7 +85,6 @@ export default function CheckoutPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fieldId,
           fieldName,
           bookingDate,
           startTime,

@@ -6,6 +6,8 @@ import AdminDashboard from "@/components/admin-dashboard";
 import FieldManagerClient from "@/app/manager/fields/FieldManagerClient";
 import BookingManagerClient from "@/app/manager/bookings/BookingManagerClient";
 import PaymentManagerClient from "@/app/manager/payments/PaymentManagerClient";
+import VenueFeatureManager from "@/components/venue-feature-manager";
+import { AdminContentEditor } from "@/components/admin-content-editor";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +43,8 @@ export default async function SuperadminPage() {
         <FieldManagerClient adminName={admin.name} useMain={false} />
         <BookingManagerClient adminName={admin.name} useMain={false} />
         <PaymentManagerClient adminName={admin.name} useMain={false} />
+        <VenueFeatureManager />
+        <AdminContentEditor />
       </>
     );
   } catch (error) {

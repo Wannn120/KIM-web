@@ -1,3 +1,5 @@
+import { prisma } from "@/lib/prisma";
+
 export interface AuditEntry {
   id: string;
   timestamp: string;
@@ -20,9 +22,34 @@ export function auditLog(event: string, details: string, actor?: string, ip?: st
   };
 
   auditEntries.push(entry);
+  void prisma.auditLog
+    .create({
+      data: {
+        action: event,
+        entity: "system",
+        entityId: entry.id,
+        changes: details,
+        ipAddress: ip,
+        referenceEmail: actor,
+      },
+    })
+    .catch((error) => console.error("[AUDIT] Unable to persist audit log:", error));
   return entry;
 }
 
-export function getAuditLogs() {
-  return [...auditEntries].reverse();
+export async function getAuditLogs() {
+  try {
+    const records = await prisma.auditLog.findMany({ orderBy: { createdAt: "desc" }, take: 200 });
+    return records.map((record) => ({
+      id: record.id,
+      timestamp: record.createdAt.toISOString(),
+      event: record.action,
+      details: record.changes ?? "",
+      actor: record.referenceEmail ?? undefined,
+      ip: record.ipAddress ?? undefined,
+    }));
+  } catch (error) {
+    console.error("[AUDIT] Unable to read persisted audit logs:", error);
+    return [...auditEntries].reverse();
+  }
 }

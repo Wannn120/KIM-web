@@ -29,9 +29,12 @@ export interface SiteContent {
 }
 
 export interface FacilityImage {
+  id?: string;
   title: string;
   description: string;
   imageUrl: string;
+  isActive?: boolean;
+  sortOrder?: number;
 }
 
 export interface StepItem {

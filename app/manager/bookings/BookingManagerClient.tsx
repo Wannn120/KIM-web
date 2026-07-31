@@ -13,11 +13,7 @@ interface BookingItem {
   customerPhone: string;
   customerEmail: string | null;
   notes: string | null;
-  field: {
-    id: string;
-    name: string;
-    location: string;
-  };
+  fieldName: string;
   payments: Array<{ id: string; status: string; amount: number; transactionId: string }>;
 }
 
@@ -28,14 +24,11 @@ interface BookingFormState {
   bookingDate: string;
   startTime: string;
   endTime: string;
-  fieldId: string;
-  fieldName?: string;
   notes: string;
 }
 
 export default function BookingManagerClient({ adminName, useMain = true }: { adminName: string; useMain?: boolean }) {
   const [bookings, setBookings] = useState<BookingItem[]>([]);
-  const [fields, setFields] = useState<Array<{ id: string; name: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -50,7 +43,6 @@ export default function BookingManagerClient({ adminName, useMain = true }: { ad
     bookingDate: "",
     startTime: "",
     endTime: "",
-    fieldId: "",
     notes: "",
   });
 
@@ -65,23 +57,14 @@ export default function BookingManagerClient({ adminName, useMain = true }: { ad
       if (q) bookingParams.set("q", q);
       if (date) bookingParams.set("date", date);
 
-      const [bookingsRes, fieldsRes] = await Promise.all([
-        fetch(`/api/admin/bookings?${bookingParams.toString()}`, { cache: "no-store" }),
-        fetch(`/api/admin/fields?limit=1000`, { cache: "no-store" }),
-      ]);
-
+      const bookingsRes = await fetch(`/api/admin/bookings?${bookingParams.toString()}`, { cache: "no-store" });
       const bookingsJson = await bookingsRes.json();
-      const fieldsJson = await fieldsRes.json();
 
       if (!bookingsRes.ok) throw new Error(bookingsJson.message || "Unable to load bookings");
-      if (!fieldsRes.ok) throw new Error(fieldsJson.message || "Unable to load fields");
 
       setBookings(bookingsJson.data || []);
       setPage(bookingsJson.page || pageParam);
       setTotalPages(bookingsJson.totalPages || 1);
-      setFields(
-        (fieldsJson.data || []).map((field: { id: string; name: string }) => ({ id: field.id, name: field.name }))
-      );
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -91,7 +74,7 @@ export default function BookingManagerClient({ adminName, useMain = true }: { ad
 
   useEffect(() => {
     fetchData(page, query, filterDate);
-  }, []);
+  }, [page, query, filterDate]);
 
   const handleSearch = async () => {
     setPage(1);
@@ -114,8 +97,6 @@ export default function BookingManagerClient({ adminName, useMain = true }: { ad
       bookingDate: "",
       startTime: "",
       endTime: "",
-      fieldId: "",
-      fieldName: "",
       notes: "",
     });
   };
@@ -134,7 +115,9 @@ export default function BookingManagerClient({ adminName, useMain = true }: { ad
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formState),
+        body: JSON.stringify({
+          ...formState,
+        }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Unable to save booking");
@@ -156,7 +139,6 @@ export default function BookingManagerClient({ adminName, useMain = true }: { ad
       bookingDate: booking.bookingDate.split("T")[0],
       startTime: booking.startTime,
       endTime: booking.endTime,
-      fieldId: booking.field.id,
       notes: booking.notes ?? "",
     });
   };
@@ -230,7 +212,7 @@ export default function BookingManagerClient({ adminName, useMain = true }: { ad
                   {bookings.map((booking) => (
                     <tr key={booking.id} className="bg-[color:rgba(255,255,255,0.02)]">
                       <td className="px-4 py-3 text-white">{booking.id.slice(0, 8)}</td>
-                      <td className="px-4 py-3">{booking.field.name}</td>
+                      <td className="px-4 py-3">{booking.fieldName}</td>
                       <td className="px-4 py-3">{booking.customerName}</td>
                       <td className="px-4 py-3">{booking.bookingDate.split("T")[0]} {booking.startTime}–{booking.endTime}</td>
                       <td className="px-4 py-3">Rp {Number(booking.totalPrice).toLocaleString("id-ID")}</td>
@@ -272,12 +254,9 @@ export default function BookingManagerClient({ adminName, useMain = true }: { ad
             <div className="mt-6 space-y-4">
               <div>
                 <label className="text-sm text-[color:var(--muted)]">Field</label>
-                <select value={formState.fieldId} onChange={(e) => handleChange("fieldId", e.target.value)} className="mt-2 w-full rounded-3xl border border-white/10 bg-[color:var(--background)] px-4 py-3 text-sm text-white outline-none">
-                  <option value="">Select field</option>
-                  {fields.map((field) => (
-                    <option key={field.id} value={field.id}>{field.name}</option>
-                  ))}
-                </select>
+                <div className="mt-2 rounded-3xl border border-white/10 bg-[color:var(--background)] px-4 py-3 text-sm text-white">
+                  Lapangan Klaten International
+                </div>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>

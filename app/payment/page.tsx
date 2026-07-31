@@ -1,5 +1,6 @@
 import { AnimatedCard } from "@/components/animated-card";
 import { PaymentSimulator } from "./simulator";
+import { DEFAULT_FIELD_NAME } from "@/lib/venue";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,7 @@ export default async function PaymentPage({
   const resolvedSearchParams = await searchParams;
   const bookingId = getSearchParam(resolvedSearchParams.bookingId, "BK-0001");
   const amount = Number(getSearchParam(resolvedSearchParams.amount, "170000"));
-  const fieldName = getSearchParam(resolvedSearchParams.fieldName, "Elite Turf 1");
+  const fieldName = getSearchParam(resolvedSearchParams.fieldName, DEFAULT_FIELD_NAME);
   const bookingDate = getSearchParam(resolvedSearchParams.bookingDate, "07 Jul 2026");
   const bookingTime = getSearchParam(resolvedSearchParams.bookingTime, "19:00 - 20:00");
   const customerName = getSearchParam(resolvedSearchParams.customerName, "Demo Customer");

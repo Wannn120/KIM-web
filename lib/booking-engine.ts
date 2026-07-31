@@ -4,7 +4,6 @@ export type BookingStatus = "pending" | "confirmed" | "completed" | "cancelled" 
 
 export interface BookingRecord {
   id: string;
-  fieldId: string;
   bookingDate: string;
   startTime: string;
   endTime: string;
@@ -13,7 +12,6 @@ export interface BookingRecord {
 }
 
 interface CreateBookingInput {
-  fieldId: string;
   bookingDate: string;
   startTime: string;
   endTime: string;
@@ -59,9 +57,9 @@ function isHoliday(date: Date, timezone: string) {
   return holidayDates.includes(key);
 }
 
-function isMaintenanceConflict(fieldId: string, bookingDate: string, startTime: string, endTime: string) {
+function isMaintenanceConflict(bookingDate: string, startTime: string, endTime: string) {
   return maintenanceSchedules.some((schedule) => {
-    if (schedule.fieldId !== fieldId || schedule.bookingDate !== bookingDate) return false;
+    if (schedule.bookingDate !== bookingDate) return false;
     return startTime < schedule.endTime && endTime > schedule.startTime;
   });
 }
@@ -77,10 +75,9 @@ async function purgeExpiredReservations(now: Date = new Date()) {
   });
 }
 
-async function hasOverlap(fieldId: string, bookingDate: string, startTime: string, endTime: string) {
+async function hasOverlap(bookingDate: string, startTime: string, endTime: string) {
   const overlapping = await prisma.booking.findFirst({
     where: {
-      fieldId,
       bookingDate: new Date(bookingDate),
       status: {
         notIn: ["cancelled", "expired"],
@@ -131,7 +128,7 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingR
     };
   }
 
-  if (isMaintenanceConflict(input.fieldId, input.bookingDate, startTime, endTime)) {
+  if (isMaintenanceConflict(input.bookingDate, startTime, endTime)) {
     return {
       success: false,
       message: "The selected slot overlaps a maintenance window.",
@@ -141,7 +138,7 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingR
 
   await purgeExpiredReservations(new Date());
 
-  if (await hasOverlap(input.fieldId, input.bookingDate, startTime, endTime)) {
+  if (await hasOverlap(input.bookingDate, startTime, endTime)) {
     return {
       success: false,
       message: "The selected slot is no longer available.",
@@ -154,7 +151,6 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingR
 
   const record = await prisma.booking.create({
     data: {
-      fieldId: input.fieldId,
       bookingDate,
       startTime,
       endTime,
@@ -172,7 +168,6 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingR
     message: "Booking reserved successfully.",
     booking: {
       id: record.id,
-      fieldId: record.fieldId,
       bookingDate: record.bookingDate.toISOString(),
       startTime: record.startTime,
       endTime: record.endTime,

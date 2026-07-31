@@ -68,7 +68,7 @@ export default function FieldManagerClient({ adminName, useMain = true }: { admi
 
   useEffect(() => {
     fetchFields(page, query);
-  }, []);
+  }, [page, query]);
 
   const resetForm = () => {
     setEditing(null);

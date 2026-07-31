@@ -240,6 +240,24 @@ Contoh Settings:
 
 ---
 
+### Catatan: Penghapusan Views Denormalized
+
+Untuk menyederhanakan skema dan menghindari duplikasi data, view berikut telah dihapus dari skema utama dan direkomendasikan untuk di-drop di basis data (Supabase) jika tidak digunakan oleh sistem eksternal:
+
+- `field_availability` (mengagregasi `field_schedule`)
+- `guest_booking_history` (denormalisasi dari `booking` + `payment`)
+- `daily_revenue` (agregat dari `booking` + `payment`)
+
+Alasan: aplikasi menggunakan tabel canonical (`field_schedule`, `booking`, `payment`) untuk operasi runtime. Views hanya merupakan convenience layer untuk reporting dan jika dibiarkan dapat menyebabkan kebingungan dan duplikasi di Supabase.
+
+Langkah aman sebelum menghapus:
+1. Backup / Export database (Supabase SQL dump).
+2. Verifikasi tidak ada dashboard atau query eksternal yang mengandalkan view.
+3. Jalankan SQL `DROP VIEW IF EXISTS ... CASCADE;` jika aman.
+
+Jika Anda mau, file `prisma/main table.sql` telah diperbarui untuk menghapus definisi `CREATE VIEW` sehingga Anda dapat menempel SQL yang tersisa ke editor Supabase.
+---
+
 ## 📝 ANALISIS FITUR PER HALAMAN
 
 ### 🏠 **HALAMAN: HOME PAGE**

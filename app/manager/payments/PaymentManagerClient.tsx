@@ -75,7 +75,7 @@ export default function PaymentManagerClient({ adminName, useMain = true }: { ad
 
   useEffect(() => {
     fetchPayments(page, query, filterStatus);
-  }, []);
+  }, [page, query, filterStatus]);
 
   const handleSearch = async () => {
     setPage(1);

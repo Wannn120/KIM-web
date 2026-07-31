@@ -13,6 +13,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, message: "Insufficient admin privileges." }, { status: 403 });
   }
 
-  const response = NextResponse.json({ success: true, data: getAuditLogs() });
+  const response = NextResponse.json({ success: true, data: await getAuditLogs() });
   return applySecurityHeaders(response);
 }

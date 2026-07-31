@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { siteConfig } from "@/lib/site-config";
+import { getSiteContent } from "@/lib/site-content";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
@@ -17,20 +18,22 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
+export async function generateMetadata(): Promise<Metadata> {
+  const content = await getSiteContent();
+  return {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: siteConfig.title,
+    default: content.heroTitle || siteConfig.title,
     template: `%s | ${siteConfig.name}`,
   },
-  description: siteConfig.description,
+  description: content.heroSubtitle || siteConfig.description,
   keywords: siteConfig.keywords,
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: siteConfig.title,
-    description: siteConfig.description,
+    title: content.heroTitle || siteConfig.title,
+    description: content.heroSubtitle || siteConfig.description,
     url: siteConfig.url,
     siteName: siteConfig.name,
     locale: siteConfig.locale,
@@ -39,11 +42,12 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: siteConfig.title,
-    description: siteConfig.description,
+    title: content.heroTitle || siteConfig.title,
+    description: content.heroSubtitle || siteConfig.description,
     images: [siteConfig.openGraphImage],
   },
-};
+  };
+}
 
 export default function RootLayout({
   children,

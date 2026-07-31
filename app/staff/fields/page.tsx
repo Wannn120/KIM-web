@@ -18,5 +18,9 @@ export default async function StaffFieldsPage() {
     redirect(`${getAdminPanelPath(admin.role)}/login`);
   }
 
+  if (!admin.permissions.canReadFields) {
+    redirect("/staff");
+  }
+
   return <StaffFieldViewer adminName={admin.name} />;
 }

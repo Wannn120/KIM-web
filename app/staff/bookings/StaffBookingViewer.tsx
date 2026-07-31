@@ -12,11 +12,7 @@ interface StaffBookingItem {
   customerName: string;
   customerPhone: string;
   customerEmail: string | null;
-  field: {
-    id: string;
-    name: string;
-    location: string;
-  };
+  fieldName: string;
 }
 
 export default function StaffBookingViewer({ adminName, useMain = true }: { adminName: string; useMain?: boolean }) {
@@ -52,7 +48,7 @@ export default function StaffBookingViewer({ adminName, useMain = true }: { admi
 
   useEffect(() => {
     fetchBookings(page, query, filterDate);
-  }, []);
+  }, [page, query, filterDate]);
 
   const handleSearch = async () => {
     setPage(1);
@@ -110,7 +106,7 @@ export default function StaffBookingViewer({ adminName, useMain = true }: { admi
                 {bookings.map((booking) => (
                   <tr key={booking.id} className="bg-[color:rgba(255,255,255,0.02)]">
                     <td className="px-4 py-3 text-white">{booking.id.slice(0, 8)}</td>
-                    <td className="px-4 py-3">{booking.field.name}</td>
+                    <td className="px-4 py-3">{booking.fieldName}</td>
                     <td className="px-4 py-3">{booking.customerName}</td>
                     <td className="px-4 py-3">{booking.bookingDate.split("T")[0]} {booking.startTime}–{booking.endTime}</td>
                     <td className="px-4 py-3">Rp {Number(booking.totalPrice).toLocaleString("id-ID")}</td>
