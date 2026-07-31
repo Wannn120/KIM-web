@@ -128,12 +128,13 @@ export function AdminContentEditor() {
   };
 
   return (
-    <div className="rounded-[2rem] border border-white/10 card-surface p-6">
+    <div className="mx-auto max-w-7xl space-y-8">
+    <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-6 sm:p-8">
       <div className="mb-6">
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Content editor</p>
         <h2 className="mt-2 text-2xl font-semibold text-white">Change hero text and images</h2>
       </div>
-      <div className="grid gap-4">
+      <div className="grid gap-5">
         <label className="block text-sm text-[color:var(--muted)]">
           <span className="mb-2 block">Hero title</span>
           <input
@@ -277,6 +278,7 @@ export function AdminContentEditor() {
         </button>
         {message ? <p className="text-sm text-emerald-300">{message}</p> : null}
       </div>
+    </section>
     </div>
   );
 }

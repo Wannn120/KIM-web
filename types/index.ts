@@ -37,6 +37,14 @@ export interface FacilityImage {
   sortOrder?: number;
 }
 
+export interface VenueGalleryImage {
+  id: string;
+  title: string;
+  imageUrl: string;
+  sortOrder: number;
+  isActive: boolean;
+}
+
 export interface StepItem {
   title: string;
   description: string;
