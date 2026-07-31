@@ -87,29 +87,27 @@ export function HeroSection({ facilities, content = siteContent }: { facilities:
     <section
       className="relative -mt-16 overflow-hidden bg-[color:var(--background)] pt-20 sm:pt-24"
     >
-      <div
-        className="pointer-events-none absolute inset-0 z-0 h-full w-full bg-cover bg-center"
-        style={{
-          backgroundImage: `url("${heroBackgroundUrl}")`,
-          backgroundColor: "#0f172a",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "cover",
-        }}
-        aria-hidden="true"
-      />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(14,165,233,0.12),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.10),transparent_35%)]" />
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+        <Image
+          src={heroBackgroundUrl}
+          alt="Hero background"
+          fill
+          priority
+          unoptimized
+          className="object-cover brightness-110"
+          onError={() => console.warn("Hero background image failed to load:", heroBackgroundUrl)}
+        />
+        <div className="absolute inset-0 bg-[color:var(--background)]/5" />
+      </div>
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(14,165,233,0.12),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.08),transparent_35%)]" />
       <div className="pointer-events-none absolute left-1/2 top-6 h-96 w-96 -translate-x-1/2 rounded-full hero-accent blur-2xl" />
       <div className="pointer-events-none absolute -left-16 top-10 h-48 w-48 rounded-full hero-glow blur-2xl shadow-[0_0_120px_rgba(255,255,255,0.65)]" />
       <div className="pointer-events-none absolute right-0 top-24 h-72 w-72 rounded-full hero-ring blur-2xl" />
       <div className="pointer-events-none absolute -bottom-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full hero-bottom blur-2xl" />
       <div className="absolute inset-0 hero-overlay" />
       <div className="relative px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
-        <div className="pointer-events-none absolute right-4 top-4 z-10 rounded-3xl border border-white/10 bg-black/40 px-3 py-2 text-xs text-white/80 backdrop-blur-md sm:right-8">
+        <div className="pointer-events-none absolute right-4 top-4 z-10 rounded-3xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/80 backdrop-blur-md sm:right-8">
           Hero image source: {heroBackgroundSource}
-          <div className="mt-1 max-w-[24rem] break-all text-[0.65rem] leading-4 text-white/60">
-            {heroBackgroundUrl}
-          </div>
         </div>
         <div className="mx-auto max-w-5xl text-center text-[color:var(--foreground)]">
           <p className="text-sm font-semibold uppercase tracking-[0.35em] text-[color:var(--accent-strong)]">
