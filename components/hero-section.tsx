@@ -7,6 +7,7 @@ import type { FacilityImage } from "@/types";
 
 export function HeroSection({ facilities, content = siteContent }: { facilities: FacilityImage[]; content?: typeof siteContent }) {
   const [assetsReady, setAssetsReady] = useState(false);
+  const [backgroundReady, setBackgroundReady] = useState(false);
   const facilityUrls = useMemo(() => facilities.map((facility) => facility.imageUrl).join("|"), [facilities]);
 
   useEffect(() => {
@@ -19,6 +20,7 @@ export function HeroSection({ facilities, content = siteContent }: { facilities:
     };
 
     setAssetsReady(false);
+    setBackgroundReady(false);
     if (urls.length === 0) {
       setAssetsReady(true);
       return () => { cancelled = true; };
@@ -45,7 +47,7 @@ export function HeroSection({ facilities, content = siteContent }: { facilities:
     };
   }, [content.backgroundImageUrl, facilityUrls, facilities]);
 
-  if (!assetsReady) {
+  if (!assetsReady || !backgroundReady) {
     return (
       <section className="relative -mt-16 overflow-hidden bg-[color:var(--background)] pt-20 sm:pt-24" aria-busy="true" aria-label="Memuat halaman utama">
         <div className="absolute inset-0 hero-skeleton-bg" />
@@ -65,13 +67,20 @@ export function HeroSection({ facilities, content = siteContent }: { facilities:
 
   return (
     <section
-      className="relative overflow-hidden bg-[color:var(--background)] -mt-16 pt-20 sm:pt-24"
-      style={{
-        backgroundImage: `url(${content.backgroundImageUrl})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
+      className="relative -mt-16 overflow-hidden bg-[color:var(--background)] pt-20 sm:pt-24"
     >
+      <Image
+        src={content.backgroundImageUrl}
+        alt=""
+        fill
+        priority
+        unoptimized
+        sizes="100vw"
+        aria-hidden="true"
+        onLoad={() => setBackgroundReady(true)}
+        onError={() => setBackgroundReady(true)}
+        className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover object-center"
+      />
       <div className="pointer-events-none absolute left-1/2 top-6 h-96 w-96 -translate-x-1/2 rounded-full hero-accent blur-2xl" />
       <div className="pointer-events-none absolute -left-16 top-10 h-48 w-48 rounded-full hero-glow blur-2xl shadow-[0_0_120px_rgba(255,255,255,0.65)]" />
       <div className="pointer-events-none absolute right-0 top-24 h-72 w-72 rounded-full hero-ring blur-2xl" />
