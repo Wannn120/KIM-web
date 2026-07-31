@@ -57,8 +57,8 @@ export default function CurveCarousel({ images, price }: CurveCarouselProps) {
 
   const handleDragEnd = useCallback(
     (_event: unknown, info: { offset: { x: number } }) => {
-      if (info.offset.x < -80) next();
-      if (info.offset.x > 80) previous();
+      if (info.offset.x < -60) next();
+      if (info.offset.x > 60) previous();
     },
     [next, previous]
   );
@@ -100,8 +100,8 @@ export default function CurveCarousel({ images, price }: CurveCarouselProps) {
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-[3rem] border border-white/10 bg-slate-950/70 p-8 shadow-[0_40px_120px_rgba(0,0,0,0.24)]">
-          <div className="pointer-events-none absolute inset-0 rounded-[3rem] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.03),transparent_75%)]" />
+        <div className="relative overflow-hidden rounded-[3rem] border border-[color:var(--border-strong)] bg-[color:var(--surface)] p-8 shadow-[0_40px_120px_rgba(0,0,0,0.14)]">
+          <div className="pointer-events-none absolute inset-0 rounded-[3rem] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08),transparent_75%)]" />
           <div className="pointer-events-none absolute left-1/2 top-0 h-48 w-48 -translate-x-1/2 rounded-full bg-white/5 blur-3xl" />
           <div className="pointer-events-none absolute right-0 top-16 h-[260px] w-[260px] rounded-full bg-slate-900/60 blur-3xl" />
 
@@ -109,7 +109,7 @@ export default function CurveCarousel({ images, price }: CurveCarouselProps) {
             className="relative mx-auto flex h-[min(68vw,640px)] items-center justify-center overflow-visible"
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.18}
+            dragElastic={0.28}
             onDragEnd={handleDragEnd}
             onWheel={handleWheel}
             role="group"

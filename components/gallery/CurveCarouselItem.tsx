@@ -45,7 +45,7 @@ export function CurveCarouselItem({ image, offset, isActive, width, height, spac
         boxShadow,
       }}
       initial={false}
-      transition={{ type: "spring", stiffness: 120, damping: 24 }}
+      transition={{ type: "spring", stiffness: 150, damping: 22 }}
       aria-label={`Tampilkan ${image.title}`}
     >
       <div className="relative h-full overflow-hidden rounded-[2.5rem] border border-white/10 bg-slate-950/80 shadow-[inherit] transition duration-500">
