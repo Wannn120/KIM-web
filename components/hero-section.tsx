@@ -21,7 +21,6 @@ export function HeroSection({ facilities, content = siteContent }: { facilities:
   const heroBackgroundUrl = isValidRemoteImageUrl(content.backgroundImageUrl)
     ? content.backgroundImageUrl
     : siteContent.backgroundImageUrl;
-  const heroBackgroundSource = isValidRemoteImageUrl(content.backgroundImageUrl) ? "DB" : "fallback";
 
   useEffect(() => {
     let cancelled = false;
@@ -106,9 +105,6 @@ export function HeroSection({ facilities, content = siteContent }: { facilities:
       <div className="pointer-events-none absolute -bottom-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full hero-bottom blur-2xl" />
       <div className="absolute inset-0 hero-overlay" />
       <div className="relative px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
-        <div className="pointer-events-none absolute right-4 top-4 z-10 rounded-3xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/80 backdrop-blur-md sm:right-8">
-          Hero image source: {heroBackgroundSource}
-        </div>
         <div className="mx-auto max-w-5xl text-center text-[color:var(--foreground)]">
           <p className="text-sm font-semibold uppercase tracking-[0.35em] text-[color:var(--accent-strong)]">
             {content.locationLabel}
