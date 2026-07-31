@@ -7,7 +7,7 @@ export function useCarousel(count: number) {
 
   useEffect(() => {
     if (count < 2) return;
-    const timer = window.setInterval(() => setActiveIndex((current) => (current + 1) % count), 6500);
+    const timer = window.setInterval(() => setActiveIndex((current) => (current + 1) % count), 3000);
     return () => window.clearInterval(timer);
   }, [count]);
 
