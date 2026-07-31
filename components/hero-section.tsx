@@ -14,27 +14,39 @@ export function HeroSection({ facilities, content = siteContent }: { facilities:
     let cancelled = false;
     const urls = [content.backgroundImageUrl, ...facilities.map((facility) => facility.imageUrl)].filter(Boolean);
     let completed = 0;
-    const finish = () => {
+    const backgroundUrl = content.backgroundImageUrl;
+
+    const finish = (url: string) => {
+      if (cancelled) return;
       completed += 1;
-      if (!cancelled && completed >= urls.length) setAssetsReady(true);
+      if (url === backgroundUrl) {
+        setBackgroundReady(true);
+      }
+      if (completed >= urls.length) {
+        setAssetsReady(true);
+      }
     };
 
     setAssetsReady(false);
     setBackgroundReady(false);
     if (urls.length === 0) {
       setAssetsReady(true);
+      setBackgroundReady(true);
       return () => { cancelled = true; };
     }
 
     const preloaders = urls.map((url) => {
       const image = new window.Image();
-      image.onload = finish;
-      image.onerror = finish;
+      image.onload = () => finish(url);
+      image.onerror = () => finish(url);
       image.src = url;
       return image;
     });
     const timeout = window.setTimeout(() => {
-      if (!cancelled) setAssetsReady(true);
+      if (!cancelled) {
+        setAssetsReady(true);
+        setBackgroundReady(true);
+      }
     }, 15000);
 
     return () => {
