@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { VenueGalleryImage } from "@/types";
 import { useCarousel } from "@/hooks/useCarousel";
-import { CurveCarouselControls } from "./CurveCarouselControls";
 import { CurveCarouselDots } from "./CurveCarouselDots";
 import { CurveCarouselItem } from "./CurveCarouselItem";
 
@@ -36,9 +35,10 @@ export default function CurveCarousel({ images, price }: CurveCarouselProps) {
   const isMobile = viewportWidth < 768;
   const isTablet = viewportWidth >= 768 && viewportWidth < 1024;
   const visibleRange = isMobile ? 1 : isTablet ? 2 : 3;
-  const cardWidth = isMobile ? 300 : isTablet ? 340 : 420;
+  const cardWidth = isMobile ? Math.min(320, Math.round(viewportWidth * 0.82)) : isTablet ? 340 : 420;
   const cardHeight = Math.round(cardWidth * 1.28);
   const spacing = isMobile ? 160 : isTablet ? 200 : 250;
+  const carouselHeight = Math.max(cardHeight + 28, 360);
 
   const visibleItems = useMemo(
     () =>
@@ -78,11 +78,11 @@ export default function CurveCarousel({ images, price }: CurveCarouselProps) {
   return (
     <section
       aria-labelledby="venue-gallery-heading"
-      className="rounded-[3rem] border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-5 py-12 shadow-[0_24px_80px_rgba(15,23,42,0.06)] sm:px-6 lg:px-8 lg:py-16"
+      className="rounded-[3rem] border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-0 py-12 shadow-[0_24px_80px_rgba(15,23,42,0.06)] sm:px-6 lg:px-8 lg:py-16"
       onKeyDown={handleKeyDown}
       tabIndex={0}
     >
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-7xl px-5 sm:px-0">
         <div className="mb-12 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-300">Galeri lapangan</p>
@@ -100,42 +100,61 @@ export default function CurveCarousel({ images, price }: CurveCarouselProps) {
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-[3rem] border border-[color:var(--border-strong)] bg-[color:var(--surface)] p-8 shadow-[0_40px_120px_rgba(0,0,0,0.14)]">
+        <div className="relative overflow-visible rounded-[3rem] border border-[color:var(--border-strong)] bg-[color:var(--surface)] p-8 shadow-[0_40px_120px_rgba(0,0,0,0.14)]">
           <div className="pointer-events-none absolute inset-0 rounded-[3rem] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08),transparent_75%)]" />
           <div className="pointer-events-none absolute left-1/2 top-0 h-48 w-48 -translate-x-1/2 rounded-full bg-white/5 blur-3xl" />
           <div className="pointer-events-none absolute right-0 top-16 h-[260px] w-[260px] rounded-full bg-slate-900/60 blur-3xl" />
 
-          <motion.div
-            className="relative mx-auto flex h-[min(68vw,640px)] items-center justify-center overflow-visible"
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.28}
-            onDragEnd={handleDragEnd}
-            onWheel={handleWheel}
-            role="group"
-            aria-label="Gallery carousel"
-          >
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="h-40 w-40 rounded-full bg-slate-900/50 blur-3xl" />
-            </div>
+          <div className="relative mx-auto flex w-full items-center justify-center overflow-visible">
+            <motion.div
+              className="relative flex w-full items-center justify-center overflow-visible"
+              style={{ minHeight: carouselHeight, width: "100%" }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.28}
+              onDragEnd={handleDragEnd}
+              onWheel={handleWheel}
+              role="group"
+              aria-label="Gallery carousel"
+            >
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="h-40 w-40 rounded-full bg-slate-900/50 blur-3xl" />
+              </div>
 
-            {visibleItems.map(({ image, offset }) => (
-              <CurveCarouselItem
-                key={image.id}
-                image={image}
-                offset={offset}
-                isActive={offset === 0}
-                width={cardWidth}
-                height={cardHeight}
-                spacing={spacing}
-                onSelect={() => setActiveIndex(images.indexOf(image))}
-              />
-            ))}
-          </motion.div>
+              {visibleItems.map(({ image, offset }) => (
+                <CurveCarouselItem
+                  key={image.id}
+                  image={image}
+                  offset={offset}
+                  isActive={offset === 0}
+                  width={cardWidth}
+                  height={cardHeight}
+                  spacing={spacing}
+                  onSelect={() => setActiveIndex(images.indexOf(image))}
+                />
+              ))}
+            </motion.div>
 
-          <div className="mt-8 flex flex-col items-center justify-between gap-4 sm:flex-row sm:items-center">
+            <button
+              type="button"
+              onClick={previous}
+              className="absolute left-3 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/15 text-xl text-white shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-2xl transition hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:h-14 sm:w-14 sm:text-2xl"
+              aria-label="Sebelumnya"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              onClick={next}
+              className="absolute right-3 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/15 text-xl text-white shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-2xl transition hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:h-14 sm:w-14 sm:text-2xl"
+              aria-label="Berikutnya"
+            >
+              ›
+            </button>
+          </div>
+
+          <div className="mt-6 flex w-full justify-center px-4 sm:px-0">
             <CurveCarouselDots activeIndex={activeIndex} count={images.length} onSelect={setActiveIndex} />
-            <CurveCarouselControls previous={previous} next={next} />
           </div>
         </div>
       </div>
