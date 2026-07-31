@@ -15,7 +15,11 @@ export async function getSiteContent(): Promise<SiteContent> {
   try {
     const records = await prisma.adminSetting.findMany({ where: { key: { in: [...SITE_CONTENT_KEYS] } } });
     const values = Object.fromEntries(records.map((record) => [record.key, record.value]));
-    return { ...siteContent, ...values } as SiteContent;
+    const merged = { ...siteContent, ...values } as SiteContent;
+    if (!merged.backgroundImageUrl) {
+      merged.backgroundImageUrl = siteContent.backgroundImageUrl;
+    }
+    return merged;
   } catch (error) {
     console.error("[CONTENT] Unable to load site content:", error);
     return siteContent;

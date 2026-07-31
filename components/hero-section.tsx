@@ -5,21 +5,33 @@ import { useEffect, useMemo, useState } from "react";
 import { siteContent } from "@/lib/mock-data";
 import type { FacilityImage } from "@/types";
 
+function isValidRemoteImageUrl(url?: string) {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export function HeroSection({ facilities, content = siteContent }: { facilities: FacilityImage[]; content?: typeof siteContent }) {
   const [assetsReady, setAssetsReady] = useState(false);
   const [backgroundReady, setBackgroundReady] = useState(false);
   const facilityUrls = useMemo(() => facilities.map((facility) => facility.imageUrl).join("|"), [facilities]);
+  const heroBackgroundUrl = isValidRemoteImageUrl(content.backgroundImageUrl)
+    ? content.backgroundImageUrl
+    : siteContent.backgroundImageUrl;
 
   useEffect(() => {
     let cancelled = false;
-    const urls = [content.backgroundImageUrl, ...facilities.map((facility) => facility.imageUrl)].filter(Boolean);
+    const urls = [heroBackgroundUrl, ...facilities.map((facility) => facility.imageUrl)].filter(Boolean);
     let completed = 0;
-    const backgroundUrl = content.backgroundImageUrl;
 
     const finish = (url: string) => {
       if (cancelled) return;
       completed += 1;
-      if (url === backgroundUrl) {
+      if (url === heroBackgroundUrl) {
         setBackgroundReady(true);
       }
       if (completed >= urls.length) {
@@ -29,6 +41,9 @@ export function HeroSection({ facilities, content = siteContent }: { facilities:
 
     setAssetsReady(false);
     setBackgroundReady(false);
+    if (!heroBackgroundUrl) {
+      setBackgroundReady(true);
+    }
     if (urls.length === 0) {
       setAssetsReady(true);
       setBackgroundReady(true);
@@ -57,7 +72,7 @@ export function HeroSection({ facilities, content = siteContent }: { facilities:
         image.onerror = null;
       });
     };
-  }, [content.backgroundImageUrl, facilityUrls, facilities]);
+  }, [heroBackgroundUrl, facilityUrls, facilities]);
 
   if (!assetsReady || !backgroundReady) {
     return (
@@ -82,7 +97,7 @@ export function HeroSection({ facilities, content = siteContent }: { facilities:
       className="relative -mt-16 overflow-hidden bg-[color:var(--background)] pt-20 sm:pt-24"
     >
       <Image
-        src={content.backgroundImageUrl}
+        src={heroBackgroundUrl}
         alt=""
         fill
         priority
