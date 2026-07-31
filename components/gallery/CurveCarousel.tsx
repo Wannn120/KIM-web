@@ -39,6 +39,7 @@ export default function CurveCarousel({ images, price }: CurveCarouselProps) {
   const cardHeight = Math.round(cardWidth * 1.28);
   const spacing = isMobile ? 160 : isTablet ? 200 : 250;
   const carouselHeight = Math.max(cardHeight + 28, 360);
+  const arrowInset = Math.min(Math.max(Math.round((viewportWidth - cardWidth) / 2 - 24), 12), 64);
 
   const visibleItems = useMemo(
     () =>
@@ -138,7 +139,8 @@ export default function CurveCarousel({ images, price }: CurveCarouselProps) {
             <button
               type="button"
               onClick={previous}
-              className="absolute left-3 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/15 text-xl text-white shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-2xl transition hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:h-14 sm:w-14 sm:text-2xl"
+              className="absolute top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 text-xl text-white shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-3xl transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:h-14 sm:w-14 sm:text-2xl"
+              style={{ left: arrowInset }}
               aria-label="Sebelumnya"
             >
               ‹
@@ -146,7 +148,8 @@ export default function CurveCarousel({ images, price }: CurveCarouselProps) {
             <button
               type="button"
               onClick={next}
-              className="absolute right-3 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/15 text-xl text-white shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-2xl transition hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:h-14 sm:w-14 sm:text-2xl"
+              className="absolute top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 text-xl text-white shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-3xl transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:h-14 sm:w-14 sm:text-2xl"
+              style={{ right: arrowInset }}
               aria-label="Berikutnya"
             >
               ›
