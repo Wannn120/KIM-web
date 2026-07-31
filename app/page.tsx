@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import type { Field, Review } from "@/types";
+import type { Review } from "@/types";
 import { HeroSection } from "@/components/hero-section";
 import { ReviewSection } from "@/components/review-section";
-import { FieldCard } from "@/components/field-card";
 import { SectionHeading } from "@/components/section-heading";
-import { getFields, getReviews, getVenueFeatures } from "@/lib/data";
+import { getReviews, getVenueFeatures, getVenueGallery } from "@/lib/data";
 import { siteConfig } from "@/lib/site-config";
 import { getSiteContent } from "@/lib/site-content";
+import { DEFAULT_FIELD_PRICE } from "@/lib/venue";
+import VenueGalleryCarousel from "@/components/venue-gallery-carousel";
 
 export const metadata: Metadata = {
   title: "Booking Lapangan Mini Soccer di Klaten",
@@ -20,25 +20,15 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-async function loadFields() {
-  return await getFields();
-}
-
 async function loadReviews() {
   return await getReviews();
 }
 
 export default async function Home() {
-  let fields: Field[] = [];
   let reviews: Review[] = [];
   const features = await getVenueFeatures();
+  const gallery = await getVenueGallery();
   const content = await getSiteContent();
-  
-  try {
-    fields = await loadFields();
-  } catch (error) {
-    console.error('❌ Failed to load fields:', error);
-  }
   
   try {
     reviews = await loadReviews();
@@ -65,26 +55,7 @@ export default async function Home() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <HeroSection facilities={features} content={content} />
 
-      <section aria-labelledby="featured-fields-heading" className="rounded-[3rem] border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-4 py-16 shadow-[0_24px_80px_rgba(15,23,42,0.06)] sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <SectionHeading
-              eyebrow="Lapangan unggulan"
-              title="Satu lapangan terbaik untuk setiap laga"
-              id="featured-fields-heading"
-            />
-            <Link href="/book" className="text-sm font-medium text-[color:var(--accent)] transition hover:text-[color:var(--accent-strong)]">
-              Booking sekarang →
-            </Link>
-          </div>
-
-          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-            {fields.map((field) => (
-              <FieldCard key={field.id} field={field} />
-            ))}
-          </div>
-        </div>
-      </section>
+      <VenueGalleryCarousel images={gallery} price={DEFAULT_FIELD_PRICE} />
 
       <ReviewSection initialReviews={reviews} />
 

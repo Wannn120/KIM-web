@@ -96,6 +96,24 @@ body[data-theme="light"] .border-white\/10 {
   background-color: rgba(14,165,233,0.06);
 }
 
+.hero-skeleton-bg {
+  background: linear-gradient(135deg, rgba(15,23,42,0.96), rgba(30,41,59,0.88), rgba(15,23,42,0.96));
+}
+
+.hero-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(100deg, rgba(148,163,184,0.22) 20%, rgba(226,232,240,0.58) 42%, rgba(148,163,184,0.22) 64%);
+  background-size: 220% 100%;
+  animation: hero-skeleton-shimmer 1.35s ease-in-out infinite;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 12px 35px rgba(15,23,42,0.22);
+}
+
+@keyframes hero-skeleton-shimmer {
+  0% { background-position: 140% 0; }
+  100% { background-position: -40% 0; }
+}
+
 html[data-theme="dark"] .hero-overlay,
 body[data-theme="dark"] .hero-overlay {
   background-color: rgba(0,0,0,0.45) !important;

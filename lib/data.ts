@@ -2,7 +2,7 @@ import type { Field } from "@/types";
 import { prisma } from "@/lib/prisma";
 import { DEFAULT_FIELD_NAME, DEFAULT_FIELD } from "@/lib/venue";
 import { facilityImages } from "@/lib/mock-data";
-import type { FacilityImage } from "@/types";
+import type { FacilityImage, VenueGalleryImage } from "@/types";
 
 export async function getFields(): Promise<Field[]> {
   return [DEFAULT_FIELD];
@@ -27,6 +27,23 @@ export async function getVenueFeatures(): Promise<FacilityImage[]> {
   } catch (error) {
     console.error("[DATA] Unable to load venue features:", error);
     return facilityImages;
+  }
+}
+
+export async function getVenueGallery(): Promise<VenueGalleryImage[]> {
+  const fallback = facilityImages.map((image, index) => ({
+    id: image.id ?? `fallback-gallery-${index}`,
+    title: image.title,
+    imageUrl: image.imageUrl,
+    sortOrder: index,
+    isActive: true,
+  }));
+  try {
+    const records = await prisma.venueGallery.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } });
+    return records.length > 0 ? records.map((image) => ({ ...image })) : fallback;
+  } catch (error) {
+    console.error("[DATA] Unable to load venue gallery:", error);
+    return fallback;
   }
 }
 

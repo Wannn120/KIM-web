@@ -15,6 +15,7 @@ DROP TABLE IF EXISTS admin_user CASCADE;
 DROP TABLE IF EXISTS audit_log CASCADE;
 DROP TABLE IF EXISTS field CASCADE;
 DROP TABLE IF EXISTS venue_feature CASCADE;
+DROP TABLE IF EXISTS venue_gallery CASCADE;
 
 -- NOTE: `field` table removed per request — application will treat the system
 -- as a single-venue setup. Bookings no longer reference `field_id`.
@@ -171,6 +172,28 @@ CREATE TABLE venue_feature (
 );
 
 CREATE INDEX IF NOT EXISTS idx_venue_feature_active_order ON venue_feature(is_active, sort_order);
+
+-- ==================== VENUE GALLERY ====================
+-- Multiple angles of the single venue shown in the landing-page carousel.
+CREATE TABLE venue_gallery (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title VARCHAR(150) NOT NULL,
+  image_url TEXT NOT NULL,
+  image_public_id VARCHAR(255),
+  sort_order INTEGER DEFAULT 0,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_venue_gallery_active_order ON venue_gallery(is_active, sort_order);
+
+INSERT INTO venue_gallery (title, image_url, image_public_id, sort_order, is_active)
+VALUES
+  ('Lapangan premium', 'https://res.cloudinary.com/ljbxjpox/image/upload/v1785465834/lapangan_premium_aqejyy.jpg', 'lapangan_premium_aqejyy', 0, true),
+  ('Lampu malam', 'https://res.cloudinary.com/ljbxjpox/image/upload/v1785465837/lampu_malam_xntenr.jpg', 'lampu_malam_xntenr', 1, true),
+  ('Fasilitas sewa', 'https://res.cloudinary.com/ljbxjpox/image/upload/v1785465837/fasilitas_sewa_o0uptk.jpg', 'fasilitas_sewa_o0uptk', 2, true),
+  ('Citarasa komunitas', 'https://res.cloudinary.com/ljbxjpox/image/upload/v1785465837/citarasa_komunitas_ey2pmm.jpg', 'citarasa_komunitas_ey2pmm', 3, true);
 
 -- Initial venue features. Images are stored in Cloudinary; only URLs and IDs are stored here.
 INSERT INTO venue_feature
