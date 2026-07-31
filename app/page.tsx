@@ -7,7 +7,7 @@ import { getReviews, getVenueFeatures, getVenueGallery } from "@/lib/data";
 import { siteConfig } from "@/lib/site-config";
 import { getSiteContent } from "@/lib/site-content";
 import { DEFAULT_FIELD_PRICE } from "@/lib/venue";
-import VenueGalleryCarousel from "@/components/venue-gallery-carousel";
+import CurveCarousel from "@/components/gallery/CurveCarousel";
 
 export const metadata: Metadata = {
   title: "Booking Lapangan Mini Soccer di Klaten",
@@ -55,7 +55,7 @@ export default async function Home() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <HeroSection facilities={features} content={content} />
 
-      <VenueGalleryCarousel images={gallery} price={DEFAULT_FIELD_PRICE} />
+      <CurveCarousel images={gallery} price={DEFAULT_FIELD_PRICE} />
 
       <ReviewSection initialReviews={reviews} />
 
