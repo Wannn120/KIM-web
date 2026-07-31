@@ -75,7 +75,7 @@ export default function VenueGalleryCarousel({ images, price }: { images: VenueG
 
   return (
     <section aria-labelledby="venue-gallery-heading" className="rounded-[3rem] border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-4 py-12 shadow-[0_24px_80px_rgba(15,23,42,0.06)] sm:px-6 lg:px-8 lg:py-16">
-      <div className="mx-auto max-w-7xl">
+      <div className="w-full">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Galeri lapangan</p>
@@ -93,8 +93,8 @@ export default function VenueGalleryCarousel({ images, price }: { images: VenueG
           <div className="pointer-events-none absolute left-1/2 top-[18%] h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-gradient-to-br from-emerald-400/12 via-transparent to-transparent blur-3xl" />
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-[radial-gradient(circle_at_bottom,rgba(255,255,255,0.12),transparent_45%)]" />
 
-          <div className="relative mx-auto flex min-h-[340px] items-center justify-center overflow-visible" style={{ perspective: 1800 }} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-            <div className="relative flex h-[320px] items-center justify-center" style={{ transformStyle: "preserve-3d", WebkitTransformStyle: "preserve-3d" }}>
+          <div className="relative mx-auto flex w-full min-h-[340px] items-center justify-center overflow-visible" style={{ perspective: 1800 }} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+            <div className="relative flex w-full h-[320px] items-center justify-center" style={{ transformStyle: "preserve-3d", WebkitTransformStyle: "preserve-3d" }}>
               {images.map((image, index) => {
                 const offset = normalizeOffset(index, active, count);
                 const absOffset = Math.abs(offset);
@@ -102,20 +102,22 @@ export default function VenueGalleryCarousel({ images, price }: { images: VenueG
                 const maxVisible = width < 640 ? 1 : width < 1024 ? 2 : 3;
                 if (absOffset > maxVisible) return null;
 
-                const spacing = width < 640 ? 110 : width < 1024 ? 140 : 190;
+                const spacing = width < 640 ? 110 : width < 1024 ? 160 : 260;
                 const translateX = offset * spacing;
-                const rotateY = offset * 18;
+                const rotateY = offset * 16;
                 const isActive = offset === 0;
-                const scale = isActive ? 1.1 : width < 640 ? 0.9 - absOffset * 0.02 : 0.86 - absOffset * 0.04;
-                const cardWidth = isActive ? Math.min(Math.max(width * 0.42, 220), 300) : Math.min(Math.max(width * 0.34, 170), 230);
-                const cardHeight = isActive ? Math.min(Math.max(width * 0.44, 280), 340) : Math.min(Math.max(width * 0.37, 240), 280);
-                const zIndex = 30 - absOffset;
-                const opacity = isActive ? 1 : 0.6;
-                const saturation = isActive ? 1 : 0.7;
-                const cardShadow = isActive ? "0 54px 160px rgba(16,185,129,0.24)" : "0 30px 100px rgba(0,0,0,0.26)";
+                const baseWidth = width < 640 ? 220 : width < 1024 ? 240 : 280;
+                const baseHeight = width < 640 ? 260 : width < 1024 ? 280 : 320;
+                const scale = isActive ? 1.18 : 0.84 - absOffset * 0.03;
+                const cardWidth = baseWidth;
+                const cardHeight = baseHeight;
+                const zIndex = isActive ? 9999 : 100 - absOffset;
+                const opacity = isActive ? 1 : 0.58;
+                const saturation = isActive ? 1 : 0.68;
+                const cardShadow = isActive ? "0 72px 220px rgba(16,185,129,0.24)" : "0 32px 100px rgba(0,0,0,0.24)";
                 const activeGlowClass = isActive ? "opacity-100" : "opacity-0";
-                const activeLabelClass = isActive ? "from-black/95 via-black/65 to-transparent" : "from-black/90 to-transparent";
-                const floatY = isActive ? -10 : 0;
+                const activeLabelClass = isActive ? "from-black/95 via-black/75 to-transparent" : "from-black/90 to-transparent";
+                const floatY = isActive ? -14 : 0;
 
                 const tiltX = hoveredIndex === index ? -hoverRotation.y : 0;
                 const tiltY = hoveredIndex === index ? hoverRotation.x : 0;
@@ -132,7 +134,7 @@ export default function VenueGalleryCarousel({ images, price }: { images: VenueG
                     style={{
                       width: `${cardWidth}px`,
                       height: `${cardHeight}px`,
-                      transform: `translateX(${translateX}px) translateZ(${-absOffset * 48}px) translateY(calc(-50% + ${floatY}px + var(--card-float, 0px))) rotateY(${rotateY + tiltY}deg) rotateX(${tiltX}deg) scale(${scale}) translateX(-50%)`,
+                      transform: `translateX(calc(${translateX}px - 50%)) translateZ(${-absOffset * 48}px) translateY(calc(-50% + ${floatY}px + var(--card-float, 0px))) rotateY(${rotateY + tiltY}deg) rotateX(${tiltX}deg) scale(${scale})`,
                       zIndex,
                       opacity,
                       filter: `saturate(${saturation})`,
@@ -157,25 +159,25 @@ export default function VenueGalleryCarousel({ images, price }: { images: VenueG
           </div>
         </div>
 
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <button type="button" onClick={previous} aria-label="Foto sebelumnya" className="rounded-full border border-white/20 bg-black/30 px-4 py-2 text-xl text-white transition hover:bg-white/10">‹</button>
-            <button type="button" onClick={next} aria-label="Foto berikutnya" className="rounded-full border border-white/20 bg-black/30 px-4 py-2 text-xl text-white transition hover:bg-white/10">›</button>
+        <div className="mt-10 flex flex-col items-center justify-between gap-5 sm:flex-row sm:items-center sm:px-6">
+          <div className="flex items-center gap-4 rounded-full border border-white/10 bg-white/5 px-4 py-3 shadow-[0_22px_70px_rgba(0,0,0,0.14)] backdrop-blur-xl">
+            <button type="button" onClick={previous} aria-label="Foto sebelumnya" className="rounded-full border border-white/20 bg-black/30 px-6 py-3 text-xl text-white transition hover:bg-white/10">‹</button>
+            <button type="button" onClick={next} aria-label="Foto berikutnya" className="rounded-full border border-white/20 bg-black/30 px-6 py-3 text-xl text-white transition hover:bg-white/10">›</button>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {images.map((_, index) => (
               <button
                 key={index}
                 type="button"
                 onClick={() => setActive(index)}
-                className={`h-2.5 w-2.5 rounded-full transition ${index === active ? "bg-emerald-400" : "bg-white/25 hover:bg-white/40"}`}
+                className={`h-3.5 w-3.5 rounded-full transition ${index === active ? "bg-emerald-400" : "bg-white/25 hover:bg-white/40"}`}
                 aria-label={`Slide ${index + 1}`}
               />
             ))}
           </div>
 
-          <Link href="/book" className="rounded-full bg-emerald-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300">
+          <Link href="/book" className="inline-flex min-w-[230px] items-center justify-center rounded-full bg-emerald-400 px-10 py-4 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300">
             Booking sekarang →
           </Link>
         </div>
