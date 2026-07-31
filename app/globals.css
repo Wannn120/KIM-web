@@ -76,7 +76,7 @@ body[data-theme="light"] .border-white\/10 {
 }
 
 .hero-overlay {
-  background-color: rgba(255,255,255,0.04);
+  background-color: rgba(255,255,255,0.1);
   backdrop-filter: blur(8px);
 }
 
