@@ -139,20 +139,28 @@ export default function CurveCarousel({ images, price }: CurveCarouselProps) {
             <button
               type="button"
               onClick={previous}
-              className="absolute top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 text-xl text-white shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-3xl transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:h-14 sm:w-14 sm:text-2xl"
+              className="absolute top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-3xl transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:h-14 sm:w-14"
               style={{ left: arrowInset }}
               aria-label="Sebelumnya"
             >
-              ‹
+              <span className="inline-flex h-full w-full items-center justify-center">
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
+                  <path d="M15.41 7.41 10.83 12l4.58 4.59L14 18l-6-6 6-6z" />
+                </svg>
+              </span>
             </button>
             <button
               type="button"
               onClick={next}
-              className="absolute top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 text-xl text-white shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-3xl transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:h-14 sm:w-14 sm:text-2xl"
+              className="absolute top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-3xl transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:h-14 sm:w-14"
               style={{ right: arrowInset }}
               aria-label="Berikutnya"
             >
-              ›
+              <span className="inline-flex h-full w-full items-center justify-center">
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
+                  <path d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z" />
+                </svg>
+              </span>
             </button>
           </div>
 
