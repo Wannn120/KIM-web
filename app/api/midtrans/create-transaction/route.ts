@@ -1,6 +1,17 @@
 import { NextResponse } from "next/server";
 import { createPaymentTransaction } from "@/lib/payment-service";
 
+function getErrorStatus(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  if (/gross_amount|item_details|order_id|customer_details|email|phone|amount|bookingId|validation/i.test(message)) {
+    return 422;
+  }
+  if (/midtrans|server key|credential|authentication|unauthorized|forbidden/i.test(message)) {
+    return 502;
+  }
+  return 500;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
@@ -17,13 +28,14 @@ export async function POST(request: Request) {
     const customerName = typeof body?.customerName === "string" ? body.customerName.trim() : undefined;
     const email = typeof body?.email === "string" ? body.email.trim() : undefined;
     const phone = typeof body?.phone === "string" ? body.phone.trim() : undefined;
+    const forceNew = body?.forceNew === true;
 
     if (!bookingId) {
-      return NextResponse.json({ success: false, message: "bookingId is required." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "bookingId is required." }, { status: 400 });
     }
 
     if (!amount || amount <= 0) {
-      return NextResponse.json({ success: false, message: "A valid amount is required." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "A valid amount is required." }, { status: 422 });
     }
 
     const result = await createPaymentTransaction({
@@ -34,6 +46,7 @@ export async function POST(request: Request) {
       email,
       phone,
       appBaseUrl,
+      forceNew,
     });
 
     return NextResponse.json({
@@ -44,7 +57,13 @@ export async function POST(request: Request) {
     }, { status: 201 });
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    console.error("[API] Midtrans create transaction error:", { message: errorMsg, stack: error instanceof Error ? error.stack : undefined, timestamp: new Date().toISOString() });
-    return NextResponse.json({ success: false, message: `Unable to create Midtrans transaction. ${errorMsg}` }, { status: 500 });
+    const status = getErrorStatus(error);
+    console.error("[API] Midtrans create transaction error:", {
+      message: errorMsg,
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString(),
+    });
+
+    return NextResponse.json({ success: false, error: errorMsg }, { status });
   }
 }

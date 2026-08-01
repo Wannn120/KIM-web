@@ -24,7 +24,7 @@ function buildInvoiceNumber() {
   return `INV-${date}-${Math.floor(1000 + Math.random() * 9000)}`;
 }
 
-export async function createPaymentTransaction(input: PaymentTransactionInput & { appBaseUrl?: string }) {
+export async function createPaymentTransaction(input: PaymentTransactionInput & { appBaseUrl?: string; forceNew?: boolean }) {
   if (!input.bookingId) {
     throw new Error("bookingId is required.");
   }
@@ -41,14 +41,18 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
     throw new Error("Booking not found.");
   }
 
-  const existingPayment = await prisma.payment.findFirst({
+  if (booking.totalPrice > 0 && input.amount !== booking.totalPrice) {
+    throw new Error(`Amount mismatch: expected booking total ${booking.totalPrice}, received ${input.amount}.`);
+  }
+
+  const existingPayment = !input.forceNew ? await prisma.payment.findFirst({
     where: {
       bookingId: input.bookingId,
       status: "pending",
       expiredAt: { gt: new Date() },
     },
     orderBy: { createdAt: "desc" },
-  });
+  }) : null;
 
   if (existingPayment && existingPayment.snapToken && existingPayment.snapUrl) {
     return {
@@ -64,9 +68,10 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
   }
 
   const appBaseUrl = input.appBaseUrl || process.env.NEXT_PUBLIC_APP_URL || "https://klaten-international-minisoccer.vercel.app";
+  const midtransOrderId = `${input.bookingId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const midtransPayload = {
     transaction_details: {
-      order_id: input.bookingId,
+      order_id: midtransOrderId,
       gross_amount: input.amount,
     },
     customer_details: {
@@ -99,7 +104,7 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
     data: {
       bookingId: input.bookingId,
       transactionId: input.bookingId,
-      midtransOrderId: input.bookingId,
+      midtransOrderId,
       snapToken: midtransResponse.token,
       snapUrl: midtransResponse.redirect_url,
       paymentMethod: input.paymentMethod as PaymentMethod,
