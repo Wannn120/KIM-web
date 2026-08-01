@@ -52,6 +52,17 @@ export async function createMidtransTransaction(payload: MidtransCreatePayload):
     };
   }
 
+  const grossAmount = Number(payload.transaction_details.gross_amount);
+  const itemTotal = (payload.item_details ?? []).reduce((sum, item) => sum + Number(item.price) * Number(item.quantity), 0);
+
+  if (!Number.isFinite(grossAmount) || grossAmount <= 0) {
+    throw new Error("Invalid Midtrans payload: transaction_details.gross_amount must be a positive number.");
+  }
+
+  if (payload.item_details?.length && grossAmount !== itemTotal) {
+    throw new Error(`Invalid Midtrans payload: gross_amount ${grossAmount} does not match item_details total ${itemTotal}.`);
+  }
+
   const response = await fetch(MIDTRANS_BASE_URL, {
     method: "POST",
     headers: {
@@ -61,12 +72,28 @@ export async function createMidtransTransaction(payload: MidtransCreatePayload):
     body: JSON.stringify(payload),
   });
 
+  const rawBody = await response.text();
+
   if (!response.ok) {
-    const message = await response.text();
-    throw new Error(`Midtrans request failed: ${message}`);
+    let parsedBody: Record<string, unknown> | null = null;
+    try {
+      parsedBody = JSON.parse(rawBody) as Record<string, unknown>;
+    } catch {
+      parsedBody = null;
+    }
+
+    const errorMessages = parsedBody && Array.isArray(parsedBody.error_messages)
+      ? parsedBody.error_messages.join(", ")
+      : undefined;
+    const message = errorMessages || parsedBody?.message || rawBody || `Midtrans request failed with status ${response.status}`;
+    throw new Error(`Midtrans request failed (${response.status}): ${message}`);
   }
 
-  return response.json();
+  try {
+    return JSON.parse(rawBody) as MidtransTransactionResponse;
+  } catch {
+    throw new Error("Midtrans returned an invalid response body.");
+  }
 }
 
 function parseMidtransBody(rawBody: string) {

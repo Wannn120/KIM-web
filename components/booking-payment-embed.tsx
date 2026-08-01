@@ -17,6 +17,8 @@ type PaymentRecord = {
   snapUrl?: string | null;
 };
 
+type PaymentUiState = "idle" | "loading" | "ready" | "active" | "error";
+
 type BookingPaymentEmbedProps = {
   bookingId: string;
   amount: number;
@@ -68,8 +70,9 @@ export function BookingPaymentEmbed({
   const [config, setConfig] = useState<{ clientKey: string; snapScriptUrl: string; mockMode: boolean } | null>(null);
   const [payment, setPayment] = useState<PaymentRecord | null>(initialPayment);
   const [snapToken, setSnapToken] = useState<string | null>(initialPayment?.snapToken ?? null);
+  const [, setSnapUrl] = useState<string | null>(initialPayment?.snapUrl ?? null);
   const [status, setStatus] = useState<string>(normalizeStatus(initialPayment?.status));
-  const [loading, setLoading] = useState(true);
+  const [uiState, setUiState] = useState<PaymentUiState>(initialPayment?.snapToken ? "active" : "idle");
   const [error, setError] = useState<string | null>(null);
   const [embedLoading, setEmbedLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -116,14 +119,20 @@ export function BookingPaymentEmbed({
 
     setPayment(paymentRecord);
     setSnapToken(paymentRecord.snapToken ?? null);
+    setSnapUrl(paymentRecord.snapUrl ?? null);
     setStatus(paymentRecord.status);
+    return paymentRecord;
   }, [bookingId]);
 
-  const createTransaction = useCallback(async () => {
+  const createTransaction = useCallback(async (options?: { forceNew?: boolean }) => {
     if (actionLoading) return;
     setActionLoading(true);
+    setUiState("loading");
     setError(null);
     setMessage(null);
+    setSnapToken(null);
+    setSnapUrl(null);
+    setEmbedLoading(true);
 
     try {
       const response = await fetch("/api/midtrans/create-transaction", {
@@ -136,12 +145,13 @@ export function BookingPaymentEmbed({
           customerName,
           email: customerEmail,
           phone: customerPhone,
+          forceNew: options?.forceNew ?? false,
         }),
       });
 
       const data = await response.json();
       if (!response.ok || !data?.success) {
-        throw new Error(data?.message || "Unable to create payment session.");
+        throw new Error(data?.error || data?.message || "Unable to create payment session.");
       }
 
       const paymentRecord: PaymentRecord = {
@@ -152,32 +162,44 @@ export function BookingPaymentEmbed({
 
       setPayment(paymentRecord);
       setSnapToken(paymentRecord.snapToken ?? null);
+      setSnapUrl(paymentRecord.snapUrl ?? null);
       setStatus(paymentRecord.status);
+      setUiState(paymentRecord.snapToken ? "active" : "ready");
       setMessage("Payment session is ready. Complete the payment below.");
     } catch (err) {
+      setUiState("error");
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setActionLoading(false);
+      setEmbedLoading(false);
     }
   }, [actionLoading, bookingId, amount, customerEmail, customerName, customerPhone]);
 
-  const refreshPayment = async () => {
+  const refreshPayment = useCallback(async () => {
     setActionLoading(true);
+    setUiState("loading");
     setError(null);
     setMessage(null);
+    setSnapToken(null);
+    setSnapUrl(null);
+    setEmbedLoading(true);
 
     try {
-      await fetchPayment();
+      const paymentRecord = await fetchPayment();
+      setUiState(paymentRecord.snapToken ? "active" : "ready");
       setMessage("Payment status refreshed.");
     } catch (err) {
+      setUiState("error");
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setActionLoading(false);
+      setEmbedLoading(false);
     }
-  };
+  }, [fetchPayment]);
 
   const simulateMockPayment = async (statusValue: "success" | "failed" | "cancelled" | "expired") => {
     setActionLoading(true);
+    setUiState("loading");
     setError(null);
     setMessage(null);
 
@@ -193,9 +215,11 @@ export function BookingPaymentEmbed({
         throw new Error(data?.message || "Unable to simulate payment.");
       }
 
-      await fetchPayment();
+      const paymentRecord = await fetchPayment();
+      setUiState(paymentRecord.snapToken ? "active" : "ready");
       setMessage(`Mock payment updated to: ${statusValue}.`);
     } catch (err) {
+      setUiState("error");
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setActionLoading(false);
@@ -204,18 +228,20 @@ export function BookingPaymentEmbed({
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
+    setUiState("loading");
     setError(null);
     setMessage(null);
+    setEmbedLoading(true);
 
     Promise.all([fetchConfig(), fetchPayment()])
       .catch((err) => {
         if (!active) return;
+        setUiState("error");
         setError(err instanceof Error ? err.message : String(err));
       })
       .finally(() => {
         if (!active) return;
-        setLoading(false);
+        setEmbedLoading(false);
       });
 
     return () => {
@@ -224,26 +250,29 @@ export function BookingPaymentEmbed({
   }, [bookingId, fetchConfig, fetchPayment]);
 
   useEffect(() => {
-    if (loading || error || isMock || !config || snapToken || actionLoading) {
-      return;
-    }
-    if (createRequestedRef.current) {
+    if (uiState !== "ready" || isMock || !config || actionLoading || createRequestedRef.current) {
       return;
     }
 
     createRequestedRef.current = true;
-    createTransaction().finally(() => {
+    createTransaction({ forceNew: false }).finally(() => {
       createRequestedRef.current = false;
     });
-  }, [loading, error, config, isMock, snapToken, actionLoading, createTransaction]);
+  }, [uiState, config, isMock, actionLoading, createTransaction]);
 
   useEffect(() => {
-    if (loading || error || isMock || !config?.snapScriptUrl || !snapToken) {
+    if (uiState === "loading" || uiState === "error" || isMock || !config?.snapScriptUrl || !snapToken || !snapToken.trim()) {
       return;
+    }
+
+    const container = document.getElementById("snap-container");
+    if (container) {
+      container.innerHTML = "";
     }
 
     const initializeSnap = () => {
       if (!window.snap?.embed) {
+        setUiState("error");
         setError("Midtrans Snap is not available in this browser session.");
         setEmbedLoading(false);
         return;
@@ -252,8 +281,10 @@ export function BookingPaymentEmbed({
       try {
         window.snap.embed(snapToken, "#snap-container");
         setEmbedLoading(false);
-      } catch (_error) {
-        setError("Unable to initialize Midtrans payment interface.");
+        setUiState("active");
+      } catch (err) {
+        setUiState("error");
+        setError(err instanceof Error ? err.message : "Unable to initialize Midtrans payment interface.");
         setEmbedLoading(false);
       }
     };
@@ -278,6 +309,7 @@ export function BookingPaymentEmbed({
       initializeSnap();
     };
     tag.onerror = () => {
+      setUiState("error");
       setError("Unable to load Midtrans Snap script.");
       setEmbedLoading(false);
     };
@@ -289,7 +321,7 @@ export function BookingPaymentEmbed({
         tag.parentElement.removeChild(tag);
       }
     };
-  }, [loading, error, isMock, config?.snapScriptUrl, snapToken]);
+  }, [uiState, isMock, config?.snapScriptUrl, snapToken]);
 
   const paymentHint = useMemo(() => {
     if (status === "success") return "This booking has already completed payment.";
@@ -340,7 +372,7 @@ export function BookingPaymentEmbed({
       ) : null}
 
       <div className="rounded-3xl border border-white/10 bg-[color:var(--surface)] p-6">
-        {loading ? (
+        {uiState === "loading" ? (
           <div className="min-h-[280px] flex items-center justify-center text-sm text-[color:var(--muted)]">Loading payment details…</div>
         ) : isMock ? (
           <div className="space-y-6">
@@ -389,7 +421,7 @@ export function BookingPaymentEmbed({
                 </p>
                 <button
                   type="button"
-                  onClick={createTransaction}
+                  onClick={() => createTransaction({ forceNew: true })}
                   disabled={actionLoading}
                   className="btn-primary w-full py-3 disabled:opacity-60"
                 >
@@ -427,7 +459,7 @@ export function BookingPaymentEmbed({
         </button>
         <button
           type="button"
-          onClick={createTransaction}
+          onClick={() => createTransaction({ forceNew: true })}
           disabled={actionLoading || isMock}
           className="btn-secondary w-full py-3 disabled:opacity-60"
         >
