@@ -290,16 +290,7 @@ export function BookingPaymentEmbed({
           return;
         }
 
-        if (window.snap.pay) {
-          // Use the redirect-based flow for maximum compatibility with sandbox and production hosts.
-          // The fallback payment link remains available below for a direct checkout experience.
-          window.snap.pay(snapToken);
-          setEmbedLoading(false);
-          setUiState("active");
-          return;
-        }
-
-        if (!window.snap.embed) {
+        if (!window.snap?.embed) {
           setUiState("error");
           setError("Midtrans Snap is not available in this browser session.");
           setEmbedLoading(false);
@@ -332,6 +323,9 @@ export function BookingPaymentEmbed({
     const tag = document.createElement("script");
     tag.src = config.snapScriptUrl;
     tag.async = true;
+    if (config.clientKey) {
+      tag.setAttribute("data-client-key", config.clientKey);
+    }
     tag.onload = () => {
       tag.setAttribute("data-loaded", "true");
       initializeSnap();
