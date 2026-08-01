@@ -311,7 +311,7 @@ export function BookingPaymentEmbed({
 
     if (window.snap?.embed) {
       // Ensure client key is set
-      if (config.clientKey && window.snap?.setClientKey) {
+      if (config.clientKey && typeof window.snap.setClientKey === "function") {
         window.snap.setClientKey(config.clientKey);
       }
       initializeSnap();
@@ -331,7 +331,7 @@ export function BookingPaymentEmbed({
     tag.onload = () => {
       tag.setAttribute("data-loaded", "true");
       // Initialize Snap with client key before embed
-      if (window.snap && config.clientKey) {
+      if (window.snap && config.clientKey && typeof window.snap.setClientKey === "function") {
         window.snap.setClientKey(config.clientKey);
       }
       initializeSnap();
