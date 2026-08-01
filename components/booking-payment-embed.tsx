@@ -121,6 +121,7 @@ export function BookingPaymentEmbed({
     setSnapToken(paymentRecord.snapToken ?? null);
     setSnapUrl(paymentRecord.snapUrl ?? null);
     setStatus(paymentRecord.status);
+    setUiState(paymentRecord.snapToken ? "active" : "ready");
     return paymentRecord;
   }, [bookingId]);
 
@@ -234,13 +235,14 @@ export function BookingPaymentEmbed({
     setEmbedLoading(true);
 
     Promise.all([fetchConfig(), fetchPayment()])
+      .then(() => {
+        if (!active) return;
+        setEmbedLoading(false);
+      })
       .catch((err) => {
         if (!active) return;
         setUiState("error");
         setError(err instanceof Error ? err.message : String(err));
-      })
-      .finally(() => {
-        if (!active) return;
         setEmbedLoading(false);
       });
 
