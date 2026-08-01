@@ -6,6 +6,7 @@ import { formatCurrency } from "@/utils/formatting";
 declare global {
   interface Window {
     snap?: {
+      setClientKey?: (key: string) => void;
       pay: (token: string) => void;
       embed?: (token: string, container: string | HTMLElement) => void;
     };
@@ -309,6 +310,10 @@ export function BookingPaymentEmbed({
     };
 
     if (window.snap?.embed) {
+      // Ensure client key is set
+      if (config.clientKey && window.snap?.setClientKey) {
+        window.snap.setClientKey(config.clientKey);
+      }
       initializeSnap();
       return;
     }
@@ -323,11 +328,12 @@ export function BookingPaymentEmbed({
     const tag = document.createElement("script");
     tag.src = config.snapScriptUrl;
     tag.async = true;
-    if (config.clientKey) {
-      tag.setAttribute("data-client-key", config.clientKey);
-    }
     tag.onload = () => {
       tag.setAttribute("data-loaded", "true");
+      // Initialize Snap with client key before embed
+      if (window.snap && config.clientKey) {
+        window.snap.setClientKey(config.clientKey);
+      }
       initializeSnap();
     };
     tag.onerror = () => {
