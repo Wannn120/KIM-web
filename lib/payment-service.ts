@@ -45,16 +45,14 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
     throw new Error(`Amount mismatch: expected booking total ${booking.totalPrice}, received ${input.amount}.`);
   }
 
-  const existingPayment = !input.forceNew ? await prisma.payment.findFirst({
+  const existingPayment = await prisma.payment.findFirst({
     where: {
       bookingId: input.bookingId,
-      status: "pending",
-      expiredAt: { gt: new Date() },
     },
     orderBy: { createdAt: "desc" },
-  }) : null;
+  });
 
-  if (existingPayment && existingPayment.snapToken && existingPayment.snapUrl) {
+  if (existingPayment && !input.forceNew && existingPayment.status === "pending" && existingPayment.expiredAt && existingPayment.expiredAt > new Date() && existingPayment.snapToken && existingPayment.snapUrl) {
     return {
       transactionId: existingPayment.transactionId,
       expiresAt: existingPayment.expiredAt?.toISOString() ?? new Date(Date.now() + 15 * 60 * 1000).toISOString(),
@@ -102,24 +100,41 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
   const midtransResponse = await createMidtransTransaction(midtransPayload);
   const uniqueTransactionId = `${input.bookingId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-  const paymentRecord = await prisma.payment.create({
-    data: {
-      bookingId: input.bookingId,
-      transactionId: uniqueTransactionId,
-      midtransOrderId,
-      snapToken: midtransResponse.token,
-      snapUrl: midtransResponse.redirect_url,
-      paymentMethod: input.paymentMethod as PaymentMethod,
-      amount: input.amount,
-      status: "pending",
-      provider: "Midtrans",
-      expiredAt: new Date(Date.now() + 15 * 60 * 1000),
-    },
-  });
+  const paymentRecord = existingPayment
+    ? await prisma.payment.update({
+        where: { id: existingPayment.id },
+        data: {
+          transactionId: uniqueTransactionId,
+          midtransOrderId,
+          snapToken: midtransResponse.token,
+          snapUrl: midtransResponse.redirect_url,
+          paymentMethod: input.paymentMethod as PaymentMethod,
+          amount: input.amount,
+          status: "pending",
+          provider: "Midtrans",
+          expiredAt: new Date(Date.now() + 15 * 60 * 1000),
+          updatedAt: new Date(),
+        },
+      })
+    : await prisma.payment.create({
+        data: {
+          bookingId: input.bookingId,
+          transactionId: uniqueTransactionId,
+          midtransOrderId,
+          snapToken: midtransResponse.token,
+          snapUrl: midtransResponse.redirect_url,
+          paymentMethod: input.paymentMethod as PaymentMethod,
+          amount: input.amount,
+          status: "pending",
+          provider: "Midtrans",
+          expiredAt: new Date(Date.now() + 15 * 60 * 1000),
+        },
+      });
 
   await prisma.invoice.upsert({
     where: { bookingId: booking.id },
     update: {
+      paymentId: paymentRecord.id,
       customerName: booking.customerName,
       customerEmail: booking.customerEmail,
       customerPhone: booking.customerPhone,
