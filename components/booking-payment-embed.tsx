@@ -298,7 +298,8 @@ export function BookingPaymentEmbed({
           return;
         }
 
-        window.snap.embed(snapToken, container);
+        // Pass container ID as string to snap.embed
+        window.snap.embed(snapToken, "snap-container");
         setEmbedLoading(false);
         setUiState("active");
       } catch (err) {
