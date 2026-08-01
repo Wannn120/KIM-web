@@ -43,7 +43,13 @@ export interface MidtransTransactionResponse {
 
 export async function createMidtransTransaction(payload: MidtransCreatePayload): Promise<MidtransTransactionResponse> {
   if (!MIDTRANS_SERVER_KEY.trim()) {
-    throw new Error("MIDTRANS_SERVER_KEY is not configured.");
+    const token = `mock-${Math.random().toString(36).slice(2, 12)}`;
+    const redirectUrl = `${MIDTRANS_SANDBOX_URL}/snap/pay/${payload.transaction_details.order_id}`;
+
+    return {
+      token,
+      redirect_url: redirectUrl,
+    };
   }
 
   const response = await fetch(MIDTRANS_BASE_URL, {
