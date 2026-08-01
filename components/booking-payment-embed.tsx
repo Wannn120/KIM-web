@@ -6,7 +6,8 @@ import { formatCurrency } from "@/utils/formatting";
 declare global {
   interface Window {
     snap?: {
-      embed: (token: string, container: string) => void;
+      pay: (token: string) => void;
+      embed?: (token: string, container: string | HTMLElement) => void;
     };
   }
 }
@@ -281,12 +282,37 @@ export function BookingPaymentEmbed({
       }
 
       try {
-        window.snap.embed(snapToken, "#snap-container");
+        const container = document.getElementById("snap-container");
+        if (!container) {
+          setUiState("error");
+          setError("Payment container is not ready.");
+          setEmbedLoading(false);
+          return;
+        }
+
+        if (window.snap.pay) {
+          // Use the redirect-based flow for maximum compatibility with sandbox and production hosts.
+          // The fallback payment link remains available below for a direct checkout experience.
+          window.snap.pay(snapToken);
+          setEmbedLoading(false);
+          setUiState("active");
+          return;
+        }
+
+        if (!window.snap.embed) {
+          setUiState("error");
+          setError("Midtrans Snap is not available in this browser session.");
+          setEmbedLoading(false);
+          return;
+        }
+
+        window.snap.embed(snapToken, container);
         setEmbedLoading(false);
         setUiState("active");
       } catch (err) {
+        const message = err instanceof Error ? err.message : "Unable to initialize Midtrans payment interface.";
         setUiState("error");
-        setError(err instanceof Error ? err.message : "Unable to initialize Midtrans payment interface.");
+        setError(message);
         setEmbedLoading(false);
       }
     };
@@ -363,7 +389,17 @@ export function BookingPaymentEmbed({
 
       {error ? (
         <div className="rounded-3xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">
-          {error}
+          <p>{error}</p>
+          {payment?.snapUrl ? (
+            <a
+              href={payment.snapUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-flex rounded-full border border-rose-400/30 bg-rose-500/10 px-4 py-2 font-semibold text-rose-100 hover:bg-rose-500/20"
+            >
+              Open payment link
+            </a>
+          ) : null}
         </div>
       ) : null}
 
@@ -419,7 +455,7 @@ export function BookingPaymentEmbed({
             {!showPaymentInterface ? (
               <div className="space-y-4">
                 <p className="text-sm text-[color:var(--muted)]">
-                  A secure payment session is required before the embedded checkout can appear.
+                  A secure payment session is required before the checkout can open. If the widget is blocked, use the alternate payment link below.
                 </p>
                 <button
                   type="button"
