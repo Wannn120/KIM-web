@@ -68,7 +68,7 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
   }
 
   const appBaseUrl = input.appBaseUrl || process.env.NEXT_PUBLIC_APP_URL || "https://klaten-international-minisoccer.vercel.app";
-  const midtransOrderId = `${input.bookingId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const midtransOrderId = `bk-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const midtransPayload = {
     transaction_details: {
       order_id: midtransOrderId,
