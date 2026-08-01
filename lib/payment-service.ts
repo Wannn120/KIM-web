@@ -100,10 +100,12 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
   };
 
   const midtransResponse = await createMidtransTransaction(midtransPayload);
+  const uniqueTransactionId = `${input.bookingId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
   const paymentRecord = await prisma.payment.create({
     data: {
       bookingId: input.bookingId,
-      transactionId: input.bookingId,
+      transactionId: uniqueTransactionId,
       midtransOrderId,
       snapToken: midtransResponse.token,
       snapUrl: midtransResponse.redirect_url,
@@ -140,7 +142,7 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
   });
 
   return {
-    transactionId: input.bookingId,
+    transactionId: uniqueTransactionId,
     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     paymentMethod: input.paymentMethod as PaymentMethod,
     amount: input.amount,
