@@ -99,10 +99,10 @@ export function HeroSection({ facilities, content = siteContent }: { facilities:
         <div className="absolute inset-0 bg-[color:var(--background)]/5" />
       </div>
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(14,165,233,0.12),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.08),transparent_35%)]" />
-      <div className="pointer-events-none absolute left-1/2 top-6 h-96 w-96 -translate-x-1/2 rounded-full hero-accent blur-2xl" />
-      <div className="pointer-events-none absolute -left-16 top-10 h-48 w-48 rounded-full hero-glow blur-2xl shadow-[0_0_120px_rgba(255,255,255,0.65)]" />
-      <div className="pointer-events-none absolute right-0 top-24 h-72 w-72 rounded-full hero-ring blur-2xl" />
-      <div className="pointer-events-none absolute -bottom-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full hero-bottom blur-2xl" />
+      <div className="pointer-events-none absolute left-1/2 top-6 h-96 w-96 -translate-x-1/2 rounded-full hero-accent blur-xl" />
+      <div className="pointer-events-none absolute -left-16 top-10 h-48 w-48 rounded-full hero-glow blur-xl shadow-[0_0_120px_rgba(255,255,255,0.45)]" />
+      <div className="pointer-events-none absolute right-0 top-24 h-72 w-72 rounded-full hero-ring blur-xl" />
+      <div className="pointer-events-none absolute -bottom-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full hero-bottom blur-xl" />
       <div className="absolute inset-0 hero-overlay" />
       <div className="relative px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
         <div className="mx-auto max-w-5xl text-center text-[color:var(--foreground)]">
@@ -117,7 +117,7 @@ export function HeroSection({ facilities, content = siteContent }: { facilities:
           </p>
 
           <div className="relative mx-auto mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <div className="pointer-events-none absolute left-1/2 top-1/2 h-28 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-[rgba(251,203,232,0.24)] via-[rgba(147,197,253,0.18)] to-[rgba(199,210,254,0.02)] blur-2xl" />
+            <div className="pointer-events-none absolute left-1/2 top-1/2 h-28 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-[rgba(251,203,232,0.24)] via-[rgba(147,197,253,0.18)] to-[rgba(199,210,254,0.02)] blur-xl" />
             <a
               href="/book"
               className="btn-primary relative z-10"

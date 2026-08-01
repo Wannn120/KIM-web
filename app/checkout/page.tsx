@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatedCard } from "@/components/animated-card";
 import { DEFAULT_FIELD_NAME } from "@/lib/venue";
 
@@ -36,6 +36,7 @@ function getSearchParam(value: string | null, fallback = "") {
 }
 
 export default function CheckoutPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -100,30 +101,8 @@ export default function CheckoutPage() {
         throw new Error(result.message || "Unable to create booking.");
       }
 
-      const paymentResp = await fetch("/api/payments/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          bookingId: result.booking.id,
-          amount,
-          paymentMethod: "Midtrans",
-          customerName,
-          email: customerEmail,
-          phone: customerPhone,
-        }),
-      });
-
-      const paymentResult = await paymentResp.json();
-      if (!paymentResp.ok || !paymentResult.success) {
-        throw new Error(paymentResult.message || "Unable to create payment.");
-      }
-
-      if (paymentResult.snapUrl) {
-        window.location.href = paymentResult.snapUrl;
-        return;
-      }
-
-      throw new Error("Payment link is unavailable. Please contact support.");
+      router.push(`/booking/${encodeURIComponent(result.booking.id)}/payment`);
+      return;
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       setSaving(false);
