@@ -9,8 +9,40 @@ interface RateLimitResult {
   limit: number;
 }
 
+export const MIDTRANS_IS_PRODUCTION = String(process.env.MIDTRANS_IS_PRODUCTION ?? "false").toLowerCase() === "true";
+export const MIDTRANS_SANDBOX_URL = process.env.MIDTRANS_SANDBOX_URL ?? "https://app.sandbox.midtrans.com";
+export const MIDTRANS_PRODUCTION_URL = process.env.MIDTRANS_PRODUCTION_URL ?? "https://app.midtrans.com";
+export const MIDTRANS_APP_DOMAIN = MIDTRANS_IS_PRODUCTION ? MIDTRANS_PRODUCTION_URL : MIDTRANS_SANDBOX_URL;
+export const MIDTRANS_API_DOMAIN = MIDTRANS_IS_PRODUCTION ? "https://api.midtrans.com" : "https://api.sandbox.midtrans.com";
+export const MIDTRANS_SNAP_ASSETS_DOMAIN = MIDTRANS_IS_PRODUCTION ? "https://snap-assets.midtrans.com" : "https://snap-assets.sandbox.midtrans.com";
+
 function getEnv(name: string, fallback: string) {
   return process.env[name] ?? fallback;
+}
+
+export function isBookingPaymentPath(pathname: string) {
+  return /^\/booking\/[^/]+\/payment\/?$/.test(pathname);
+}
+
+export function validatePaymentRouteCsp(csp: string, pathname: string) {
+  if (!isBookingPaymentPath(pathname)) {
+    return;
+  }
+
+  const requiredSources = [MIDTRANS_APP_DOMAIN, MIDTRANS_SNAP_ASSETS_DOMAIN, MIDTRANS_API_DOMAIN];
+  const missing = requiredSources.filter((source) => !csp.includes(source));
+
+  if (missing.length > 0) {
+    console.warn(
+      `[security] Booking payment route CSP is missing required Midtrans sources: ${missing.join(", ")}`,
+    );
+  }
+
+  if (!/script-src-elem/.test(csp)) {
+    console.warn(
+      '[security] Booking payment route CSP is missing script-src-elem; embedded script loads could be blocked.',
+    );
+  }
 }
 
 export function getRateLimitResult(identifier: string, limit = Number(getEnv("RATE_LIMIT_MAX", "60")), windowMs = Number(getEnv("RATE_LIMIT_WINDOW_MS", "60000"))): RateLimitResult {
@@ -32,18 +64,41 @@ export function getRateLimitResult(identifier: string, limit = Number(getEnv("RA
 }
 
 export function applySecurityHeaders(response: NextResponse, request?: NextRequest) {
-  const csp = [
+  const isPaymentPage = request ? isBookingPaymentPath(request.nextUrl.pathname) : false;
+
+  const defaultCsp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://app.sandbox.midtrans.com https://app.midtrans.com https://snap-assets.sandbox.midtrans.com https://snap-assets.midtrans.com https://api.sandbox.midtrans.com https://api.midtrans.com https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+    "script-src-elem 'self'",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "img-src 'self' data: https://res.cloudinary.com https://snap-assets.sandboxmidtrans.com https://snap-assets.sandbox.midtrans.com https://snap-assets.midtrans.com https://api.sandbox.midtrans.com https://api.midtrans.com https://pay.google.com https://g.alicdn.com",
-    "connect-src 'self' https://app.sandbox.midtrans.com https://app.midtrans.com https://api.sandbox.midtrans.com https://api.midtrans.com https://snap-assets.sandbox.midtrans.com",
-    "frame-src https://app.sandbox.midtrans.com https://app.midtrans.com",
-    "child-src https://app.sandbox.midtrans.com https://app.midtrans.com",
+    "style-src-elem 'self' https://fonts.googleapis.com",
+    "img-src 'self' data: https://res.cloudinary.com",
+    "connect-src 'self'",
+    "frame-src 'none'",
+    "child-src 'none'",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
-  ].join("; ");
+  ];
+
+  const paymentCsp = [
+    "default-src 'self'",
+    `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${MIDTRANS_APP_DOMAIN} ${MIDTRANS_SNAP_ASSETS_DOMAIN} https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com`,
+    `script-src-elem 'self' ${MIDTRANS_APP_DOMAIN} ${MIDTRANS_SNAP_ASSETS_DOMAIN} https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "style-src-elem 'self' https://fonts.googleapis.com",
+    `img-src 'self' data: ${MIDTRANS_SNAP_ASSETS_DOMAIN} ${MIDTRANS_APP_DOMAIN} https://pay.google.com https://g.alicdn.com https://res.cloudinary.com`,
+    `connect-src 'self' ${MIDTRANS_APP_DOMAIN} ${MIDTRANS_API_DOMAIN} ${MIDTRANS_SNAP_ASSETS_DOMAIN}`,
+    `frame-src ${MIDTRANS_APP_DOMAIN} ${MIDTRANS_SNAP_ASSETS_DOMAIN}`,
+    `child-src ${MIDTRANS_APP_DOMAIN} ${MIDTRANS_SNAP_ASSETS_DOMAIN}`,
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ];
+
+  const csp = isPaymentPage ? paymentCsp.join("; ") : defaultCsp.join("; ");
+
+  validatePaymentRouteCsp(csp, request?.nextUrl.pathname ?? "");
 
   response.headers.set("content-security-policy", csp);
   response.headers.set("x-content-type-options", "nosniff");
