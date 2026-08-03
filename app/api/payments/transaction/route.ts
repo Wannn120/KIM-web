@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   const bookingId = url.searchParams.get("bookingId")?.trim() ?? "";
 
   if (!transactionId && !bookingId) {
-    return NextResponse.json({ success: false, message: "transactionId or bookingId is required." }, { status: 400 });
+    return NextResponse.json({ success: false, error: "transactionId or bookingId is required." }, { status: 400 });
   }
 
   try {
@@ -33,6 +33,6 @@ export async function GET(request: Request) {
       bookingId,
       stack: error instanceof Error ? error.stack : undefined,
     });
-    return NextResponse.json({ success: false, message }, { status });
+    return NextResponse.json({ success: false, error: message }, { status });
   }
 }

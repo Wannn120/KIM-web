@@ -13,8 +13,13 @@ export const MIDTRANS_IS_PRODUCTION = String(process.env.MIDTRANS_IS_PRODUCTION 
 export const MIDTRANS_SANDBOX_URL = process.env.MIDTRANS_SANDBOX_URL ?? "https://app.sandbox.midtrans.com";
 export const MIDTRANS_PRODUCTION_URL = process.env.MIDTRANS_PRODUCTION_URL ?? "https://app.midtrans.com";
 export const MIDTRANS_APP_DOMAIN = MIDTRANS_IS_PRODUCTION ? MIDTRANS_PRODUCTION_URL : MIDTRANS_SANDBOX_URL;
-export const MIDTRANS_API_DOMAIN = MIDTRANS_IS_PRODUCTION ? "https://api.midtrans.com" : "https://api.sandbox.midtrans.com";
-export const MIDTRANS_SNAP_ASSETS_DOMAIN = MIDTRANS_IS_PRODUCTION ? "https://snap-assets.midtrans.com" : "https://snap-assets.sandbox.midtrans.com";
+export const MIDTRANS_SNAP_ASSETS_SANDBOX_URL = process.env.MIDTRANS_SNAP_ASSETS_SANDBOX_URL ?? "https://snap-assets.sandbox.midtrans.com";
+export const MIDTRANS_SNAP_ASSETS_PRODUCTION_URL = process.env.MIDTRANS_SNAP_ASSETS_PRODUCTION_URL ?? "https://snap-assets.midtrans.com";
+export const MIDTRANS_API_SANDBOX_URL = process.env.MIDTRANS_API_SANDBOX_URL ?? "https://api.sandbox.midtrans.com";
+export const MIDTRANS_API_PRODUCTION_URL = process.env.MIDTRANS_API_PRODUCTION_URL ?? "https://api.midtrans.com";
+export const MIDTRANS_APP_DOMAINS = [`${MIDTRANS_SANDBOX_URL}`, `${MIDTRANS_PRODUCTION_URL}`];
+export const MIDTRANS_API_DOMAINS = [`${MIDTRANS_API_SANDBOX_URL}`, `${MIDTRANS_API_PRODUCTION_URL}`];
+export const MIDTRANS_SNAP_ASSETS_DOMAINS = [`${MIDTRANS_SNAP_ASSETS_SANDBOX_URL}`, `${MIDTRANS_SNAP_ASSETS_PRODUCTION_URL}`];
 
 function getEnv(name: string, fallback: string) {
   return process.env[name] ?? fallback;
@@ -29,7 +34,7 @@ export function validatePaymentRouteCsp(csp: string, pathname: string) {
     return;
   }
 
-  const requiredSources = [MIDTRANS_APP_DOMAIN, MIDTRANS_SNAP_ASSETS_DOMAIN, MIDTRANS_API_DOMAIN];
+  const requiredSources = [...MIDTRANS_APP_DOMAINS, ...MIDTRANS_SNAP_ASSETS_DOMAINS, ...MIDTRANS_API_DOMAINS];
   const missing = requiredSources.filter((source) => !csp.includes(source));
 
   if (missing.length > 0) {
@@ -83,14 +88,14 @@ export function applySecurityHeaders(response: NextResponse, request?: NextReque
 
   const paymentCsp = [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${MIDTRANS_APP_DOMAIN} ${MIDTRANS_SNAP_ASSETS_DOMAIN} https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com`,
-    `script-src-elem 'self' 'unsafe-inline' ${MIDTRANS_APP_DOMAIN} ${MIDTRANS_SNAP_ASSETS_DOMAIN} https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com`,
-    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com ${MIDTRANS_SNAP_ASSETS_DOMAIN}`,
-    `style-src-elem 'self' https://fonts.googleapis.com ${MIDTRANS_SNAP_ASSETS_DOMAIN}`,
-    `img-src 'self' data: ${MIDTRANS_SNAP_ASSETS_DOMAIN} ${MIDTRANS_APP_DOMAIN} https://pay.google.com https://g.alicdn.com https://res.cloudinary.com`,
-    `connect-src 'self' ${MIDTRANS_APP_DOMAIN} ${MIDTRANS_API_DOMAIN} ${MIDTRANS_SNAP_ASSETS_DOMAIN}`,
-    `frame-src ${MIDTRANS_APP_DOMAIN} ${MIDTRANS_SNAP_ASSETS_DOMAIN} https://www.openstreetmap.org`,
-    `child-src ${MIDTRANS_APP_DOMAIN} ${MIDTRANS_SNAP_ASSETS_DOMAIN}`,
+    `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${MIDTRANS_APP_DOMAINS.join(" ")} ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} ${MIDTRANS_API_DOMAINS.join(" ")} https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com`,
+    `script-src-elem 'self' 'unsafe-inline' ${MIDTRANS_APP_DOMAINS.join(" ")} ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} ${MIDTRANS_API_DOMAINS.join(" ")} https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com`,
+    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} ${MIDTRANS_APP_DOMAINS.join(" ")}`,
+    `style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} ${MIDTRANS_APP_DOMAINS.join(" ")}`,
+    `img-src 'self' data: ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} ${MIDTRANS_APP_DOMAINS.join(" ")} https://pay.google.com https://g.alicdn.com https://res.cloudinary.com`,
+    `connect-src 'self' ${MIDTRANS_APP_DOMAINS.join(" ")} ${MIDTRANS_API_DOMAINS.join(" ")} ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} https://pay.google.com`,
+    `frame-src ${MIDTRANS_APP_DOMAINS.join(" ")} ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} https://www.openstreetmap.org`,
+    `child-src ${MIDTRANS_APP_DOMAINS.join(" ")} ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")}`,
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
