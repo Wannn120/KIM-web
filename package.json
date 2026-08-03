@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "prisma generate && cross-env NEXT_DISABLE_ESLINT=1 next build",
     "start": "next start",
+    "test": "jest --config jest.config.cjs",
     "postinstall": "prisma generate",
     "vercel-build": "prisma generate && next build",
     "lint": "eslint",
@@ -31,9 +32,14 @@
     "@types/react-dom": "^18.3.1",
     "cross-env": "^7.0.3",
     "eslint": "^9",
+    "@types/jest": "^30.0.0",
+    "@tailwindcss/postcss": "^4",
+    "eslint": "^9",
     "eslint-config-next": "^15.5.20",
+    "jest": "^29.7.0",
     "prisma": "^4.16.2",
     "tailwindcss": "^4",
+    "ts-jest": "^29.1.0",
     "typescript": "^5"
   }
 }
