@@ -246,10 +246,6 @@ export async function getPaymentTransactionByBookingId(bookingId: string) {
     },
   });
 
-  if (!payment) {
-    throw new Error("Payment record not found.");
-  }
-
   return payment;
 }
 
