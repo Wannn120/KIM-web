@@ -7,6 +7,10 @@ import { formatCurrency } from "@/utils/formatting";
 
 export const dynamic = "force-dynamic";
 
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
 function formatBookingDate(bookingDate: Date) {
   return bookingDate.toLocaleDateString("id-ID", {
     day: "2-digit",
@@ -17,6 +21,11 @@ function formatBookingDate(bookingDate: Date) {
 
 export default async function BookingPaymentPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+
+  if (!isUuid(id)) {
+    notFound();
+  }
+
   const booking = await prisma.booking.findUnique({
     where: { id },
   });
