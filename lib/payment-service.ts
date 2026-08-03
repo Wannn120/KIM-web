@@ -234,6 +234,25 @@ export async function getPaymentTransaction(transactionId: string) {
   return payment;
 }
 
+export async function getPaymentTransactionByBookingId(bookingId: string) {
+  await expirePendingPayments();
+
+  const payment = await prisma.payment.findFirst({
+    where: { bookingId },
+    orderBy: { createdAt: "desc" },
+    include: {
+      booking: true,
+      invoice: true,
+    },
+  });
+
+  if (!payment) {
+    throw new Error("Payment record not found.");
+  }
+
+  return payment;
+}
+
 export async function getPaymentSimulationDetails(method: PaymentMethod): Promise<PaymentSimulationDetails> {
   return paymentProvider.getSimulationDetails(method);
 }
