@@ -1,20 +1,38 @@
 import { NextResponse } from "next/server";
-import { getPaymentTransaction, expirePendingPayments } from "@/lib/payment-service";
+import { getPaymentTransaction, getPaymentTransactionByBookingId, expirePendingPayments } from "@/lib/payment-service";
+
+function getErrorStatus(message: string) {
+  if (/not found/i.test(message)) return 404;
+  return 500;
+}
 
 export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const transactionId = url.searchParams.get("transactionId")?.trim() ?? "";
+  const bookingId = url.searchParams.get("bookingId")?.trim() ?? "";
+
+  if (!transactionId && !bookingId) {
+    return NextResponse.json({ success: false, message: "transactionId or bookingId is required." }, { status: 400 });
+  }
+
   try {
-    await expirePendingPayments();
-
-    const url = new URL(request.url);
-    const transactionId = url.searchParams.get("transactionId");
-
-    if (!transactionId) {
-      return NextResponse.json({ success: false, message: "transactionId is required." }, { status: 400 });
+    let payment;
+    if (transactionId) {
+      payment = await getPaymentTransaction(transactionId);
+    } else {
+      payment = await getPaymentTransactionByBookingId(bookingId);
     }
 
-    const payment = await getPaymentTransaction(transactionId);
     return NextResponse.json({ success: true, payment });
   } catch (error) {
-    return NextResponse.json({ success: false, message: (error as Error).message }, { status: 500 });
+    const message = error instanceof Error ? error.message : String(error);
+    const status = getErrorStatus(message);
+    console.error("[API] /api/payments/transaction error:", {
+      message,
+      transactionId,
+      bookingId,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    return NextResponse.json({ success: false, message }, { status });
   }
 }

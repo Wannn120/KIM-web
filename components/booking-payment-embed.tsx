@@ -99,7 +99,7 @@ export function BookingPaymentEmbed({
   }, []);
 
   const fetchPayment = useCallback(async () => {
-    const response = await fetch(`/api/payments/transaction?transactionId=${encodeURIComponent(bookingId)}`, {
+    const response = await fetch(`/api/payments/transaction?bookingId=${encodeURIComponent(bookingId)}`, {
       cache: "no-store",
     });
 
