@@ -1,9 +1,9 @@
 import {
   isBookingPaymentPath,
   validatePaymentRouteCsp,
-  MIDTRANS_APP_DOMAIN,
-  MIDTRANS_API_DOMAIN,
-  MIDTRANS_SNAP_ASSETS_DOMAIN,
+  MIDTRANS_APP_DOMAINS,
+  MIDTRANS_API_DOMAINS,
+  MIDTRANS_SNAP_ASSETS_DOMAINS,
 } from "@/lib/security-headers";
 
 describe("security headers helpers", () => {
@@ -35,14 +35,14 @@ describe("security headers helpers", () => {
     it("does not warn when payment route CSP includes the exact Midtrans sources and script-src-elem", () => {
       const csp = [
         "default-src 'self'",
-        `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${MIDTRANS_APP_DOMAIN} ${MIDTRANS_SNAP_ASSETS_DOMAIN} ${MIDTRANS_API_DOMAIN} https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com`,
-        `script-src-elem 'self' ${MIDTRANS_APP_DOMAIN} ${MIDTRANS_SNAP_ASSETS_DOMAIN} https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com`,
+        `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${MIDTRANS_APP_DOMAINS.join(" ")} ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} ${MIDTRANS_API_DOMAINS.join(" ")} https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com`,
+        `script-src-elem 'self' ${MIDTRANS_APP_DOMAINS.join(" ")} ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} ${MIDTRANS_API_DOMAINS.join(" ")} https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com`,
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "style-src-elem 'self' https://fonts.googleapis.com",
-        `img-src 'self' data: ${MIDTRANS_SNAP_ASSETS_DOMAIN} ${MIDTRANS_APP_DOMAIN} https://pay.google.com https://g.alicdn.com https://res.cloudinary.com`,
-        `connect-src 'self' ${MIDTRANS_APP_DOMAIN} ${MIDTRANS_API_DOMAIN} ${MIDTRANS_SNAP_ASSETS_DOMAIN}`,
-        `frame-src ${MIDTRANS_APP_DOMAIN} ${MIDTRANS_SNAP_ASSETS_DOMAIN}`,
-        `child-src ${MIDTRANS_APP_DOMAIN} ${MIDTRANS_SNAP_ASSETS_DOMAIN}`,
+        `img-src 'self' data: ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} ${MIDTRANS_APP_DOMAINS.join(" ")} https://pay.google.com https://g.alicdn.com https://res.cloudinary.com`,
+        `connect-src 'self' ${MIDTRANS_APP_DOMAINS.join(" ")} ${MIDTRANS_API_DOMAINS.join(" ")} ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")}`,
+        `frame-src ${MIDTRANS_APP_DOMAINS.join(" ")} ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")}`,
+        `child-src ${MIDTRANS_APP_DOMAINS.join(" ")} ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")}`,
       ].join("; ");
 
       validatePaymentRouteCsp(csp, "/booking/abc123/payment");
@@ -52,8 +52,8 @@ describe("security headers helpers", () => {
     it("warns when payment route CSP is missing required Midtrans sources", () => {
       const csp = [
         "default-src 'self'",
-        `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${MIDTRANS_APP_DOMAIN}`,
-        `script-src-elem 'self' ${MIDTRANS_APP_DOMAIN}`,
+        `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${MIDTRANS_APP_DOMAINS[0]}`,
+        `script-src-elem 'self' ${MIDTRANS_APP_DOMAINS[0]}`,
       ].join("; ");
 
       validatePaymentRouteCsp(csp, "/booking/abc123/payment");
