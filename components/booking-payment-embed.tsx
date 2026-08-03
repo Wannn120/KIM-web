@@ -103,13 +103,29 @@ export function BookingPaymentEmbed({
       cache: "no-store",
     });
 
+    const data = await response.json().catch(() => null);
+
     if (!response.ok) {
-      throw new Error("Unable to read existing payment status.");
+      if (response.status === 404 || data?.error?.includes("Payment record not found")) {
+        const emptyPayment: PaymentRecord = { status: "pending", snapToken: null, snapUrl: null };
+        setPayment(null);
+        setSnapToken(null);
+        setSnapUrl(null);
+        setStatus("pending");
+        setUiState("ready");
+        return emptyPayment;
+      }
+      throw new Error(data?.message || "Unable to read existing payment status.");
     }
 
-    const data = await response.json();
     if (!data?.success || !data?.payment) {
-      throw new Error(data?.message || "Payment information is not available.");
+      const emptyPayment: PaymentRecord = { status: "pending", snapToken: null, snapUrl: null };
+      setPayment(null);
+      setSnapToken(null);
+      setSnapUrl(null);
+      setStatus("pending");
+      setUiState("ready");
+      return emptyPayment;
     }
 
     const paymentRecord: PaymentRecord = {

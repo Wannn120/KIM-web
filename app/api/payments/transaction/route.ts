@@ -15,10 +15,29 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, error: "transactionId or bookingId is required." }, { status: 400 });
   }
 
+  function isUuid(value: string) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+  }
+
+  if (bookingId && !transactionId) {
+    if (!isUuid(bookingId)) {
+      return NextResponse.json({ success: false, error: "Invalid bookingId format." }, { status: 400 });
+    }
+  }
+
   try {
-    let payment;
+    let payment = null;
     if (transactionId) {
-      payment = await getPaymentTransaction(transactionId);
+      try {
+        payment = await getPaymentTransaction(transactionId);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (message.includes("Payment record not found")) {
+          payment = null;
+        } else {
+          throw error;
+        }
+      }
     } else {
       payment = await getPaymentTransactionByBookingId(bookingId);
     }
