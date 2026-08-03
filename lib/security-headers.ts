@@ -69,7 +69,7 @@ export function applySecurityHeaders(response: NextResponse, request?: NextReque
   const defaultCsp = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-    "script-src-elem 'self'",
+    "script-src-elem 'self' 'unsafe-inline'",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "style-src-elem 'self' https://fonts.googleapis.com",
     "img-src 'self' data: https://res.cloudinary.com",
