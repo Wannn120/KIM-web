@@ -84,7 +84,7 @@ export function applySecurityHeaders(response: NextResponse, request?: NextReque
   const paymentCsp = [
     "default-src 'self'",
     `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${MIDTRANS_APP_DOMAIN} ${MIDTRANS_SNAP_ASSETS_DOMAIN} https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com`,
-    `script-src-elem 'self' ${MIDTRANS_APP_DOMAIN} ${MIDTRANS_SNAP_ASSETS_DOMAIN} https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com`,
+    `script-src-elem 'self' 'unsafe-inline' ${MIDTRANS_APP_DOMAIN} ${MIDTRANS_SNAP_ASSETS_DOMAIN} https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "style-src-elem 'self' https://fonts.googleapis.com",
     `img-src 'self' data: ${MIDTRANS_SNAP_ASSETS_DOMAIN} ${MIDTRANS_APP_DOMAIN} https://pay.google.com https://g.alicdn.com https://res.cloudinary.com`,
