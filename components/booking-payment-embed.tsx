@@ -304,8 +304,19 @@ export function BookingPaymentEmbed({
     setMessage(null);
 
     Promise.all([fetchConfig(), fetchPayment()])
-      .then(() => {
+      .then((results) => {
         if (!active) return;
+        
+        // Check if payment was already processed before component loaded
+        const paymentRecord = results[1];
+        if (paymentRecord?.status === "success") {
+          // Redirect immediately if payment already completed
+          window.location.href = `/payment/success?transactionId=${encodeURIComponent(bookingId)}`;
+        } else if (["failed", "cancelled", "expired"].includes(paymentRecord?.status ?? "")) {
+          // Show error if payment already failed
+          setError(`Payment ${paymentRecord?.status}. Please try again.`);
+          setUiState("ready");
+        }
       })
       .catch((err) => {
         if (!active) return;
