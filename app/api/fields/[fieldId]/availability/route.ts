@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { BLOCKING_BOOKING_STATUSES } from "@/lib/booking-engine";
+import { expirePendingPayments } from "@/lib/payment-service";
+import { BLOCKING_BOOKING_STATUSES, buildTimeSlots, getScheduleSlots } from "@/lib/booking-engine";
 import { DEFAULT_FIELD, DEFAULT_FIELD_ID } from "@/lib/venue";
+import { getFieldHourlyRate } from "@/lib/site-content";
 
 function getDateRange(dateString: string) {
   const start = new Date(`${dateString}T00:00:00.000Z`);
@@ -12,22 +14,6 @@ function getDateRange(dateString: string) {
   const end = new Date(start);
   end.setUTCDate(end.getUTCDate() + 1);
   return { start, end };
-}
-
-function buildTimeSlots(date: string, bookedIntervals: Array<{ startTime: string; endTime: string }>) {
-  const slots: Array<{ id: string; startTime: string; endTime: string; isAvailable: boolean }> = [];
-  const startHour = 6;
-  const endHour = 22;
-
-  for (let hour = startHour; hour < endHour; hour++) {
-    const startTime = `${String(hour).padStart(2, "0")}:00`;
-    const endTime = `${String(hour + 1).padStart(2, "0")}:00`;
-
-    const isAvailable = !bookedIntervals.some((booking) => booking.startTime < endTime && booking.endTime > startTime);
-    slots.push({ id: `${date}-${startTime}`, startTime, endTime, isAvailable });
-  }
-
-  return slots;
 }
 
 export async function GET(request: Request, props: { params: Promise<{ fieldId: string }> }) {
@@ -50,6 +36,8 @@ export async function GET(request: Request, props: { params: Promise<{ fieldId: 
   }
 
   try {
+    await expirePendingPayments();
+
     const bookings = await prisma.booking.findMany({
       where: {
         bookingDate: range.start,
@@ -63,11 +51,13 @@ export async function GET(request: Request, props: { params: Promise<{ fieldId: 
       },
     });
 
-    const schedules = buildTimeSlots(date, bookings);
+    const scheduleSlots = await getScheduleSlots();
+    const schedules = buildTimeSlots(date, bookings, scheduleSlots);
+    const hourlyRate = await getFieldHourlyRate();
 
     return NextResponse.json({
       success: true,
-      field: DEFAULT_FIELD,
+      field: { ...DEFAULT_FIELD, price: hourlyRate },
       schedules,
     });
   } catch (error) {

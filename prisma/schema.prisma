@@ -142,6 +142,19 @@ model Review {
   @@map("review")
 }
 
+model ScheduleSlot {
+  id        String   @id @default(uuid()) @map("id")
+  startTime String   @map("start_time")
+  endTime   String   @map("end_time")
+  isActive  Boolean  @default(true) @map("is_active")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("schedule_slot")
+  @@index([sortOrder])
+}
+
 model AuditLog {
   id             String    @id @default(uuid()) @map("id")
   action         String    @map("action")

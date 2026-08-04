@@ -2,11 +2,13 @@ import type { Field } from "@/types";
 import { prisma } from "@/lib/prisma";
 import { BLOCKING_BOOKING_STATUSES } from "@/lib/booking-engine";
 import { DEFAULT_FIELD_NAME, DEFAULT_FIELD } from "@/lib/venue";
+import { getFieldHourlyRate } from "@/lib/site-content";
 import { facilityImages } from "@/lib/mock-data";
 import type { FacilityImage, VenueGalleryImage } from "@/types";
 
 export async function getFields(): Promise<Field[]> {
-  return [DEFAULT_FIELD];
+  const hourlyRate = await getFieldHourlyRate();
+  return [{ ...DEFAULT_FIELD, price: hourlyRate }];
 }
 
 export async function getVenueFeatures(): Promise<FacilityImage[]> {

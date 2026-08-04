@@ -1,5 +1,6 @@
 import { AnimatedCard } from "@/components/animated-card";
 import { DEFAULT_FIELD } from "@/lib/venue";
+import { getFieldHourlyRate } from "@/lib/site-content";
 
 const availability = [
   { time: "08:00", available: true },
@@ -12,7 +13,9 @@ const availability = [
 
 export const dynamic = "force-dynamic";
 
-export default function BookingPage() {
+export default async function BookingPage() {
+  const hourlyRate = await getFieldHourlyRate();
+
   return (
     <main className="flex-1 bg-[color:var(--background)] px-6 py-16 lg:px-8">
       <div className="mx-auto grid max-w-7xl gap-8 xl:grid-cols-[1.2fr_0.8fr]">
@@ -29,7 +32,7 @@ export default function BookingPage() {
             </div>
                 <div className="rounded-3xl border border-[color:rgba(16,185,129,0.12)] bg-[color:rgba(16,185,129,0.06)] p-5">
                   <p className="text-sm text-[color:var(--accent)]">Hourly rate</p>
-              <p className="mt-2 text-3xl font-semibold text-white">Rp {DEFAULT_FIELD.price.toLocaleString("id-ID")}</p>
+              <p className="mt-2 text-3xl font-semibold text-white">Rp {hourlyRate.toLocaleString("id-ID")}</p>
             </div>
           </div>
 

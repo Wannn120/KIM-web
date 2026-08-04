@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { siteContent } from "@/lib/mock-data";
+import { getDefaultFieldPrice } from "@/lib/venue";
 import type { SiteContent } from "@/types";
 
 export const SITE_CONTENT_KEYS = [
@@ -10,6 +11,8 @@ export const SITE_CONTENT_KEYS = [
   "ctaSecondary",
   "backgroundImageUrl",
 ] as const;
+
+export const FIELD_HOURLY_RATE_KEY = "field_hourly_rate";
 
 export async function getSiteContent(): Promise<SiteContent> {
   try {
@@ -23,6 +26,20 @@ export async function getSiteContent(): Promise<SiteContent> {
   } catch (error) {
     console.error("[CONTENT] Unable to load site content:", error);
     return siteContent;
+  }
+}
+
+export async function getFieldHourlyRate(defaultPrice = getDefaultFieldPrice()): Promise<number> {
+  try {
+    const record = await prisma.adminSetting.findUnique({ where: { key: FIELD_HOURLY_RATE_KEY } });
+    if (!record) {
+      return defaultPrice;
+    }
+    const value = Number(record.value);
+    return Number.isFinite(value) && value > 0 ? Math.round(value) : defaultPrice;
+  } catch (error) {
+    console.error("[SETTINGS] Unable to load field hourly rate:", error);
+    return defaultPrice;
   }
 }
 

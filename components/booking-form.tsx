@@ -223,7 +223,7 @@ export function BookingForm({ fields }: { fields: Field[] }) {
           ) : slots.length === 0 ? (
             <div className="rounded-3xl border border-white/10 bg-[color:var(--surface)] p-6 text-sm text-[color:var(--muted)]">No schedule available for this field on the selected date.</div>
           ) : (
-            <div className="grid gap-3">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {slots.map((slot) => {
                 const label = `${slot.startTime} - ${slot.endTime}`;
                 const isSelected = selectedIds.has(slot.id);

@@ -54,6 +54,9 @@ export default function AdminDashboard({
                 {admin.permissions.canManageSettings ? (
                   <Link href={admin.role === "super_admin" ? "/superadmin/settings" : "/manager/settings"} className="rounded-full bg-white/5 px-3 py-1 text-sm text-white hover:bg-white/10">Settings</Link>
                 ) : null}
+                {admin.permissions.canManageSchedule ? (
+                  <Link href={admin.role === "super_admin" ? "/superadmin/schedule-slots" : "/manager/schedule-slots"} className="rounded-full bg-white/5 px-3 py-1 text-sm text-white hover:bg-white/10">Schedule slots</Link>
+                ) : null}
                 {admin.permissions.canManageAdmins ? (
                   <Link href="/superadmin/users" className="rounded-full bg-white/5 px-3 py-1 text-sm text-white hover:bg-white/10">Admin users</Link>
                 ) : null}
