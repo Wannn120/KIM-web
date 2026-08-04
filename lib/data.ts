@@ -1,5 +1,6 @@
 import type { Field } from "@/types";
 import { prisma } from "@/lib/prisma";
+import { BLOCKING_BOOKING_STATUSES } from "@/lib/booking-engine";
 import { DEFAULT_FIELD_NAME, DEFAULT_FIELD } from "@/lib/venue";
 import { facilityImages } from "@/lib/mock-data";
 import type { FacilityImage, VenueGalleryImage } from "@/types";
@@ -51,7 +52,7 @@ export async function getUpcomingBookings(limit = 5) {
   return prisma.booking.findMany({
     where: {
       status: {
-        notIn: ["cancelled", "expired"],
+        in: BLOCKING_BOOKING_STATUSES,
       },
       bookingDate: {
         gte: new Date(),

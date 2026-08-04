@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { BLOCKING_BOOKING_STATUSES } from "@/lib/booking-engine";
 import { DEFAULT_FIELD, DEFAULT_FIELD_ID } from "@/lib/venue";
 
 function getDateRange(dateString: string) {
@@ -53,7 +54,7 @@ export async function GET(request: Request, props: { params: Promise<{ fieldId: 
       where: {
         bookingDate: range.start,
         status: {
-          in: ["pending", "confirmed", "completed"],
+          in: BLOCKING_BOOKING_STATUSES,
         },
       },
       select: {
