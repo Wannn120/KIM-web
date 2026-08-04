@@ -92,7 +92,12 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
 
   const appBaseUrl = input.appBaseUrl || process.env.NEXT_PUBLIC_APP_URL || "https://klaten-international-minisoccer.vercel.app";
   const uniqueTransactionId = `${normalizedBookingId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const midtransOrderId = uniqueTransactionId;
+  const shortBookingId = normalizedBookingId.replace(/-/g, "").slice(0, 12);
+  const orderSuffix = Math.random().toString(36).slice(2, 6);
+  const midtransOrderId = `ORD-${shortBookingId}-${orderSuffix}`;
+  if (midtransOrderId.length > 50) {
+    throw new Error(`Invalid Midtrans payload: transaction_details.order_id must be 50 characters or less. Generated id=${midtransOrderId}`);
+  }
   const customerDetails = buildMidtransCustomerDetails(input.customerName, input.email, input.phone);
   const midtransPayload = {
     transaction_details: {
