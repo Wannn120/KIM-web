@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getPaymentTransaction, getPaymentTransactionByBookingId, expirePendingPayments } from "@/lib/payment-service";
+import { isUuid } from "@/lib/payment-utils";
 
 function getErrorStatus(message: string) {
   if (/not found/i.test(message)) return 404;
@@ -13,10 +14,6 @@ export async function GET(request: Request) {
 
   if (!transactionId && !bookingId) {
     return NextResponse.json({ success: false, error: "transactionId or bookingId is required." }, { status: 400 });
-  }
-
-  function isUuid(value: string) {
-    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
   }
 
   if (bookingId && !transactionId) {
