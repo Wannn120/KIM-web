@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       where: {
         bookingDate: range.start,
         status: {
-          notIn: ["cancelled", "expired"],
+          in: ["confirmed", "completed"],
         },
         startTime: { lt: endTime },
         endTime: { gt: startTime },
