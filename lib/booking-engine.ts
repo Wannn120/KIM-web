@@ -2,6 +2,13 @@ import { prisma } from "@/lib/prisma";
 
 export type BookingStatus = "pending" | "confirmed" | "completed" | "cancelled" | "expired" | "refunded";
 
+export const BLOCKING_BOOKING_STATUSES: BookingStatus[] = ["pending", "confirmed", "completed"];
+
+export function isBookingSlotBlocked(status: string | undefined | null): boolean {
+  const normalized = status?.toLowerCase();
+  return BLOCKING_BOOKING_STATUSES.includes(normalized as BookingStatus);
+}
+
 export interface BookingRecord {
   id: string;
   bookingDate: string;
@@ -80,7 +87,7 @@ async function hasOverlap(bookingDate: string, startTime: string, endTime: strin
     where: {
       bookingDate: new Date(bookingDate),
       status: {
-        in: ["pending", "confirmed", "completed"],
+        in: BLOCKING_BOOKING_STATUSES,
       },
       startTime: { lt: endTime },
       endTime: { gt: startTime },

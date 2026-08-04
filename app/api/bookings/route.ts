@@ -3,6 +3,7 @@ import { auditLog } from "@/lib/audit-log";
 import { expirePendingPayments } from "@/lib/payment-service";
 import { getRateLimitResult, sanitizeObject, applySecurityHeaders } from "@/lib/security-headers";
 import { prisma } from "@/lib/prisma";
+import { BLOCKING_BOOKING_STATUSES } from "@/lib/booking-engine";
 import { DEFAULT_FIELD_ID, DEFAULT_FIELD_NAME, DEFAULT_FIELD_PRICE } from "@/lib/venue";
 
 function getDateRange(dateString: string) {
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
       where: {
         bookingDate: range.start,
         status: {
-          in: ["pending", "confirmed", "completed"],
+          in: BLOCKING_BOOKING_STATUSES,
         },
         startTime: { lt: endTime },
         endTime: { gt: startTime },
