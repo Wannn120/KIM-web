@@ -53,7 +53,7 @@ export async function GET(request: Request, props: { params: Promise<{ fieldId: 
       where: {
         bookingDate: range.start,
         status: {
-          in: ["confirmed", "completed"],
+          in: ["pending", "confirmed", "completed"],
         },
       },
       select: {
