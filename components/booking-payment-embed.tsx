@@ -341,6 +341,45 @@ export function BookingPaymentEmbed({
     }
   }, [uiState, isMock, openSnap, snapToken]);
 
+  // Poll for payment status updates
+  useEffect(() => {
+    if (status !== "pending" || isMock) {
+      return;
+    }
+
+    let active = true;
+    let intervalId: NodeJS.Timeout | null = null;
+
+    const pollPaymentStatus = async () => {
+      try {
+        const paymentRecord = await fetchPayment();
+        if (!active) return;
+
+        // If payment status changed
+        if (paymentRecord.status !== status) {
+          if (paymentRecord.status === "success") {
+            // Redirect to success page
+            window.location.href = `/payment/success?transactionId=${encodeURIComponent(bookingId)}`;
+          } else if (["failed", "cancelled", "expired"].includes(paymentRecord.status)) {
+            setError(`Payment ${paymentRecord.status}. Please try again.`);
+            setUiState("ready");
+          }
+        }
+      } catch (err) {
+        // Silently ignore polling errors
+        console.debug("Payment status poll error:", err);
+      }
+    };
+
+    // Start polling every 3 seconds
+    intervalId = setInterval(pollPaymentStatus, 3000);
+
+    return () => {
+      active = false;
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [status, bookingId, isMock, fetchPayment]);
+
   const paymentHint = useMemo(() => {
     if (status === "success") return "This booking has already completed payment.";
     if (status === "pending") return "Complete your payment to confirm the reservation.";
