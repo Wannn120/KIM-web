@@ -69,14 +69,16 @@ export function getRateLimitResult(identifier: string, limit = Number(getEnv("RA
 }
 
 export function applySecurityHeaders(response: NextResponse, request?: NextRequest) {
-  const isPaymentPage = request ? isBookingPaymentPath(request.nextUrl.pathname) : false;
+  const isPaymentPage = request
+    ? isBookingPaymentPath(request.nextUrl.pathname) || /\/payment(?:\/|$)/.test(request.nextUrl.pathname)
+    : false;
 
   const defaultCsp = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
     "script-src-elem 'self' 'unsafe-inline'",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "style-src-elem 'self' https://fonts.googleapis.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com",
+    "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com",
     "img-src 'self' data: https://res.cloudinary.com",
     "connect-src 'self'",
     "frame-src 'self' https://www.openstreetmap.org",
@@ -90,8 +92,8 @@ export function applySecurityHeaders(response: NextResponse, request?: NextReque
     "default-src 'self'",
     `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${MIDTRANS_APP_DOMAINS.join(" ")} ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} ${MIDTRANS_API_DOMAINS.join(" ")} https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com`,
     `script-src-elem 'self' 'unsafe-inline' ${MIDTRANS_APP_DOMAINS.join(" ")} ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} ${MIDTRANS_API_DOMAINS.join(" ")} https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com`,
-    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} ${MIDTRANS_APP_DOMAINS.join(" ")}`,
-    `style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} ${MIDTRANS_APP_DOMAINS.join(" ")}`,
+    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} ${MIDTRANS_APP_DOMAINS.join(" ")}`,
+    `style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} ${MIDTRANS_APP_DOMAINS.join(" ")}`,
     `img-src 'self' data: ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} ${MIDTRANS_APP_DOMAINS.join(" ")} https://pay.google.com https://g.alicdn.com https://res.cloudinary.com`,
     `connect-src 'self' ${MIDTRANS_APP_DOMAINS.join(" ")} ${MIDTRANS_API_DOMAINS.join(" ")} ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} https://pay.google.com`,
     `frame-src ${MIDTRANS_APP_DOMAINS.join(" ")} ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} https://www.openstreetmap.org`,
