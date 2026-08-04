@@ -80,7 +80,7 @@ async function hasOverlap(bookingDate: string, startTime: string, endTime: strin
     where: {
       bookingDate: new Date(bookingDate),
       status: {
-        notIn: ["cancelled", "expired"],
+        in: ["confirmed", "completed"],
       },
       startTime: { lt: endTime },
       endTime: { gt: startTime },
