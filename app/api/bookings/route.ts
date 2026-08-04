@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       where: {
         bookingDate: range.start,
         status: {
-          in: ["confirmed", "completed"],
+          in: ["pending", "confirmed", "completed"],
         },
         startTime: { lt: endTime },
         endTime: { gt: startTime },
