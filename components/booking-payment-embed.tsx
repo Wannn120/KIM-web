@@ -77,7 +77,10 @@ export function BookingPaymentEmbed({
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [scriptLoadError, setScriptLoadError] = useState<string | null>(null);
   const createRequestedRef = useRef(false);
+  const snapOpenedRef = useRef(false);
 
   const isMock = config?.mockMode === true;
   const badgeClass = statusBadge[status as keyof typeof statusBadge] ?? statusBadge.pending;
@@ -95,6 +98,42 @@ export function BookingPaymentEmbed({
       mockMode: Boolean(data.mockMode),
     });
   }, []);
+
+  const loadSnapScript = useCallback(async () => {
+    if (!config?.snapScriptUrl) {
+      setScriptLoadError("Midtrans Snap script URL is not configured.");
+      return;
+    }
+
+    if (scriptLoaded) {
+      return;
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      const existing = document.querySelector(`script[src="${config.snapScriptUrl}"]`);
+      if (existing) {
+        setScriptLoaded(true);
+        resolve();
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = config.snapScriptUrl;
+      script.async = true;
+      script.onload = () => {
+        setScriptLoaded(true);
+        setScriptLoadError(null);
+        resolve();
+      };
+      script.onerror = () => {
+        const message = "Failed to load Midtrans Snap script.";
+        setScriptLoadError(message);
+        reject(new Error(message));
+      };
+
+      document.body.appendChild(script);
+    });
+  }, [config?.snapScriptUrl, scriptLoaded]);
 
   const fetchPayment = useCallback(async () => {
     const response = await fetch(`/api/payments/transaction?bookingId=${encodeURIComponent(bookingId)}`, {
@@ -189,6 +228,26 @@ export function BookingPaymentEmbed({
     }
   }, [actionLoading, bookingId, amount, customerEmail, customerName, customerPhone]);
 
+  const openSnap = useCallback(async (token: string) => {
+    if (!token.trim()) {
+      setError("Invalid Snap token.");
+      return;
+    }
+
+    try {
+      await loadSnapScript();
+      if (!window.snap?.pay) {
+        throw new Error("Midtrans Snap script did not expose the expected API.");
+      }
+
+      snapOpenedRef.current = true;
+      window.snap.pay(token);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setUiState("ready");
+    }
+  }, [loadSnapScript]);
+
   const refreshPayment = useCallback(async () => {
     setActionLoading(true);
     setUiState("loading");
@@ -275,8 +334,12 @@ export function BookingPaymentEmbed({
       return;
     }
 
-    setUiState("active");
-  }, [uiState, isMock, snapToken]);
+    if (!snapOpenedRef.current) {
+      openSnap(snapToken).finally(() => {
+        snapOpenedRef.current = false;
+      });
+    }
+  }, [uiState, isMock, openSnap, snapToken]);
 
   const paymentHint = useMemo(() => {
     if (status === "success") return "This booking has already completed payment.";
