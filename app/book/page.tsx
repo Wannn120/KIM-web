@@ -89,8 +89,8 @@ export default async function BookPage() {
           </div>
         </section>
 
-        <section className="grid gap-8 lg:grid-cols-[1.4fr_0.6fr]">
-          <div className="card-surface p-8">
+        <section className="grid gap-8 lg:grid-cols-2">
+          <div className="card-surface p-8 h-full">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Available schedule</p>
@@ -102,57 +102,63 @@ export default async function BookPage() {
             </div>
 
             <div className="mt-8">
-              <div className="hidden md:block overflow-x-auto rounded-3xl border border-white/10 card-surface">
-                <table className="min-w-[640px] w-full table-auto text-left text-sm text-[color:var(--muted)]">
-                  <thead className="bg-[color:var(--surface-strong)] text-[color:var(--muted)]">
-                    <tr>
-                      <th className="whitespace-nowrap px-4 py-3">Date</th>
-                      <th className="whitespace-nowrap px-4 py-3">Time</th>
-                      <th className="whitespace-nowrap px-4 py-3">Field</th>
-                      <th className="whitespace-nowrap px-4 py-3">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {bookedSlots.map((slot) => (
-                      <tr key={`${slot.date}-${slot.time}-${slot.field}`} className="border-t border-white/10 card-surface">
-                        <td className="px-4 py-3 text-white">{slot.date}</td>
-                        <td className="px-4 py-3">{slot.time}</td>
-                        <td className="px-4 py-3">{slot.field}</td>
-                        <td className="px-4 py-3 text-[color:var(--accent)]">{slot.status}</td>
+              <div className="overflow-hidden rounded-3xl border border-white/10 bg-[color:var(--surface)]">
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full table-auto text-left text-sm text-[color:var(--muted)]">
+                    <thead className="bg-[color:var(--surface-strong)] text-[color:var(--muted)]">
+                      <tr>
+                        <th className="whitespace-nowrap px-4 py-3">Date</th>
+                        <th className="whitespace-nowrap px-4 py-3">Time</th>
+                        <th className="whitespace-nowrap px-4 py-3">Field</th>
+                        <th className="whitespace-nowrap px-4 py-3">Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {bookedSlots.map((slot) => (
+                        <tr key={`${slot.date}-${slot.time}-${slot.field}`} className="border-t border-white/10">
+                          <td className="px-4 py-3 text-white">{slot.date}</td>
+                          <td className="px-4 py-3">{slot.time}</td>
+                          <td className="px-4 py-3">{slot.field}</td>
+                          <td className="px-4 py-3">
+                            <span className="inline-flex rounded-full bg-[color:rgba(16,185,129,0.12)] px-3 py-1 text-[color:var(--accent)]">
+                              {slot.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
 
-              <div className="md:hidden space-y-3">
-                {bookedSlots.map((slot) => (
-                  <div key={`${slot.date}-${slot.time}-${slot.field}`} className="rounded-2xl border border-white/10 card-surface p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-[color:var(--muted)]">Date</p>
-                        <p className="font-semibold text-white">{slot.date}</p>
+                <div className="md:hidden space-y-3 p-4">
+                  {bookedSlots.map((slot) => (
+                    <div key={`${slot.date}-${slot.time}-${slot.field}`} className="rounded-3xl border border-white/10 bg-[color:var(--surface-strong)] p-4">
+                      <div className="flex flex-col gap-3">
+                        <div>
+                          <p className="text-xs text-[color:var(--muted)]">Date</p>
+                          <p className="font-semibold text-white">{slot.date}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-[color:var(--muted)]">Time</p>
+                          <p className="text-sm text-white">{slot.time}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-[color:var(--muted)]">Field</p>
+                          <p className="text-sm text-white">{slot.field}</p>
+                        </div>
+                        <div className="flex items-center justify-between gap-4">
+                          <p className="text-xs text-[color:var(--muted)]">Status</p>
+                          <span className="rounded-full bg-[color:rgba(16,185,129,0.12)] px-3 py-1 text-[color:var(--accent)] text-sm">{slot.status}</span>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-xs text-[color:var(--muted)]">Time</p>
-                        <p className="text-sm text-white">{slot.time}</p>
-                      </div>
                     </div>
-                    <div className="mt-3">
-                      <p className="text-xs text-[color:var(--muted)]">Field</p>
-                      <p className="text-sm text-white">{slot.field}</p>
-                    </div>
-                    <div className="mt-3 flex items-center justify-between">
-                      <p className="text-xs text-[color:var(--muted)]">Status</p>
-                      <span className="rounded-full bg-[color:rgba(16,185,129,0.12)] px-3 py-1 text-[color:var(--accent)] text-sm">{slot.status}</span>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
 
-          <aside className="card-glow p-8">
+          <aside className="card-glow p-8 h-full">
             {usingFallback ? (
               <div className="rounded-3xl border border-rose-500/10 bg-rose-500/5 p-8">
                 <p className="text-sm uppercase tracking-[0.3em] text-rose-200">Booking unavailable</p>

@@ -188,22 +188,21 @@ export function BookingForm({ fields }: { fields: Field[] }) {
         </div>
       </div>
 
-      <div className="mt-8">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2">
         <div className="rounded-3xl border border-white/10 bg-[color:var(--background)] p-4">
           <p className="text-sm font-medium text-[color:var(--muted)]">Field</p>
           <p className="mt-2 text-base font-semibold text-white">{selectedField?.name}</p>
           <p className="text-sm text-[color:var(--muted)]">{selectedField?.location}</p>
         </div>
-      </div>
-
-      <div className="mt-4 sm:mt-8">
-        <label className="block text-sm font-medium text-[color:var(--muted)]">Booking date</label>
-        <input
-          type="date"
-          value={selectedDate}
-          onChange={(event) => setSelectedDate(event.target.value)}
-          className="mt-2 w-full rounded-3xl border border-white/10 bg-[color:var(--background)] px-4 py-3 text-white outline-none focus:border-[color:var(--accent)]"
-        />
+        <div className="rounded-3xl border border-white/10 bg-[color:var(--background)] p-4">
+          <label className="block text-sm font-medium text-[color:var(--muted)]">Booking date</label>
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(event) => setSelectedDate(event.target.value)}
+            className="mt-2 w-full rounded-3xl border border-white/10 bg-[color:var(--surface)] px-4 py-3 text-white outline-none focus:border-[color:var(--accent)]"
+          />
+        </div>
       </div>
 
       <div className="mt-8">
@@ -253,26 +252,30 @@ export function BookingForm({ fields }: { fields: Field[] }) {
       </div>
 
       <div className="mt-8 rounded-3xl border border-white/10 bg-[color:var(--background)] p-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="grid gap-4 sm:grid-cols-[1.1fr_0.9fr] sm:items-center">
           <div>
             <p className="text-sm uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Booking preview</p>
             <p className="mt-2 text-lg font-semibold text-white">{selectedField?.name}</p>
             <p className="text-sm text-[color:var(--muted)]">{selectedField?.location}</p>
           </div>
-          <div className="text-right">
-            <p className="text-sm text-[color:var(--muted)]">Duration</p>
-            <p className="text-xl font-semibold text-white">
-              {selectedRange ? `${selectedDuration} hour(s)` : "Select a slot"}
-            </p>
-            <p className="text-sm text-[color:var(--muted)]">Time</p>
-            <p className="mt-2 text-white">{selectedLabel}</p>
-            {selectedRange && !selectedRange.isContinuous ? (
-              <p className="mt-1 text-sm text-amber-300">Please select continuous slots without gaps.</p>
-            ) : null}
+          <div className="rounded-3xl border border-white/10 bg-[color:var(--surface)] p-4">
+            <div className="grid gap-3">
+              <div>
+                <p className="text-sm text-[color:var(--muted)]">Duration</p>
+                <p className="text-lg font-semibold text-white">{selectedRange ? `${selectedDuration} hour(s)` : "Select a slot"}</p>
+              </div>
+              <div>
+                <p className="text-sm text-[color:var(--muted)]">Time</p>
+                <p className="mt-1 text-white">{selectedLabel}</p>
+              </div>
+              {selectedRange && !selectedRange.isContinuous ? (
+                <p className="text-sm text-amber-300">Select continuous slots without gaps.</p>
+              ) : null}
+            </div>
           </div>
         </div>
 
-        <div className="mt-6 flex items-center justify-between border-t border-white/10 pt-4 text-white">
+        <div className="mt-6 flex flex-col gap-3 border-t border-white/10 pt-4 text-white sm:flex-row sm:items-center sm:justify-between">
           <span className="text-sm text-[color:var(--muted)]">Estimated total</span>
           <span className="text-2xl font-semibold">{formatCurrency(selectedAmount)}</span>
         </div>
