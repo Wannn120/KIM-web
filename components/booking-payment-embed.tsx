@@ -75,7 +75,6 @@ export function BookingPaymentEmbed({
   const [status, setStatus] = useState<string>(normalizeStatus(initialPayment?.status));
   const [uiState, setUiState] = useState<PaymentUiState>(initialPayment?.snapToken ? "active" : "idle");
   const [error, setError] = useState<string | null>(null);
-  const [embedLoading, setEmbedLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const createRequestedRef = useRef(false);
@@ -83,7 +82,6 @@ export function BookingPaymentEmbed({
   const isMock = config?.mockMode === true;
   const badgeClass = statusBadge[status as keyof typeof statusBadge] ?? statusBadge.pending;
   const badgeLabel = friendlyStatus[status as keyof typeof friendlyStatus] ?? friendlyStatus.pending;
-  const showPaymentInterface = !isMock && config?.clientKey && Boolean(snapToken);
 
   const fetchConfig = useCallback(async () => {
     const response = await fetch("/api/midtrans/config", { cache: "no-store" });
@@ -150,7 +148,6 @@ export function BookingPaymentEmbed({
     setMessage(null);
     setSnapToken(null);
     setSnapUrl(null);
-    setEmbedLoading(true);
 
     try {
       const response = await fetch("/api/midtrans/create-transaction", {
@@ -189,7 +186,6 @@ export function BookingPaymentEmbed({
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setActionLoading(false);
-      setEmbedLoading(false);
     }
   }, [actionLoading, bookingId, amount, customerEmail, customerName, customerPhone]);
 
@@ -200,7 +196,6 @@ export function BookingPaymentEmbed({
     setMessage(null);
     setSnapToken(null);
     setSnapUrl(null);
-    setEmbedLoading(true);
 
     try {
       const paymentRecord = await fetchPayment();
@@ -211,7 +206,6 @@ export function BookingPaymentEmbed({
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setActionLoading(false);
-      setEmbedLoading(false);
     }
   }, [fetchPayment]);
 
@@ -249,18 +243,15 @@ export function BookingPaymentEmbed({
     setUiState("loading");
     setError(null);
     setMessage(null);
-    setEmbedLoading(true);
 
     Promise.all([fetchConfig(), fetchPayment()])
       .then(() => {
         if (!active) return;
-        setEmbedLoading(false);
       })
       .catch((err) => {
         if (!active) return;
         setUiState("error");
         setError(err instanceof Error ? err.message : String(err));
-        setEmbedLoading(false);
       });
 
     return () => {
@@ -280,86 +271,12 @@ export function BookingPaymentEmbed({
   }, [uiState, config, isMock, actionLoading, createTransaction]);
 
   useEffect(() => {
-    if (uiState === "loading" || uiState === "error" || isMock || !config?.snapScriptUrl || !snapToken || !snapToken.trim()) {
+    if (uiState === "loading" || uiState === "error" || isMock || !snapToken || !snapToken.trim()) {
       return;
     }
 
-    const container = document.getElementById("snap-container");
-    if (container) {
-      container.innerHTML = "";
-    }
-
-    const initializeSnap = () => {
-      if (!window.snap?.embed) {
-        setUiState("error");
-        setError("Midtrans Snap is not available in this browser session.");
-        setEmbedLoading(false);
-        return;
-      }
-
-      try {
-        const container = document.getElementById("snap-container");
-        if (!container) {
-          setUiState("error");
-          setError("Payment container is not ready.");
-          setEmbedLoading(false);
-          return;
-        }
-
-        if (!window.snap?.embed) {
-          setUiState("error");
-          setError("Midtrans Snap is not available in this browser session.");
-          setEmbedLoading(false);
-          return;
-        }
-
-        window.snap.embed(snapToken, container);
-        setEmbedLoading(false);
-        setUiState("active");
-      } catch (err) {
-        const message = err instanceof Error ? err.message : "Unable to initialize Midtrans payment interface.";
-        setUiState("error");
-        setError(message);
-        setEmbedLoading(false);
-      }
-    };
-
-    if (window.snap?.embed) {
-      initializeSnap();
-      return;
-    }
-
-    const script = document.querySelector(`script[src="${config.snapScriptUrl}"]`) as HTMLScriptElement | null;
-    if (script?.getAttribute("data-loaded") === "true") {
-      initializeSnap();
-      return;
-    }
-
-    setEmbedLoading(true);
-    const tag = document.createElement("script");
-    tag.src = config.snapScriptUrl;
-    tag.async = true;
-    if (config.clientKey) {
-      tag.setAttribute("data-client-key", config.clientKey);
-    }
-    tag.onload = () => {
-      tag.setAttribute("data-loaded", "true");
-      initializeSnap();
-    };
-    tag.onerror = () => {
-      setUiState("error");
-      setError("Unable to load Midtrans Snap script.");
-      setEmbedLoading(false);
-    };
-
-    document.body.appendChild(tag);
-
-    return () => {
-      if (tag.parentElement) {
-        tag.parentElement.removeChild(tag);
-      }
-    };
-  }, [uiState, isMock, config?.snapScriptUrl, snapToken]);
+    setUiState("active");
+  }, [uiState, isMock, snapToken]);
 
   const paymentHint = useMemo(() => {
     if (status === "success") return "This booking has already completed payment.";
@@ -455,33 +372,10 @@ export function BookingPaymentEmbed({
           </div>
         ) : (
           <div className="space-y-5">
-            <div className="min-h-[320px] rounded-3xl border border-white/10 bg-black/10 p-4">
-              <div id="snap-container" className="min-h-[320px] rounded-3xl bg-[color:var(--background)] p-4" />
-              {embedLoading ? (
-                <p className="mt-4 text-sm text-[color:var(--muted)]">Initializing payment interface…</p>
-              ) : null}
-            </div>
-
-            {!showPaymentInterface ? (
-              <div className="space-y-4">
-                <p className="text-sm text-[color:var(--muted)]">
-                  A secure payment session is required before the checkout can open. If the widget is blocked, use the alternate payment link below.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => createTransaction({ forceNew: true })}
-                  disabled={actionLoading}
-                  className="btn-primary w-full py-3 disabled:opacity-60"
-                >
-                  {actionLoading ? "Preparing payment…" : "Create payment session"}
-                </button>
-              </div>
-            ) : null}
-
-            {payment?.snapUrl ? (
-              <div className="rounded-3xl border border-white/10 bg-black/10 p-4 text-sm text-[color:var(--muted)]">
-                <p className="font-semibold text-white">Alternate payment link</p>
-                <p className="mt-2">If the embedded checkout does not appear, open the payment flow in a new tab.</p>
+            <div className="rounded-3xl border border-white/10 bg-black/10 p-6 text-sm text-[color:var(--muted)]">
+              <p className="font-semibold text-white">Continue to payment</p>
+              <p className="mt-2">The embedded checkout is unavailable in this browser session, so the payment will open in a new tab using the secure Midtrans link.</p>
+              {payment?.snapUrl ? (
                 <a
                   href={payment.snapUrl}
                   target="_blank"
@@ -490,8 +384,22 @@ export function BookingPaymentEmbed({
                 >
                   Open payment in new tab
                 </a>
-              </div>
-            ) : null}
+              ) : null}
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-sm text-[color:var(--muted)]">
+                A secure payment session is required before the checkout can open. If the widget is blocked, use the alternate payment link above.
+              </p>
+              <button
+                type="button"
+                onClick={() => createTransaction({ forceNew: true })}
+                disabled={actionLoading}
+                className="btn-primary w-full py-3 disabled:opacity-60"
+              >
+                {actionLoading ? "Preparing payment…" : "Create payment session"}
+              </button>
+            </div>
           </div>
         )}
       </div>

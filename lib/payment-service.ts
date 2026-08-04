@@ -4,6 +4,7 @@ import { BookingStatus } from "@/lib/booking-engine";
 import { sendNotification } from "@/lib/notifications";
 import { createMidtransTransaction } from "@/lib/midtrans";
 import { DEFAULT_FIELD_NAME } from "@/lib/venue";
+import { buildMidtransCustomerDetails, isUuid } from "@/lib/payment-utils";
 
 const paymentProvider = new DemoPaymentProvider();
 
@@ -33,8 +34,15 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
     throw new Error("A valid amount is required.");
   }
 
+  const bookingId = input.bookingId.trim();
+  const normalizedBookingId = isUuid(bookingId) ? bookingId : undefined;
+
+  if (!normalizedBookingId) {
+    throw new Error("Invalid bookingId format.");
+  }
+
   const booking = await prisma.booking.findUnique({
-    where: { id: input.bookingId },
+    where: { id: normalizedBookingId },
   });
 
   if (!booking) {
@@ -47,7 +55,7 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
 
   const existingPayment = await prisma.payment.findFirst({
     where: {
-      bookingId: input.bookingId,
+      bookingId: normalizedBookingId,
     },
     orderBy: { createdAt: "desc" },
   });
@@ -67,19 +75,16 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
 
   const appBaseUrl = input.appBaseUrl || process.env.NEXT_PUBLIC_APP_URL || "https://klaten-international-minisoccer.vercel.app";
   const midtransOrderId = `bk-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const customerDetails = buildMidtransCustomerDetails(input.customerName, input.email, input.phone);
   const midtransPayload = {
     transaction_details: {
       order_id: midtransOrderId,
       gross_amount: input.amount,
     },
-    customer_details: {
-      first_name: input.customerName || "Guest",
-      email: input.email,
-      phone: input.phone,
-    },
+    customer_details: customerDetails,
     item_details: [
       {
-        id: input.bookingId,
+        id: normalizedBookingId,
         name: DEFAULT_FIELD_NAME,
         price: input.amount,
         quantity: 1,
@@ -98,7 +103,7 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
   };
 
   const midtransResponse = await createMidtransTransaction(midtransPayload);
-  const uniqueTransactionId = `${input.bookingId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const uniqueTransactionId = `${normalizedBookingId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
   const paymentRecord = existingPayment
     ? await prisma.payment.update({
@@ -118,7 +123,7 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
       })
     : await prisma.payment.create({
         data: {
-          bookingId: input.bookingId,
+          bookingId: normalizedBookingId,
           transactionId: uniqueTransactionId,
           midtransOrderId,
           snapToken: midtransResponse.token,
