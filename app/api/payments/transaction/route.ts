@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getPaymentTransaction, getPaymentTransactionByBookingId, expirePendingPayments } from "@/lib/payment-service";
+import { getPaymentTransaction, getPaymentTransactionByBookingId } from "@/lib/payment-service";
 import { isUuid } from "@/lib/payment-utils";
 
 function getErrorStatus(message: string) {

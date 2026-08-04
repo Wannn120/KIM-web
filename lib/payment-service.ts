@@ -19,6 +19,23 @@ function normalizePaymentStatus(status: string): PaymentStatus {
   return "pending";
 }
 
+async function findPaymentByIdentifier(identifier: string) {
+  if (!identifier || !identifier.trim()) {
+    return null;
+  }
+
+  return prisma.payment.findFirst({
+    where: {
+      OR: [
+        { transactionId: identifier },
+        { midtransOrderId: identifier },
+        { bookingId: identifier },
+      ],
+    },
+    include: { booking: true },
+  });
+}
+
 function buildInvoiceNumber() {
   const now = new Date();
   const date = now.toISOString().slice(0, 10).replace(/-/g, "");
@@ -74,7 +91,8 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
   }
 
   const appBaseUrl = input.appBaseUrl || process.env.NEXT_PUBLIC_APP_URL || "https://klaten-international-minisoccer.vercel.app";
-  const midtransOrderId = `bk-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const uniqueTransactionId = `${normalizedBookingId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const midtransOrderId = uniqueTransactionId;
   const customerDetails = buildMidtransCustomerDetails(input.customerName, input.email, input.phone);
   const midtransPayload = {
     transaction_details: {
@@ -91,9 +109,9 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
       },
     ],
     callbacks: {
-      finish: `${appBaseUrl}/payment/success?transactionId=${encodeURIComponent(input.bookingId)}`,
-      error: `${appBaseUrl}/payment/failure?transactionId=${encodeURIComponent(input.bookingId)}`,
-      pending: `${appBaseUrl}/payment/success?transactionId=${encodeURIComponent(input.bookingId)}`,
+      finish: `${appBaseUrl}/payment/success?transactionId=${encodeURIComponent(uniqueTransactionId)}`,
+      error: `${appBaseUrl}/payment/failure?transactionId=${encodeURIComponent(uniqueTransactionId)}`,
+      pending: `${appBaseUrl}/payment/success?transactionId=${encodeURIComponent(uniqueTransactionId)}`,
     },
     notification_url: `${appBaseUrl}/api/payments/webhook`,
     expiry: {
@@ -103,7 +121,6 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
   };
 
   const midtransResponse = await createMidtransTransaction(midtransPayload);
-  const uniqueTransactionId = `${normalizedBookingId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
   const paymentRecord = existingPayment
     ? await prisma.payment.update({
@@ -224,19 +241,25 @@ export async function expirePendingPayments() {
 export async function getPaymentTransaction(transactionId: string) {
   await expirePendingPayments();
 
-  const payment = await prisma.payment.findUnique({
-    where: { transactionId },
+  const payment = await findPaymentByIdentifier(transactionId);
+
+  if (!payment) {
+    throw new Error("Payment record not found.");
+  }
+
+  const result = await prisma.payment.findUnique({
+    where: { id: payment.id },
     include: {
       booking: true,
       invoice: true,
     },
   });
 
-  if (!payment) {
+  if (!result) {
     throw new Error("Payment record not found.");
   }
 
-  return payment;
+  return result;
 }
 
 export async function getPaymentTransactionByBookingId(bookingId: string) {
@@ -261,10 +284,7 @@ export async function getPaymentSimulationDetails(method: PaymentMethod): Promis
 export async function processWebhookEvent(transactionId: string, status: PaymentStatus) {
   const normalized = normalizePaymentStatus(status);
 
-  const payment = await prisma.payment.findUnique({
-    where: { transactionId },
-    include: { booking: true },
-  });
+  const payment = await findPaymentByIdentifier(transactionId);
 
   if (!payment) {
     throw new Error("Payment record not found.");

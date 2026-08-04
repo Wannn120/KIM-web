@@ -3,8 +3,9 @@ import { auditLog } from "@/lib/audit-log";
 import { expirePendingPayments } from "@/lib/payment-service";
 import { getRateLimitResult, sanitizeObject, applySecurityHeaders } from "@/lib/security-headers";
 import { prisma } from "@/lib/prisma";
-import { BLOCKING_BOOKING_STATUSES } from "@/lib/booking-engine";
-import { DEFAULT_FIELD_ID, DEFAULT_FIELD_NAME, DEFAULT_FIELD_PRICE } from "@/lib/venue";
+import { BLOCKING_BOOKING_STATUSES, getRequestedScheduleBlocks, getScheduleSlots } from "@/lib/booking-engine";
+import { DEFAULT_FIELD_ID, DEFAULT_FIELD_NAME } from "@/lib/venue";
+import { getFieldHourlyRate } from "@/lib/site-content";
 
 function getDateRange(dateString: string) {
   const start = new Date(`${dateString}T00:00:00.000Z`);
@@ -28,34 +29,6 @@ function parseTimeToMinutes(timeValue: string) {
 
   return hour * 60 + minute;
 }
-
-function formatMinutesToTime(totalMinutes: number) {
-  const safeMinutes = Math.max(0, totalMinutes);
-  const hour = Math.floor(safeMinutes / 60);
-  const minute = safeMinutes % 60;
-  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
-}
-
-function getRequestedScheduleBlocks(startTime: string, endTime: string) {
-  const startMinutes = parseTimeToMinutes(startTime);
-  const endMinutes = parseTimeToMinutes(endTime);
-
-  if (Number.isNaN(startMinutes) || Number.isNaN(endMinutes) || endMinutes <= startMinutes) {
-    return [];
-  }
-
-  const blocks: Array<{ start: string; end: string }> = [];
-  for (let cursor = startMinutes; cursor < endMinutes; cursor += 60) {
-    const nextCursor = Math.min(cursor + 60, endMinutes);
-    blocks.push({
-      start: formatMinutesToTime(cursor),
-      end: formatMinutesToTime(nextCursor),
-    });
-  }
-
-  return blocks;
-}
-
 
 export async function POST(request: NextRequest) {
   try {
@@ -89,10 +62,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: "Invalid booking date." }, { status: 400 });
     }
 
-    const requestedBlocks = getRequestedScheduleBlocks(startTime, endTime);
+    const scheduleSlots = await getScheduleSlots();
+    const requestedBlocks = getRequestedScheduleBlocks(startTime, endTime, scheduleSlots);
     if (requestedBlocks.length === 0) {
       return NextResponse.json({ success: false, message: "Invalid booking time range." }, { status: 400 });
     }
+
+    await expirePendingPayments();
 
     const overlappingBooking = await prisma.booking.findFirst({
       where: {
@@ -120,7 +96,8 @@ export async function POST(request: NextRequest) {
     const startMinutes = parseTimeToMinutes(startTime);
     const endMinutes = parseTimeToMinutes(endTime);
     const durationHours = Math.max(Math.ceil((endMinutes - startMinutes) / 60), 1);
-    const totalPrice = DEFAULT_FIELD_PRICE * durationHours;
+    const hourlyRate = await getFieldHourlyRate();
+    const totalPrice = hourlyRate * durationHours;
 
     const booking = await prisma.booking.create({
       data: {

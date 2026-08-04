@@ -6,7 +6,7 @@ import { SectionHeading } from "@/components/section-heading";
 import { getReviews, getVenueFeatures, getVenueGallery } from "@/lib/data";
 import { siteConfig } from "@/lib/site-config";
 import { getSiteContent } from "@/lib/site-content";
-import { DEFAULT_FIELD_PRICE } from "@/lib/venue";
+import { getFieldHourlyRate } from "@/lib/site-content";
 import CurveCarousel from "@/components/gallery/CurveCarousel";
 
 export const metadata: Metadata = {
@@ -35,6 +35,7 @@ export default async function Home() {
   } catch (error) {
     console.error('❌ Failed to load reviews:', error);
   }
+  const hourlyRate = await getFieldHourlyRate();
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "SportsActivityLocation",
@@ -55,7 +56,7 @@ export default async function Home() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <HeroSection facilities={features} content={content} />
 
-      <CurveCarousel images={gallery} price={DEFAULT_FIELD_PRICE} />
+      <CurveCarousel images={gallery} price={hourlyRate} />
 
       <ReviewSection initialReviews={reviews} />
 

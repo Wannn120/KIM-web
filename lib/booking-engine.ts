@@ -8,7 +8,125 @@ export function isBookingSlotBlocked(status: string | undefined | null): boolean
   const normalized = status?.toLowerCase();
   return BLOCKING_BOOKING_STATUSES.includes(normalized as BookingStatus);
 }
+export interface ScheduleSlotRecord {
+  id: string;
+  startTime: string;
+  endTime: string;
+  isActive: boolean;
+  sortOrder: number;
+}
 
+function parseTimeToMinutes(timeValue: string) {
+  const [hourText, minuteText] = timeValue.split(":");
+  const hour = Number(hourText);
+  const minute = Number(minuteText ?? "0");
+  if (Number.isNaN(hour) || Number.isNaN(minute)) return NaN;
+  return hour * 60 + minute;
+}
+
+function formatMinutesToTime(totalMinutes: number) {
+  const safeMinutes = Math.max(0, totalMinutes);
+  const hour = Math.floor(safeMinutes / 60);
+  const minute = safeMinutes % 60;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+export async function getScheduleSlots(): Promise<ScheduleSlotRecord[]> {
+  const scheduleSlots = await prisma.scheduleSlot.findMany({
+    orderBy: { sortOrder: "asc" },
+  });
+
+  return scheduleSlots.map((slot) => ({
+    id: slot.id,
+    startTime: slot.startTime,
+    endTime: slot.endTime,
+    isActive: slot.isActive,
+    sortOrder: slot.sortOrder,
+  }));
+}
+
+function isScheduleSlotAvailable(
+  slot: ScheduleSlotRecord,
+  bookedIntervals: Array<{ startTime: string; endTime: string }>
+) {
+  if (!slot.isActive) {
+    return false;
+  }
+
+  return !bookedIntervals.some((booking) => booking.startTime < slot.endTime && booking.endTime > slot.startTime);
+}
+
+function buildDefaultTimeSlots(
+  date: string,
+  bookedIntervals: Array<{ startTime: string; endTime: string }>
+) {
+  const slots: Array<{ id: string; startTime: string; endTime: string; isAvailable: boolean }> = [];
+  const startHour = 6;
+  const endHour = 22;
+
+  for (let hour = startHour; hour < endHour; hour++) {
+    const startTime = `${String(hour).padStart(2, "0")}:00`;
+    const endTime = `${String(hour + 1).padStart(2, "0")}:00`;
+    const isAvailable = !bookedIntervals.some((booking) => booking.startTime < endTime && booking.endTime > startTime);
+    slots.push({ id: `${date}-${startTime}-${endTime}`, startTime, endTime, isAvailable });
+  }
+
+  return slots;
+}
+
+export function buildTimeSlots(
+  date: string,
+  bookedIntervals: Array<{ startTime: string; endTime: string }>,
+  scheduleSlots: ScheduleSlotRecord[] = []
+) {
+  if (!scheduleSlots || scheduleSlots.length === 0) {
+    return buildDefaultTimeSlots(date, bookedIntervals);
+  }
+
+  return scheduleSlots.map((slot) => ({
+    id: `${date}-${slot.startTime}-${slot.endTime}`,
+    startTime: slot.startTime,
+    endTime: slot.endTime,
+    isAvailable: isScheduleSlotAvailable(slot, bookedIntervals),
+  }));
+}
+
+export function getRequestedScheduleBlocks(
+  startTime: string,
+  endTime: string,
+  scheduleSlots: ScheduleSlotRecord[] = []
+) {
+  const startMinutes = parseTimeToMinutes(startTime);
+  const endMinutes = parseTimeToMinutes(endTime);
+
+  if (Number.isNaN(startMinutes) || Number.isNaN(endMinutes) || endMinutes <= startMinutes) {
+    return [];
+  }
+
+  if (!scheduleSlots || scheduleSlots.length === 0) {
+    const blocks: Array<{ start: string; end: string }> = [];
+    for (let cursor = startMinutes; cursor < endMinutes; cursor += 60) {
+      const nextCursor = Math.min(cursor + 60, endMinutes);
+      blocks.push({ start: formatMinutesToTime(cursor), end: formatMinutesToTime(nextCursor) });
+    }
+    return blocks;
+  }
+
+  const scheduleByStart = new Map(scheduleSlots.map((slot) => [slot.startTime, slot]));
+  const blocks: Array<{ start: string; end: string }> = [];
+  let cursor = startTime;
+
+  while (cursor !== endTime) {
+    const slot = scheduleByStart.get(cursor);
+    if (!slot || !slot.isActive) {
+      return [];
+    }
+    blocks.push({ start: slot.startTime, end: slot.endTime });
+    cursor = slot.endTime;
+  }
+
+  return blocks;
+}
 export interface BookingRecord {
   id: string;
   bookingDate: string;

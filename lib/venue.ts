@@ -15,6 +15,10 @@ export const DEFAULT_FIELD_ID = DEFAULT_FIELD.id;
 export const DEFAULT_FIELD_NAME = DEFAULT_FIELD.name;
 export const DEFAULT_FIELD_PRICE = DEFAULT_FIELD.price;
 
+export function getDefaultFieldPrice() {
+  return DEFAULT_FIELD.price;
+}
+
 export function isDefaultFieldId(fieldId?: string) {
   return !fieldId || fieldId === DEFAULT_FIELD_ID;
 }

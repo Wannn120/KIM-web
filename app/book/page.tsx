@@ -1,5 +1,6 @@
 import { bookingSteps, bookedSlots as fallbackBookedSlots, fields as fallbackFields } from "@/lib/mock-data";
 import { getUpcomingBookings, getFields, mapBookingsToSlots } from "@/lib/data";
+import { expirePendingPayments } from "@/lib/payment-service";
 import { BookingForm } from "@/components/booking-form";
 import { headers } from "next/headers";
 
@@ -23,6 +24,7 @@ async function getAppUrl() {
 
 async function loadBookedSlots() {
   try {
+    await expirePendingPayments();
     const bookings = await getUpcomingBookings(5);
     return mapBookingsToSlots(bookings);
   } catch (error) {
