@@ -196,14 +196,40 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
 }
 
 export async function reconcilePaymentStatus(transactionId: string, status?: string) {
-  const normalized = normalizePaymentStatus(status ?? "");
-
-  if (!transactionId || !normalized || normalized === "pending") {
+  if (!transactionId) {
     return null;
   }
 
-  await processWebhookEvent(transactionId, normalized);
-  return normalized;
+  const normalized = normalizePaymentStatus(status ?? "");
+
+  if (normalized && normalized !== "pending") {
+    await processWebhookEvent(transactionId, normalized);
+    return normalized;
+  }
+
+  const payment = await findPaymentByIdentifier(transactionId);
+  if (!payment || !payment.midtransOrderId) {
+    return normalized || null;
+  }
+
+  try {
+    const midtransResponse = await getMidtransTransactionStatus(payment.midtransOrderId);
+    const liveStatus = normalizePaymentStatus(resolveMidtransTransactionStatus(midtransResponse));
+
+    if (liveStatus && liveStatus !== "pending") {
+      await processWebhookEvent(payment.transactionId, liveStatus);
+      return liveStatus;
+    }
+  } catch (error) {
+    // ignore live status lookup failures; return whatever we already know
+    console.warn("[payment-service] Midtrans status lookup failed", {
+      transactionId,
+      midtransOrderId: payment.midtransOrderId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  return normalized || null;
 }
 
 export async function expirePendingPayments() {
@@ -321,13 +347,15 @@ export async function processWebhookEvent(transactionId: string, status: Payment
     data: updateData,
   });
 
-  let nextBookingStatus: BookingStatus = "cancelled";
+  let nextBookingStatus: BookingStatus = booking.status;
   if (normalized === "success") {
     nextBookingStatus = "confirmed";
   } else if (normalized === "refunded") {
     nextBookingStatus = "refunded";
   } else if (normalized === "expired") {
     nextBookingStatus = "expired";
+  } else if (normalized === "cancelled" || normalized === "failed") {
+    nextBookingStatus = "cancelled";
   }
 
   await prisma.booking.update({

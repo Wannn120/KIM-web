@@ -32,6 +32,7 @@ export default async function PaymentSuccessPage({
   const isFailed = status === "failed" || status === "cancelled" || status === "expired";
   const isPending = status === "pending";
   const refreshUrl = `/payment/success?transactionId=${encodeURIComponent(transactionId)}`;
+  const continueUrl = payment?.booking ? `/booking/${payment.booking.id}/payment` : "/";
 
   return (
     <main className="flex-1 px-6 py-16 lg:px-8">
@@ -72,8 +73,8 @@ export default async function PaymentSuccessPage({
                 <Link href={refreshUrl} className="btn-secondary w-full sm:w-auto">
                   Refresh status
                 </Link>
-                <Link href="/booking-history" className="btn-primary w-full sm:w-auto">
-                  View booking history
+                <Link href={continueUrl} className="btn-primary w-full sm:w-auto">
+                  Open payment popup
                 </Link>
               </div>
             </div>

@@ -28,6 +28,7 @@ export default async function PaymentFailurePage({
   const status = payment?.status ?? "failed";
   const isPending = status === "pending";
   const refreshUrl = `/payment/failure?transactionId=${encodeURIComponent(transactionId)}`;
+  const continueUrl = payment?.booking ? `/booking/${payment.booking.id}/payment` : "/";
   const invoiceNumber = payment?.invoice?.invoiceNumber ?? null;
   const invoiceAmount = payment?.amount ? `Rp ${payment.amount.toLocaleString("id-ID")}` : undefined;
   const paymentMethod = payment?.paymentMethod;
@@ -64,8 +65,8 @@ export default async function PaymentFailurePage({
                 <Link href={refreshUrl} className="btn-secondary">
                   Refresh status
                 </Link>
-                <Link href="/booking-history" className="btn-primary">
-                  Lihat riwayat booking
+                <Link href={continueUrl} className="btn-primary">
+                  Open payment popup
                 </Link>
               </div>
             </div>
