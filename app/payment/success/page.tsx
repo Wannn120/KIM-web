@@ -66,15 +66,21 @@ export default async function PaymentSuccessPage({
           {isPending ? (
             <div className="mt-4 rounded-3xl border border-white/10 bg-white/5 p-4 text-left">
               <p className="text-sm text-[color:var(--muted)]">
-                The payment is pending. It can take a few moments for Midtrans to confirm the status. If the status does not update automatically, refresh below.
+                The payment is pending. It can take a few moments for Midtrans to confirm the status. If you accidentally closed the payment window or the checkout did not finish, refresh below or return to the payment page to continue.
               </p>
               <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-center">
                 <Link href={refreshUrl} className="btn-secondary w-full sm:w-auto">
                   Refresh status
                 </Link>
-                <Link href="/booking-history" className="btn-primary w-full sm:w-auto">
-                  View booking history
-                </Link>
+                {payment?.booking?.id ? (
+                  <Link href={`/booking/${encodeURIComponent(payment.booking.id)}/payment`} className="btn-primary w-full sm:w-auto">
+                    Resume payment
+                  </Link>
+                ) : (
+                  <Link href="/booking-history" className="btn-primary w-full sm:w-auto">
+                    View booking history
+                  </Link>
+                )}
               </div>
             </div>
           ) : null}
