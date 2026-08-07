@@ -48,7 +48,7 @@ export default async function BookingPaymentPage({ params }: { params: Promise<{
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Payment checkout</p>
               <h1 className="mt-3 text-4xl font-semibold text-white">Complete your booking payment</h1>
               <p className="mt-4 max-w-2xl text-lg text-[color:var(--muted)]">
-                Pay securely with Midtrans Snap Embedded. Your booking will be confirmed once payment is completed.
+                Pay securely with Midtrans Snap Popup. Your booking will be confirmed once payment is completed.
               </p>
             </div>
             <div className="rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-sm text-[color:var(--muted)]">
@@ -83,9 +83,9 @@ export default async function BookingPaymentPage({ params }: { params: Promise<{
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Secure payment</p>
               <h2 className="mt-3 text-3xl font-semibold text-white">Pay with Midtrans Snap</h2>
             </div>
-            <p className="max-w-xl text-sm text-[color:var(--muted)]">
-              The page will open an embedded Midtrans checkout window. If the widget cannot load, use the fallback payment link.
-            </p>
+              <p className="max-w-xl text-sm text-[color:var(--muted)]">
+                The page will open the Midtrans Snap popup. If the popup cannot open, use the fallback payment link.
+              </p>
           </div>
 
           <div className="mt-8">
