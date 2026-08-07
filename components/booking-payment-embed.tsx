@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatCurrency } from "@/utils/formatting";
 
 declare global {
@@ -90,7 +90,7 @@ export function BookingPaymentEmbed({
 }: BookingPaymentEmbedProps) {
   const [config, setConfig] = useState<{ clientKey: string; snapScriptUrl: string; mockMode: boolean } | null>(null);
   const [payment, setPayment] = useState<PaymentRecord | null>(initialPayment);
-  const [snapToken, setSnapToken] = useState<string | null>(initialPayment?.snapToken ?? null);
+  const [, setSnapToken] = useState<string | null>(initialPayment?.snapToken ?? null);
   const [, setSnapUrl] = useState<string | null>(initialPayment?.snapUrl ?? null);
   const [status, setStatus] = useState<PaymentUiState>(initialPayment?.snapToken ? "active" : "idle");
   const [uiState, setUiState] = useState<PaymentUiState>(initialPayment?.snapToken ? "active" : "idle");
@@ -98,8 +98,7 @@ export function BookingPaymentEmbed({
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
-  const [scriptLoadError, setScriptLoadError] = useState<string | null>(null);
-  const createRequestedRef = useRef(false);
+  const [, setScriptLoadError] = useState<string | null>(null);
 
   const isMock = config?.mockMode === true;
   const badgeClass = statusBadge[status as keyof typeof statusBadge] ?? statusBadge.pending;
@@ -266,7 +265,7 @@ export function BookingPaymentEmbed({
 
       // Give the browser a synchronously-opened fallback window to avoid popup blockers.
       // The fallback will be navigated to `snapUrl` if Midtrans' popup does not appear.
-      const fallback = (window as any).__BOOKING_PAYMENT_FALLBACK_WINDOW || null;
+      const fallback: Window | null = window.__BOOKING_PAYMENT_FALLBACK_WINDOW ?? null;
 
       let fallbackNavTimer: number | null = null;
 
@@ -316,7 +315,7 @@ export function BookingPaymentEmbed({
         fallbackNavTimer = window.setTimeout(() => {
           try {
             // Use current payment record snapUrl if available
-            const navUrl = (payment && payment.snapUrl) || (config && (config as any).snapScriptUrl) || null;
+            const navUrl = payment?.snapUrl ?? config?.snapScriptUrl ?? null;
             if (navUrl) {
               fallback.location.href = navUrl;
             } else {
@@ -332,7 +331,7 @@ export function BookingPaymentEmbed({
       setError(err instanceof Error ? err.message : String(err));
       setUiState("ready");
     }
-  }, [bookingId, loadSnapScript, status]);
+  }, [bookingId, config, loadSnapScript, payment, status]);
 
   const handlePayNow = useCallback(async () => {
     if (actionLoading || status === "loading" || status === "pending") {
@@ -345,21 +344,33 @@ export function BookingPaymentEmbed({
 
     // Open a synchronous fallback popup to avoid popup blockers.
     try {
-      (window as any).__BOOKING_PAYMENT_FALLBACK_WINDOW = window.open('', '_blank', 'noopener,noreferrer');
+      window.__BOOKING_PAYMENT_FALLBACK_WINDOW = window.open('', '_blank', 'noopener,noreferrer');
       try {
-        const fw = (window as any).__BOOKING_PAYMENT_FALLBACK_WINDOW;
+        const fw = window.__BOOKING_PAYMENT_FALLBACK_WINDOW;
         if (fw && !fw.closed) {
-          try { fw.document.title = 'Payment'; fw.document.body.innerHTML = '<p style="font-family:system-ui,Segoe UI,Roboto">Preparing payment…</p>'; } catch (e) { /* ignore write errors */ }
+          try {
+            fw.document.title = 'Payment';
+            fw.document.body.innerHTML = '<p style="font-family:system-ui,Segoe UI,Roboto">Preparing payment…</p>';
+          } catch {
+            // ignore write errors
+          }
         }
-      } catch (e) {}
-    } catch (e) {
+      } catch {
+        // ignore fallback setup errors
+      }
+    } catch {
       // popup blocked synchronously; continue and rely on snap.pay
     }
 
     const paymentRecord = await createTransaction({ forceNew: true });
     if (!paymentRecord?.snapToken) {
       setStatus("error");
-      try { const fw = (window as any).__BOOKING_PAYMENT_FALLBACK_WINDOW; if (fw && !fw.closed) fw.close(); } catch (e) {}
+      try {
+        const fw = window.__BOOKING_PAYMENT_FALLBACK_WINDOW;
+        if (fw && !fw.closed) fw.close();
+      } catch {
+        // ignore
+      }
       return;
     }
 
@@ -452,25 +463,31 @@ export function BookingPaymentEmbed({
   useEffect(() => {
     function onDocumentClick(ev: MouseEvent) {
       try {
-        var target = ev.target;
+        let target = ev.target as Node | null;
         while (target && target !== document) {
           if (target instanceof HTMLElement) {
-            var text = (target.textContent || '').trim();
+            const text = (target.textContent || '').trim();
             if (text && text.startsWith('Bayar Sekarang')) {
               // open fallback only if not already opened
               try {
-                if (!window['__BOOKING_PAYMENT_FALLBACK_WINDOW'] || window['__BOOKING_PAYMENT_FALLBACK_WINDOW'].closed) {
-                  window['__BOOKING_PAYMENT_FALLBACK_WINDOW'] = window.open('', '_blank', 'noopener,noreferrer');
-                  try { var fw = window['__BOOKING_PAYMENT_FALLBACK_WINDOW']; if (fw && !fw.closed) { fw.document.title = 'Payment'; fw.document.body.innerHTML = '<p>Preparing payment…</p>'; } } catch (e) {}
+                const fallback = window.__BOOKING_PAYMENT_FALLBACK_WINDOW;
+                if (!fallback || fallback.closed) {
+                  window.__BOOKING_PAYMENT_FALLBACK_WINDOW = window.open('', '_blank', 'noopener,noreferrer');
+                  try {
+                    const fw = window.__BOOKING_PAYMENT_FALLBACK_WINDOW;
+                    if (fw && !fw.closed) {
+                      fw.document.title = 'Payment';
+                      fw.document.body.innerHTML = '<p>Preparing payment…</p>';
+                    }
+                  } catch (e) {}
                 }
               } catch (e) {}
               return;
             }
           }
-          // @ts-ignore
-          target = target.parentNode;
+          target = target.parentNode as Node | null;
         }
-      } catch (e) {
+      } catch {
         // ignore
       }
     }
