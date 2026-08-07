@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { DemoPaymentProvider, PaymentMethod, PaymentStatus, PaymentTransactionInput, PaymentSimulationDetails } from "@/lib/payment-provider";
 import { BookingStatus } from "@/lib/booking-engine";
 import { sendNotification } from "@/lib/notifications";
-import { createMidtransTransaction } from "@/lib/midtrans";
+import { createMidtransTransaction, getMidtransTransactionStatus, resolveMidtransTransactionStatus } from "@/lib/midtrans";
 import { DEFAULT_FIELD_NAME } from "@/lib/venue";
 import { buildMidtransCustomerDetails, isUuid } from "@/lib/payment-utils";
 
@@ -347,7 +347,7 @@ export async function processWebhookEvent(transactionId: string, status: Payment
     data: updateData,
   });
 
-  let nextBookingStatus: BookingStatus = booking.status;
+  let nextBookingStatus: BookingStatus = booking.status as BookingStatus;
   if (normalized === "success") {
     nextBookingStatus = "confirmed";
   } else if (normalized === "refunded") {

@@ -6,19 +6,38 @@ import { formatCurrency } from "@/utils/formatting";
 declare global {
   interface Window {
     snap?: {
-      pay: (token: string) => void;
-      embed?: (token: string, container: string | HTMLElement) => void;
+      pay: (
+        token: string,
+        options?: {
+          onSuccess?: (result: unknown) => void;
+          onPending?: (result: unknown) => void;
+          onError?: (result: unknown) => void;
+          onClose?: () => void;
+        },
+      ) => void;
     };
   }
 }
 
 type PaymentRecord = {
-  status: string;
+  transactionId?: string | null;
+  status: PaymentUiState;
   snapToken?: string | null;
   snapUrl?: string | null;
 };
 
-type PaymentUiState = "idle" | "loading" | "ready" | "active" | "error";
+type PaymentUiState =
+  | "idle"
+  | "loading"
+  | "ready"
+  | "active"
+  | "pending"
+  | "success"
+  | "failed"
+  | "cancelled"
+  | "expired"
+  | "refunded"
+  | "error";
 
 type BookingPaymentEmbedProps = {
   bookingId: string;
@@ -48,14 +67,14 @@ const friendlyStatus = {
   refunded: "Refund processed",
 };
 
-function normalizeStatus(status?: string) {
+function normalizeStatus(status?: string): PaymentUiState {
   if (!status) return "pending";
   const normalized = status.toLowerCase();
-  if (normalized === "settlement" || normalized === "capture" || normalized === "success") return "success";
-  if (normalized === "deny" || normalized === "failure" || normalized === "failed") return "failed";
-  if (normalized === "cancel" || normalized === "cancelled") return "cancelled";
-  if (normalized === "expire" || normalized === "expired") return "expired";
-  if (normalized === "refund" || normalized === "refunded") return "refunded";
+  if (["settlement", "capture", "success"].includes(normalized)) return "success";
+  if (["deny", "failure", "failed"].includes(normalized)) return "failed";
+  if (["cancel", "cancelled"].includes(normalized)) return "cancelled";
+  if (["expire", "expired"].includes(normalized)) return "expired";
+  if (["refund", "refunded"].includes(normalized)) return "refunded";
   return "pending";
 }
 
@@ -72,7 +91,7 @@ export function BookingPaymentEmbed({
   const [payment, setPayment] = useState<PaymentRecord | null>(initialPayment);
   const [snapToken, setSnapToken] = useState<string | null>(initialPayment?.snapToken ?? null);
   const [, setSnapUrl] = useState<string | null>(initialPayment?.snapUrl ?? null);
-  const [status, setStatus] = useState<string>(normalizeStatus(initialPayment?.status));
+  const [status, setStatus] = useState<PaymentUiState>(initialPayment?.snapToken ? "active" : "idle");
   const [uiState, setUiState] = useState<PaymentUiState>(initialPayment?.snapToken ? "active" : "idle");
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -80,7 +99,6 @@ export function BookingPaymentEmbed({
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [scriptLoadError, setScriptLoadError] = useState<string | null>(null);
   const createRequestedRef = useRef(false);
-  const snapOpenedRef = useRef(false);
 
   const isMock = config?.mockMode === true;
   const badgeClass = statusBadge[status as keyof typeof statusBadge] ?? statusBadge.pending;
@@ -135,7 +153,7 @@ export function BookingPaymentEmbed({
     });
   }, [config?.snapScriptUrl, scriptLoaded]);
 
-  const fetchPayment = useCallback(async () => {
+  const fetchPayment = useCallback(async (): Promise<PaymentRecord> => {
     const response = await fetch(`/api/payments/transaction?bookingId=${encodeURIComponent(bookingId)}`, {
       cache: "no-store",
     });
@@ -179,8 +197,8 @@ export function BookingPaymentEmbed({
     return paymentRecord;
   }, [bookingId]);
 
-  const createTransaction = useCallback(async (options?: { forceNew?: boolean }) => {
-    if (actionLoading) return;
+  const createTransaction = useCallback(async (options?: { forceNew?: boolean }): Promise<PaymentRecord | null> => {
+    if (actionLoading) return null;
     setActionLoading(true);
     setUiState("loading");
     setError(null);
@@ -217,12 +235,14 @@ export function BookingPaymentEmbed({
       setPayment(paymentRecord);
       setSnapToken(paymentRecord.snapToken ?? null);
       setSnapUrl(paymentRecord.snapUrl ?? null);
-      setStatus(paymentRecord.status);
-      setUiState(paymentRecord.snapToken ? "active" : "ready");
-      setMessage("Payment session is ready. Complete the payment below.");
+      setStatus(paymentRecord.status === "pending" ? "ready" : (paymentRecord.status as PaymentUiState));
+      setUiState("ready");
+      setMessage("Payment session is ready. Click Bayar Sekarang to open the popup.");
+      return paymentRecord;
     } catch (err) {
       setUiState("error");
       setError(err instanceof Error ? err.message : String(err));
+      return null;
     } finally {
       setActionLoading(false);
     }
@@ -240,13 +260,110 @@ export function BookingPaymentEmbed({
         throw new Error("Midtrans Snap script did not expose the expected API.");
       }
 
-      snapOpenedRef.current = true;
-      window.snap.pay(token);
+      setStatus("pending");
+      setMessage("Opening Midtrans payment popup...");
+
+      // Give the browser a synchronously-opened fallback window to avoid popup blockers.
+      // The fallback will be navigated to `snapUrl` if Midtrans' popup does not appear.
+      const fallback = (window as any).__BOOKING_PAYMENT_FALLBACK_WINDOW || null;
+
+      let fallbackNavTimer: number | null = null;
+
+      const clearFallback = () => {
+        try {
+          if (fallbackNavTimer) window.clearTimeout(fallbackNavTimer as unknown as number);
+          if (fallback && !fallback.closed) {
+            // Close the temporary fallback if Midtrans handled the popup.
+            try { fallback.close(); } catch (e) { /* ignore cross-origin close errors */ }
+          }
+        } catch (e) {
+          // ignore
+        }
+      };
+
+      window.snap.pay(token, {
+        onSuccess: () => {
+          clearFallback();
+          setStatus("success");
+          setMessage("Payment successful. Redirecting...");
+          window.location.href = `/payment/success?transactionId=${encodeURIComponent(bookingId)}`;
+        },
+        onPending: () => {
+          clearFallback();
+          setStatus("pending");
+          setMessage("Payment pending. Confirming status...");
+          window.location.href = `/payment/success?transactionId=${encodeURIComponent(bookingId)}`;
+        },
+        onError: () => {
+          clearFallback();
+          setStatus("error");
+          setError("Payment failed or was rejected. Please try again.");
+        },
+        onClose: () => {
+          clearFallback();
+          if (status !== "success") {
+            setStatus("ready");
+            setMessage("Payment popup closed. Click Bayar Sekarang to try again.");
+          }
+        },
+      });
+
+      // If Midtrans does not open a popup window (or sandbox blocks it), navigate the
+      // previously-opened fallback to the `snapUrl` so the user still sees the payment flow.
+      if (fallback && !fallback.closed) {
+        // Wait a short moment to let snap.open attempt its own popup first.
+        fallbackNavTimer = window.setTimeout(() => {
+          try {
+            // Use current payment record snapUrl if available
+            const navUrl = (payment && payment.snapUrl) || (config && (config as any).snapScriptUrl) || null;
+            if (navUrl) {
+              fallback.location.href = navUrl;
+            } else {
+              // as a last resort, close it
+              try { fallback.close(); } catch (e) {}
+            }
+          } catch (e) {
+            try { fallback.close(); } catch (ignored) {}
+          }
+        }, 1200);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       setUiState("ready");
     }
-  }, [loadSnapScript]);
+  }, [bookingId, loadSnapScript, status]);
+
+  const handlePayNow = useCallback(async () => {
+    if (actionLoading || status === "loading" || status === "pending") {
+      return;
+    }
+
+    setError(null);
+    setMessage(null);
+    setStatus("loading");
+
+    // Open a synchronous fallback popup to avoid popup blockers.
+    try {
+      (window as any).__BOOKING_PAYMENT_FALLBACK_WINDOW = window.open('', '_blank', 'noopener,noreferrer');
+      try {
+        const fw = (window as any).__BOOKING_PAYMENT_FALLBACK_WINDOW;
+        if (fw && !fw.closed) {
+          try { fw.document.title = 'Payment'; fw.document.body.innerHTML = '<p style="font-family:system-ui,Segoe UI,Roboto">Preparing payment…</p>'; } catch (e) { /* ignore write errors */ }
+        }
+      } catch (e) {}
+    } catch (e) {
+      // popup blocked synchronously; continue and rely on snap.pay
+    }
+
+    const paymentRecord = await createTransaction({ forceNew: true });
+    if (!paymentRecord?.snapToken) {
+      setStatus("error");
+      try { const fw = (window as any).__BOOKING_PAYMENT_FALLBACK_WINDOW; if (fw && !fw.closed) fw.close(); } catch (e) {}
+      return;
+    }
+
+    await openSnap(paymentRecord.snapToken);
+  }, [actionLoading, createTransaction, openSnap, status]);
 
   const refreshPayment = useCallback(async () => {
     setActionLoading(true);
@@ -329,28 +446,38 @@ export function BookingPaymentEmbed({
     };
   }, [bookingId, fetchConfig, fetchPayment]);
 
+  // Ensure a synchronous fallback popup is opened if the user clicks the Pay button
+  // Use capture phase so this runs even if React handlers are not yet attached.
   useEffect(() => {
-    if (uiState !== "ready" || isMock || !config || actionLoading || createRequestedRef.current) {
-      return;
+    function onDocumentClick(ev: MouseEvent) {
+      try {
+        var target = ev.target;
+        while (target && target !== document) {
+          if (target instanceof HTMLElement) {
+            var text = (target.textContent || '').trim();
+            if (text && text.startsWith('Bayar Sekarang')) {
+              // open fallback only if not already opened
+              try {
+                if (!window['__BOOKING_PAYMENT_FALLBACK_WINDOW'] || window['__BOOKING_PAYMENT_FALLBACK_WINDOW'].closed) {
+                  window['__BOOKING_PAYMENT_FALLBACK_WINDOW'] = window.open('', '_blank', 'noopener,noreferrer');
+                  try { var fw = window['__BOOKING_PAYMENT_FALLBACK_WINDOW']; if (fw && !fw.closed) { fw.document.title = 'Payment'; fw.document.body.innerHTML = '<p>Preparing payment…</p>'; } } catch (e) {}
+                }
+              } catch (e) {}
+              return;
+            }
+          }
+          // @ts-ignore
+          target = target.parentNode;
+        }
+      } catch (e) {
+        // ignore
+      }
     }
 
-    createRequestedRef.current = true;
-    createTransaction({ forceNew: false }).finally(() => {
-      createRequestedRef.current = false;
-    });
-  }, [uiState, config, isMock, actionLoading, createTransaction]);
+    document.addEventListener('click', onDocumentClick, true);
+    return () => document.removeEventListener('click', onDocumentClick, true);
+  }, []);
 
-  useEffect(() => {
-    if (uiState === "loading" || uiState === "error" || isMock || !snapToken || !snapToken.trim()) {
-      return;
-    }
-
-    if (!snapOpenedRef.current) {
-      openSnap(snapToken).finally(() => {
-        snapOpenedRef.current = false;
-      });
-    }
-  }, [uiState, isMock, openSnap, snapToken]);
 
   // Poll for payment status updates
   useEffect(() => {
@@ -394,6 +521,8 @@ export function BookingPaymentEmbed({
   const paymentHint = useMemo(() => {
     if (status === "success") return "This booking has already completed payment.";
     if (status === "pending") return "Complete your payment to confirm the reservation.";
+    if (status === "loading") return "Preparing the payment popup...";
+    if (status === "ready") return "Ready to open the Midtrans Snap popup.";
     return "Update the payment status to continue.";
   }, [status]);
 
@@ -486,32 +615,29 @@ export function BookingPaymentEmbed({
         ) : (
           <div className="space-y-5">
             <div className="rounded-3xl border border-white/10 bg-black/10 p-6 text-sm text-[color:var(--muted)]">
-              <p className="font-semibold text-white">Continue to payment</p>
-              <p className="mt-2">The embedded checkout is unavailable in this browser session, so the payment will open in a new tab using the secure Midtrans link.</p>
+              <p className="font-semibold text-white">Open Midtrans popup</p>
+              <p className="mt-2">Click the button below to open the Midtrans Snap popup and complete your booking payment.</p>
+            </div>
+
+            <div className="space-y-4">
+              <button
+                type="button"
+                onClick={handlePayNow}
+                disabled={actionLoading || !config}
+                className="btn-primary w-full py-3 disabled:opacity-60"
+              >
+                {actionLoading ? "Menyiapkan pembayaran…" : "Bayar Sekarang"}
+              </button>
               {payment?.snapUrl ? (
                 <a
                   href={payment.snapUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-4 inline-flex rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10"
+                  className="mt-2 inline-flex w-full justify-center rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10"
                 >
-                  Open payment in new tab
+                  Buka link pembayaran alternatif
                 </a>
               ) : null}
-            </div>
-
-            <div className="space-y-4">
-              <p className="text-sm text-[color:var(--muted)]">
-                A secure payment session is required before the checkout can open. If the widget is blocked, use the alternate payment link above.
-              </p>
-              <button
-                type="button"
-                onClick={() => createTransaction({ forceNew: true })}
-                disabled={actionLoading}
-                className="btn-primary w-full py-3 disabled:opacity-60"
-              >
-                {actionLoading ? "Preparing payment…" : "Create payment session"}
-              </button>
             </div>
           </div>
         )}
@@ -528,11 +654,11 @@ export function BookingPaymentEmbed({
         </button>
         <button
           type="button"
-          onClick={() => createTransaction({ forceNew: true })}
-          disabled={actionLoading || isMock}
+          onClick={handlePayNow}
+          disabled={actionLoading || !config}
           className="btn-secondary w-full py-3 disabled:opacity-60"
         >
-          Renew payment session
+          {actionLoading ? "Processing…" : "Bayar Sekarang"}
         </button>
       </div>
     </div>
