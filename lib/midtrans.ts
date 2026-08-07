@@ -6,6 +6,7 @@ const MIDTRANS_IS_PRODUCTION = String(process.env.MIDTRANS_IS_PRODUCTION ?? "fal
 const MIDTRANS_SANDBOX_URL = process.env.MIDTRANS_SANDBOX_URL ?? "https://app.sandbox.midtrans.com";
 const MIDTRANS_PRODUCTION_URL = process.env.MIDTRANS_PRODUCTION_URL ?? "https://app.midtrans.com";
 const MIDTRANS_BASE_URL = process.env.MIDTRANS_BASE_URL ?? `${MIDTRANS_IS_PRODUCTION ? MIDTRANS_PRODUCTION_URL : MIDTRANS_SANDBOX_URL}/snap/v1/transactions`;
+const MIDTRANS_STATUS_BASE_URL = process.env.MIDTRANS_STATUS_BASE_URL ?? `${MIDTRANS_IS_PRODUCTION ? MIDTRANS_PRODUCTION_URL : MIDTRANS_SANDBOX_URL}/v2`;
 const MIDTRANS_SNAP_SCRIPT_URL = process.env.NEXT_PUBLIC_MIDTRANS_SNAP_URL ?? `${MIDTRANS_IS_PRODUCTION ? MIDTRANS_PRODUCTION_URL : MIDTRANS_SANDBOX_URL}/snap/snap.js`;
 
 export interface MidtransCreatePayload {
@@ -94,6 +95,48 @@ export async function createMidtransTransaction(payload: MidtransCreatePayload):
   } catch {
     throw new Error("Midtrans returned an invalid response body.");
   }
+}
+
+export async function getMidtransTransactionStatus(orderId: string): Promise<Record<string, unknown>> {
+  if (!MIDTRANS_SERVER_KEY.trim()) {
+    throw new Error("Midtrans server key is required to fetch transaction status.");
+  }
+
+  const url = `${MIDTRANS_STATUS_BASE_URL}/${encodeURIComponent(orderId)}/status`;
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      Authorization: `Basic ${Buffer.from(`${MIDTRANS_SERVER_KEY}:`).toString("base64")}`,
+      "Accept": "application/json",
+    },
+  });
+
+  const rawBody = await response.text();
+  if (!response.ok) {
+    let parsedBody: Record<string, unknown> | null = null;
+    try {
+      parsedBody = JSON.parse(rawBody) as Record<string, unknown>;
+    } catch {
+      parsedBody = null;
+    }
+
+    const errorMessage = parsedBody?.message ?? rawBody ?? `Midtrans status lookup failed with ${response.status}`;
+    throw new Error(`Midtrans status fetch failed (${response.status}): ${errorMessage}`);
+  }
+
+  try {
+    return JSON.parse(rawBody) as Record<string, unknown>;
+  } catch {
+    throw new Error("Invalid Midtrans status response body.");
+  }
+}
+
+export function resolveMidtransTransactionStatus(body: Record<string, unknown>): string {
+  if (typeof body?.transaction_status === "string") return body.transaction_status;
+  if (typeof body?.status === "string") return body.status;
+  if (typeof body?.transactionStatus === "string") return body.transactionStatus;
+  if (typeof body?.status_code === "string") return body.status_code;
+  return "";
 }
 
 function parseMidtransBody(rawBody: string) {
