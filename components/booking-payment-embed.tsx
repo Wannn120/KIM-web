@@ -248,7 +248,7 @@ export function BookingPaymentEmbed({
     }
   }, [actionLoading, bookingId, amount, customerEmail, customerName, customerPhone]);
 
-  const openSnap = useCallback(async (token: string) => {
+  const openSnap = useCallback(async (token: string, snapUrl?: string | null) => {
     if (!token.trim()) {
       setError("Invalid Snap token.");
       return;
@@ -263,8 +263,6 @@ export function BookingPaymentEmbed({
       setStatus("pending");
       setMessage("Opening Midtrans payment popup...");
 
-      // Give the browser a synchronously-opened fallback window to avoid popup blockers.
-      // The fallback will be navigated to `snapUrl` if Midtrans' popup does not appear.
       const fallback: Window | null = window.__BOOKING_PAYMENT_FALLBACK_WINDOW ?? null;
 
       let fallbackNavTimer: number | null = null;
@@ -273,10 +271,9 @@ export function BookingPaymentEmbed({
         try {
           if (fallbackNavTimer) window.clearTimeout(fallbackNavTimer as unknown as number);
           if (fallback && !fallback.closed) {
-            // Close the temporary fallback if Midtrans handled the popup.
             try { fallback.close(); } catch (e) { /* ignore cross-origin close errors */ }
           }
-        } catch (e) {
+        } catch {
           // ignore
         }
       };
@@ -301,29 +298,35 @@ export function BookingPaymentEmbed({
         },
         onClose: () => {
           clearFallback();
-          if (status !== "success") {
-            setStatus("ready");
-            setMessage("Payment popup closed. Click Bayar Sekarang to try again.");
-          }
+          setStatus("ready");
+          setMessage("Payment popup closed. Click Bayar Sekarang to try again.");
         },
       });
 
-      // If Midtrans does not open a popup window (or sandbox blocks it), navigate the
-      // previously-opened fallback to the `snapUrl` so the user still sees the payment flow.
       if (fallback && !fallback.closed) {
-        // Wait a short moment to let snap.open attempt its own popup first.
+        const navUrl = snapUrl ?? payment?.snapUrl ?? null;
+        if (navUrl) {
+          try {
+            fallback.location.href = navUrl;
+          } catch {
+            // ignore navigation errors
+          }
+        }
+
         fallbackNavTimer = window.setTimeout(() => {
           try {
-            // Use current payment record snapUrl if available
-            const navUrl = payment?.snapUrl ?? config?.snapScriptUrl ?? null;
-            if (navUrl) {
-              fallback.location.href = navUrl;
-            } else {
-              // as a last resort, close it
-              try { fallback.close(); } catch (e) {}
+            const delayedNavUrl = snapUrl ?? payment?.snapUrl ?? null;
+            if (delayedNavUrl && fallback && !fallback.closed) {
+              fallback.location.href = delayedNavUrl;
+            } else if (fallback && !fallback.closed) {
+              try { fallback.close(); } catch {
+                // ignore
+              }
             }
-          } catch (e) {
-            try { fallback.close(); } catch (ignored) {}
+          } catch {
+            try { fallback.close(); } catch {
+              // ignore
+            }
           }
         }, 1200);
       }
@@ -331,7 +334,7 @@ export function BookingPaymentEmbed({
       setError(err instanceof Error ? err.message : String(err));
       setUiState("ready");
     }
-  }, [bookingId, config, loadSnapScript, payment, status]);
+  }, [bookingId, config, loadSnapScript, payment]);
 
   const handlePayNow = useCallback(async () => {
     if (actionLoading || status === "loading" || status === "pending") {
@@ -344,7 +347,7 @@ export function BookingPaymentEmbed({
 
     // Open a synchronous fallback popup to avoid popup blockers.
     try {
-      window.__BOOKING_PAYMENT_FALLBACK_WINDOW = window.open('', '_blank', 'noopener,noreferrer');
+      window.__BOOKING_PAYMENT_FALLBACK_WINDOW = window.open('', '_blank', 'width=640,height=760');
       try {
         const fw = window.__BOOKING_PAYMENT_FALLBACK_WINDOW;
         if (fw && !fw.closed) {
@@ -374,7 +377,7 @@ export function BookingPaymentEmbed({
       return;
     }
 
-    await openSnap(paymentRecord.snapToken);
+    await openSnap(paymentRecord.snapToken, paymentRecord.snapUrl);
   }, [actionLoading, createTransaction, openSnap, status]);
 
   const refreshPayment = useCallback(async () => {
@@ -458,45 +461,8 @@ export function BookingPaymentEmbed({
     };
   }, [bookingId, fetchConfig, fetchPayment]);
 
-  // Ensure a synchronous fallback popup is opened if the user clicks the Pay button
-  // Use capture phase so this runs even if React handlers are not yet attached.
-  useEffect(() => {
-    function onDocumentClick(ev: MouseEvent) {
-      try {
-        let target = ev.target as Node | null;
-        while (target && target !== document) {
-          if (target instanceof HTMLElement) {
-            const text = (target.textContent || '').trim();
-            if (text && text.startsWith('Bayar Sekarang')) {
-              // open fallback only if not already opened
-              try {
-                const fallback = window.__BOOKING_PAYMENT_FALLBACK_WINDOW;
-                if (!fallback || fallback.closed) {
-                  window.__BOOKING_PAYMENT_FALLBACK_WINDOW = window.open('', '_blank', 'noopener,noreferrer');
-                  try {
-                    const fw = window.__BOOKING_PAYMENT_FALLBACK_WINDOW;
-                    if (fw && !fw.closed) {
-                      fw.document.title = 'Payment';
-                      fw.document.body.innerHTML = '<p>Preparing payment…</p>';
-                    }
-                  } catch (e) {}
-                }
-              } catch (e) {}
-              return;
-            }
-          }
-          target = target.parentNode as Node | null;
-        }
-      } catch {
-        // ignore
-      }
-    }
-
-    document.addEventListener('click', onDocumentClick, true);
-    return () => document.removeEventListener('click', onDocumentClick, true);
-  }, []);
-
-
+  // Ensure a synchronous fallback popup is opened when the user clicks the Pay button.
+  // This is required because Midtrans may open the popup from the same user interaction.
   // Poll for payment status updates
   useEffect(() => {
     if (status !== "pending" || isMock) {

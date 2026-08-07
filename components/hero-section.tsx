@@ -17,10 +17,13 @@ function isValidRemoteImageUrl(url?: string) {
 
 export function HeroSection({ facilities, content = siteContent }: { facilities: FacilityImage[]; content?: typeof siteContent }) {
   const [assetsReady, setAssetsReady] = useState(false);
+  const [heroImageFailed, setHeroImageFailed] = useState(false);
+  const [brokenFacilityImages, setBrokenFacilityImages] = useState<Record<string, boolean>>({});
   const facilityUrls = useMemo(() => facilities.map((facility) => facility.imageUrl).join("|"), [facilities]);
   const heroBackgroundUrl = isValidRemoteImageUrl(content.backgroundImageUrl)
     ? content.backgroundImageUrl
     : siteContent.backgroundImageUrl;
+  const heroImageSrc = heroImageFailed ? "/placeholder-image.svg" : heroBackgroundUrl;
 
   useEffect(() => {
     let cancelled = false;
@@ -88,13 +91,18 @@ export function HeroSection({ facilities, content = siteContent }: { facilities:
     >
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
         <Image
-          src={heroBackgroundUrl}
+          src={heroImageSrc}
           alt="Hero background"
           fill
           priority
           unoptimized
           className="object-cover brightness-110"
-          onError={() => console.warn("Hero background image failed to load:", heroBackgroundUrl)}
+          onError={() => {
+            if (!heroImageFailed) {
+              console.warn("Hero background image failed to load:", heroBackgroundUrl);
+              setHeroImageFailed(true);
+            }
+          }}
         />
         <div className="absolute inset-0 bg-[color:var(--background)]/5" />
       </div>
@@ -136,7 +144,20 @@ export function HeroSection({ facilities, content = siteContent }: { facilities:
             {facilities.map((facility) => (
               <div key={facility.id ?? facility.title} className="rounded-[2rem] border border-[color:var(--border-strong)] bg-[color:var(--surface)] p-4 shadow-sm backdrop-blur-xl">
                 <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-[color:var(--surface)] sm:aspect-[16/9]">
-                  <Image src={facility.imageUrl} alt={facility.title} fill sizes="(max-width: 768px) 100vw, 25vw" loading="lazy" className="object-cover" />
+                  <Image
+                    src={brokenFacilityImages[facility.id ?? facility.title] ? "/placeholder-image.svg" : facility.imageUrl}
+                    alt={facility.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 25vw"
+                    loading="lazy"
+                    className="object-cover"
+                    onError={() => {
+                      const facilityKey = facility.id ?? facility.title;
+                      if (!brokenFacilityImages[facilityKey]) {
+                        setBrokenFacilityImages((current) => ({ ...current, [facilityKey]: true }));
+                      }
+                    }}
+                  />
                 </div>
                 <h3 className="mt-4 text-lg font-semibold text-[color:var(--foreground)]">{facility.title}</h3>
                 <p className="mt-2 text-sm text-[color:var(--muted)]">{facility.description}</p>
