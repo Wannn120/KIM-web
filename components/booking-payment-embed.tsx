@@ -16,6 +16,7 @@ declare global {
         },
       ) => void;
     };
+    __BOOKING_PAYMENT_FALLBACK_WINDOW?: Window | null;
   }
 }
 
