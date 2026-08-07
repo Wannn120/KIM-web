@@ -101,7 +101,13 @@ export default function CheckoutPage() {
         throw new Error(result.message || "Unable to create booking.");
       }
 
-      router.push(`/booking/${encodeURIComponent(result.booking.id)}/payment`);
+      const paymentUrl = `/booking/${encodeURIComponent(result.booking.id)}/payment?autoOpen=1`;
+      const popupWindow = window.open("", "_blank", "width=1000,height=900");
+      if (popupWindow) {
+        popupWindow.location.href = paymentUrl;
+      } else {
+        router.push(paymentUrl);
+      }
       return;
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

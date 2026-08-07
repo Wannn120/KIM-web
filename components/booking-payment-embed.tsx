@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { formatCurrency } from "@/utils/formatting";
 
 declare global {
@@ -99,6 +100,9 @@ export function BookingPaymentEmbed({
   const [message, setMessage] = useState<string | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [, setScriptLoadError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const autoOpen = searchParams.get("autoOpen") === "1";
+  const [autoOpenAttempted, setAutoOpenAttempted] = useState(false);
 
   const isMock = config?.mockMode === true;
   const badgeClass = statusBadge[status as keyof typeof statusBadge] ?? statusBadge.pending;
@@ -337,7 +341,7 @@ export function BookingPaymentEmbed({
   }, [bookingId, config, loadSnapScript, payment]);
 
   const handlePayNow = useCallback(async () => {
-    if (actionLoading || status === "loading" || status === "pending") {
+    if (actionLoading || status === "loading") {
       return;
     }
 
@@ -460,6 +464,23 @@ export function BookingPaymentEmbed({
       active = false;
     };
   }, [bookingId, fetchConfig, fetchPayment]);
+
+  useEffect(() => {
+    if (!autoOpen || autoOpenAttempted) {
+      return;
+    }
+
+    if (!config || actionLoading || uiState === "loading") {
+      return;
+    }
+
+    if (uiState === "ready" || uiState === "idle" || uiState === "active") {
+      setAutoOpenAttempted(true);
+      handlePayNow().catch(() => {
+        // ignore failures; user can still click Bayar Sekarang manually
+      });
+    }
+  }, [autoOpen, autoOpenAttempted, config, actionLoading, uiState, handlePayNow]);
 
   // Ensure a synchronous fallback popup is opened when the user clicks the Pay button.
   // This is required because Midtrans may open the popup from the same user interaction.
