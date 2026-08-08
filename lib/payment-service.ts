@@ -8,7 +8,7 @@ import { buildMidtransCustomerDetails, isUuid } from "@/lib/payment-utils";
 
 const paymentProvider = new DemoPaymentProvider();
 
-function normalizePaymentStatus(status: string): PaymentStatus {
+export function normalizePaymentStatus(status: string): PaymentStatus {
   const lower = status.toLowerCase();
 
   if (["capture", "settlement", "success"].includes(lower)) return "success";
@@ -200,28 +200,36 @@ export async function reconcilePaymentStatus(transactionId: string, status?: str
     return null;
   }
 
+  const payment = await findPaymentByIdentifier(transactionId);
+  if (!payment) {
+    return normalizePaymentStatus(status ?? "") || null;
+  }
+
   const normalized = normalizePaymentStatus(status ?? "");
 
-  if (normalized && normalized !== "pending") {
-    await processWebhookEvent(transactionId, normalized);
+  if (normalized !== "pending") {
+    await processWebhookEvent(payment.transactionId, normalized);
     return normalized;
   }
 
-  const payment = await findPaymentByIdentifier(transactionId);
-  if (!payment || !payment.midtransOrderId) {
-    return normalized || null;
+  if (payment.status === "success" && payment.booking.status !== "confirmed") {
+    await processWebhookEvent(payment.transactionId, "success");
+    return "success";
+  }
+
+  if (!payment.midtransOrderId) {
+    return payment.status || normalized || null;
   }
 
   try {
     const midtransResponse = await getMidtransTransactionStatus(payment.midtransOrderId);
     const liveStatus = normalizePaymentStatus(resolveMidtransTransactionStatus(midtransResponse));
 
-    if (liveStatus && liveStatus !== "pending") {
+    if (liveStatus !== "pending") {
       await processWebhookEvent(payment.transactionId, liveStatus);
       return liveStatus;
     }
   } catch (error) {
-    // ignore live status lookup failures; return whatever we already know
     console.warn("[payment-service] Midtrans status lookup failed", {
       transactionId,
       midtransOrderId: payment.midtransOrderId,
@@ -229,7 +237,7 @@ export async function reconcilePaymentStatus(transactionId: string, status?: str
     });
   }
 
-  return normalized || null;
+  return payment.status || normalized || null;
 }
 
 export async function expirePendingPayments() {

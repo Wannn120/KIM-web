@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { processWebhookEvent } from "@/lib/payment-service";
+import { reconcilePaymentStatus } from "@/lib/payment-service";
 import { isUuid } from "@/lib/payment-utils";
 
 /**
@@ -60,11 +60,8 @@ export async function POST(request: Request) {
     const previousBookingStatus = payment.booking?.status;
 
     try {
-      // Process webhook event to ensure latest status is applied
-      // This will validate payment state and update if needed
-      await processWebhookEvent(payment.transactionId, payment.status);
+      const syncedStatus = await reconcilePaymentStatus(payment.transactionId, payment.status);
 
-      // Fetch updated payment record
       const updatedPayment = await prisma.payment.findUnique({
         where: { transactionId: payment.transactionId },
         include: { booking: true },
@@ -78,6 +75,7 @@ export async function POST(request: Request) {
         bookingId: payment.bookingId,
         previousStatus,
         currentStatus: updatedPayment?.status,
+        reconciledStatus: syncedStatus,
         statusChanged: previousStatus !== updatedPayment?.status,
         previousBookingStatus,
         currentBookingStatus: updatedPayment?.booking?.status,
