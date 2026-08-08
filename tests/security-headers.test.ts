@@ -1,4 +1,6 @@
+import { NextRequest, NextResponse } from "next/server";
 import {
+  applySecurityHeaders,
   isBookingPaymentPath,
   validatePaymentRouteCsp,
   MIDTRANS_APP_DOMAINS,
@@ -47,6 +49,16 @@ describe("security headers helpers", () => {
 
       validatePaymentRouteCsp(csp, "/booking/abc123/payment");
       expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it("allows wildcard Midtrans hosts in the payment CSP for broader browser compatibility", () => {
+      const request = new NextRequest("https://example.com/booking/abc123/payment");
+      const res = applySecurityHeaders(NextResponse.next(), request);
+      const csp = res.headers.get("content-security-policy") ?? "";
+
+      expect(csp).toContain("https://*.midtrans.com");
+      expect(csp).toContain("https://*.gopayapi.com");
+      expect(csp).toContain("script-src-elem");
     });
 
     it("warns when payment route CSP is missing required Midtrans sources", () => {

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { getPopupBlockedMessage, isPopupWindowOpenable } from "@/lib/popup-fallback";
 import { formatCurrency } from "@/utils/formatting";
 
 declare global {
@@ -275,7 +276,9 @@ export function BookingPaymentEmbed({
         try {
           if (fallbackNavTimer) window.clearTimeout(fallbackNavTimer as unknown as number);
           if (fallback && !fallback.closed) {
-            try { fallback.close(); } catch (e) { /* ignore cross-origin close errors */ }
+            try { fallback.close(); } catch {
+              // ignore cross-origin close errors
+            }
           }
         } catch {
           // ignore
@@ -335,10 +338,37 @@ export function BookingPaymentEmbed({
         }, 1200);
       }
     } catch (err) {
+      const fallbackUrl = snapUrl || payment?.snapUrl;
+      if (fallbackUrl) {
+        const blockedMessage = getPopupBlockedMessage(fallbackUrl);
+        setMessage(blockedMessage);
+        setStatus("ready");
+        setUiState("ready");
+
+        try {
+          const fallbackWindow = window.open(fallbackUrl, "_blank", "noopener,noreferrer,width=640,height=760");
+          if (isPopupWindowOpenable(fallbackWindow)) {
+            fallbackWindow.focus();
+            return;
+          }
+        } catch {
+          // ignore fallback window errors and fall through to direct navigation
+        }
+
+        try {
+          window.location.href = fallbackUrl;
+          return;
+        } catch {
+          // ignore redirect errors and keep the visible fallback message
+        }
+
+        return;
+      }
+
       setError(err instanceof Error ? err.message : String(err));
       setUiState("ready");
     }
-  }, [bookingId, config, loadSnapScript, payment]);
+  }, [bookingId, config, loadSnapScript, payment, payment?.snapUrl]);
 
   const handlePayNow = useCallback(async () => {
     if (actionLoading || status === "loading") {
@@ -349,24 +379,27 @@ export function BookingPaymentEmbed({
     setMessage(null);
     setStatus("loading");
 
-    // Open a synchronous fallback popup to avoid popup blockers.
+    const popupReadyMessage = "Preparing the Midtrans payment window. Please allow pop-ups for this site so the secure payment screen can open correctly.";
+
+    setMessage(popupReadyMessage);
+
     try {
-      window.__BOOKING_PAYMENT_FALLBACK_WINDOW = window.open('', '_blank', 'width=640,height=760');
-      try {
-        const fw = window.__BOOKING_PAYMENT_FALLBACK_WINDOW;
-        if (fw && !fw.closed) {
-          try {
-            fw.document.title = 'Payment';
-            fw.document.body.innerHTML = '<p style="font-family:system-ui,Segoe UI,Roboto">Preparing payment…</p>';
-          } catch {
-            // ignore write errors
-          }
+      const preparedPopup = window.open("", "_blank", "width=640,height=760,noopener,noreferrer");
+      window.__BOOKING_PAYMENT_FALLBACK_WINDOW = preparedPopup ?? window.__BOOKING_PAYMENT_FALLBACK_WINDOW ?? null;
+
+      const fw = window.__BOOKING_PAYMENT_FALLBACK_WINDOW;
+      if (isPopupWindowOpenable(fw)) {
+        try {
+          fw.document.title = "Payment";
+          fw.document.body.innerHTML = '<p style="font-family:system-ui,Segoe UI,Roboto">Preparing payment…</p>';
+        } catch {
+          // ignore write errors
         }
-      } catch {
-        // ignore fallback setup errors
+      } else {
+        setMessage("Your browser blocked the payment popup. We will keep the secure payment link ready below.");
       }
     } catch {
-      // popup blocked synchronously; continue and rely on snap.pay
+      setMessage("Your browser blocked the payment popup. Please allow pop-ups or use the secure payment link below.");
     }
 
     const paymentRecord = await createTransaction({ forceNew: true });
@@ -562,14 +595,14 @@ export function BookingPaymentEmbed({
       </div>
 
       {error ? (
-        <div className="rounded-3xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">
-          <p>{error}</p>
+        <div className="rounded-3xl border border-rose-400/40 bg-rose-500/15 p-4 text-sm text-rose-100 shadow-[0_0_0_1px_rgba(251,113,133,0.2)] sm:p-5">
+          <p className="font-medium leading-6">{error}</p>
           {payment?.snapUrl ? (
             <a
               href={payment.snapUrl}
               target="_blank"
               rel="noreferrer"
-              className="mt-3 inline-flex rounded-full border border-rose-400/30 bg-rose-500/10 px-4 py-2 font-semibold text-rose-100 hover:bg-rose-500/20"
+              className="mt-3 inline-flex rounded-full border border-rose-300/50 bg-rose-500/20 px-4 py-2.5 font-semibold text-rose-50 transition hover:bg-rose-500/30"
             >
               Open payment link
             </a>
@@ -578,7 +611,7 @@ export function BookingPaymentEmbed({
       ) : null}
 
       {message ? (
-        <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-100">
+        <div className="rounded-3xl border border-amber-400/40 bg-amber-500/15 p-4 text-sm font-medium leading-6 text-amber-50 shadow-[0_0_0_1px_rgba(251,191,36,0.2)] sm:p-5">
           {message}
         </div>
       ) : null}

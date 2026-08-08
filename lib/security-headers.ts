@@ -20,6 +20,14 @@ export const MIDTRANS_API_PRODUCTION_URL = process.env.MIDTRANS_API_PRODUCTION_U
 export const MIDTRANS_APP_DOMAINS = [`${MIDTRANS_SANDBOX_URL}`, `${MIDTRANS_PRODUCTION_URL}`];
 export const MIDTRANS_API_DOMAINS = [`${MIDTRANS_API_SANDBOX_URL}`, `${MIDTRANS_API_PRODUCTION_URL}`];
 export const MIDTRANS_SNAP_ASSETS_DOMAINS = [`${MIDTRANS_SNAP_ASSETS_SANDBOX_URL}`, `${MIDTRANS_SNAP_ASSETS_PRODUCTION_URL}`];
+export const MIDTRANS_CSP_HOSTS = [
+  "https://*.midtrans.com",
+  "https://*.sandbox.midtrans.com",
+  "https://*.gopayapi.com",
+  ...MIDTRANS_APP_DOMAINS,
+  ...MIDTRANS_SNAP_ASSETS_DOMAINS,
+  ...MIDTRANS_API_DOMAINS,
+];
 
 function getEnv(name: string, fallback: string) {
   return process.env[name] ?? fallback;
@@ -75,13 +83,13 @@ export function applySecurityHeaders(response: NextResponse, request?: NextReque
 
   const defaultCsp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-    "script-src-elem 'self' 'unsafe-inline'",
+    `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${MIDTRANS_CSP_HOSTS.join(" ")} https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com`,
+    `script-src-elem 'self' 'unsafe-inline' ${MIDTRANS_CSP_HOSTS.join(" ")} https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com",
     "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com",
     "img-src 'self' data: https://res.cloudinary.com",
-    "connect-src 'self'",
-    "frame-src 'self' https://www.openstreetmap.org",
+    "connect-src 'self' https://*.midtrans.com https://*.gopayapi.com",
+    "frame-src 'self' https://www.openstreetmap.org https://*.midtrans.com",
     "child-src 'none'",
     "frame-ancestors 'none'",
     "base-uri 'self'",
@@ -90,14 +98,14 @@ export function applySecurityHeaders(response: NextResponse, request?: NextReque
 
   const paymentCsp = [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${MIDTRANS_APP_DOMAINS.join(" ")} ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} ${MIDTRANS_API_DOMAINS.join(" ")} https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com`,
-    `script-src-elem 'self' 'unsafe-inline' ${MIDTRANS_APP_DOMAINS.join(" ")} ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} ${MIDTRANS_API_DOMAINS.join(" ")} https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com`,
+    `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${MIDTRANS_CSP_HOSTS.join(" ")} https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com`,
+    `script-src-elem 'self' 'unsafe-inline' ${MIDTRANS_CSP_HOSTS.join(" ")} https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com`,
     `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} ${MIDTRANS_APP_DOMAINS.join(" ")}`,
     `style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} ${MIDTRANS_APP_DOMAINS.join(" ")}`,
     `img-src 'self' data: ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} ${MIDTRANS_APP_DOMAINS.join(" ")} https://pay.google.com https://g.alicdn.com https://res.cloudinary.com`,
-    `connect-src 'self' ${MIDTRANS_APP_DOMAINS.join(" ")} ${MIDTRANS_API_DOMAINS.join(" ")} ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} https://pay.google.com`,
-    `frame-src ${MIDTRANS_APP_DOMAINS.join(" ")} ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")} https://www.openstreetmap.org`,
-    `child-src ${MIDTRANS_APP_DOMAINS.join(" ")} ${MIDTRANS_SNAP_ASSETS_DOMAINS.join(" ")}`,
+    `connect-src 'self' ${MIDTRANS_CSP_HOSTS.join(" ")} https://pay.google.com`,
+    `frame-src ${MIDTRANS_CSP_HOSTS.join(" ")} https://www.openstreetmap.org`,
+    `child-src ${MIDTRANS_CSP_HOSTS.join(" ")}`,
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
