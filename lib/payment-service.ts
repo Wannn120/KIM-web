@@ -240,8 +240,37 @@ export async function reconcilePaymentStatus(transactionId: string, status?: str
   return payment.status || normalized || null;
 }
 
+export async function syncBookingStatusesFromPayments() {
+  const payments = await prisma.payment.findMany({
+    include: { booking: true },
+    orderBy: { createdAt: "desc" },
+  });
+
+  for (const payment of payments) {
+    const bookingStatusMap: Record<PaymentStatus, BookingStatus> = {
+      pending: "pending",
+      success: "confirmed",
+      failed: "cancelled",
+      expired: "expired",
+      cancelled: "cancelled",
+      refunded: "refunded",
+    };
+
+    const nextBookingStatus = bookingStatusMap[payment.status] ?? payment.booking.status;
+
+    if (payment.booking.status !== nextBookingStatus) {
+      await prisma.booking.update({
+        where: { id: payment.booking.id },
+        data: { status: nextBookingStatus, updatedAt: new Date() },
+      });
+    }
+  }
+}
+
 export async function expirePendingPayments() {
   const now = new Date();
+  await syncBookingStatusesFromPayments();
+
   const overduePayments = await prisma.payment.findMany({
     where: {
       status: "pending",

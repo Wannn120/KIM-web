@@ -1,12 +1,16 @@
 import { prisma } from "@/lib/prisma";
 
-export type BookingStatus = "pending" | "confirmed" | "completed" | "cancelled" | "expired" | "refunded";
+export type BookingStatus = "pending" | "confirmed" | "completed" | "cancelled" | "expired" | "refunded" | "rescheduled";
 
-export const BLOCKING_BOOKING_STATUSES: BookingStatus[] = ["pending", "confirmed", "completed"];
+export const BLOCKING_BOOKING_STATUSES: BookingStatus[] = ["pending", "confirmed", "completed", "rescheduled"];
 
 export function isBookingSlotBlocked(status: string | undefined | null): boolean {
-  const normalized = status?.toLowerCase();
-  return BLOCKING_BOOKING_STATUSES.includes(normalized as BookingStatus);
+  const normalized = status?.trim().toLowerCase();
+  return !!normalized && BLOCKING_BOOKING_STATUSES.includes(normalized as BookingStatus);
+}
+
+export function isBookingStatusAvailableInSlot(status: string | undefined | null): boolean {
+  return !isBookingSlotBlocked(status);
 }
 export interface ScheduleSlotRecord {
   id: string;
@@ -191,12 +195,22 @@ function isMaintenanceConflict(bookingDate: string, startTime: string, endTime: 
 
 async function purgeExpiredReservations(now: Date = new Date()) {
   const expirationCutoff = new Date(now.getTime() - 15 * 60 * 1000);
+
   await prisma.booking.updateMany({
     where: {
       status: "pending",
       createdAt: { lt: expirationCutoff },
     },
-    data: { status: "expired" },
+    data: { status: "expired", updatedAt: now },
+  });
+
+  await prisma.booking.updateMany({
+    where: {
+      status: "pending",
+      endTime: { lt: "23:59" },
+      createdAt: { lt: expirationCutoff },
+    },
+    data: { status: "expired", updatedAt: now },
   });
 }
 

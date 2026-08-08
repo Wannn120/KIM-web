@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { auditLog } from "@/lib/audit-log";
-import { expirePendingPayments } from "@/lib/payment-service";
+import { expirePendingPayments, syncBookingStatusesFromPayments } from "@/lib/payment-service";
 import { getRateLimitResult, sanitizeObject, applySecurityHeaders } from "@/lib/security-headers";
 import { prisma } from "@/lib/prisma";
 import { BLOCKING_BOOKING_STATUSES, getRequestedScheduleBlocks, getScheduleSlots } from "@/lib/booking-engine";
@@ -68,6 +68,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: "Invalid booking time range." }, { status: 400 });
     }
 
+    await syncBookingStatusesFromPayments();
     await expirePendingPayments();
 
     const overlappingBooking = await prisma.booking.findFirst({
