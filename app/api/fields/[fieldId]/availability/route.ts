@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { expirePendingPayments } from "@/lib/payment-service";
+import { expirePendingPayments, syncBookingStatusesFromPayments } from "@/lib/payment-service";
 import { BLOCKING_BOOKING_STATUSES, buildTimeSlots, getScheduleSlots } from "@/lib/booking-engine";
 import { DEFAULT_FIELD, DEFAULT_FIELD_ID } from "@/lib/venue";
 import { getFieldHourlyRate } from "@/lib/site-content";
@@ -36,6 +36,7 @@ export async function GET(request: Request, props: { params: Promise<{ fieldId: 
   }
 
   try {
+    await syncBookingStatusesFromPayments();
     await expirePendingPayments();
 
     const bookings = await prisma.booking.findMany({
