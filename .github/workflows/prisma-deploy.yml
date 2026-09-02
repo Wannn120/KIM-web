@@ -61,6 +61,8 @@ jobs:
             echo "POOLER_URL_SOURCE=$MIGRATION_URL_SOURCE" >> "$GITHUB_ENV"
           else
             echo "No database URL found; skipping migrations." >> "$GITHUB_STEP_SUMMARY"
+            echo "ERROR: No database secret provided to run Prisma migrations.\n\nMake sure one of the repository secrets is set: POSTGRES_URL_NON_POOLING, DIRECT_URL, DATABASE_URL, POSTGRES_PRISMA_URL, or POSTGRES_URL.\nIf you rely on Vercel env variables, add the same values to GitHub Secrets for CI to run migrations." >&2
+            exit 1
           fi
       - name: Check Prisma migration status
         shell: bash
