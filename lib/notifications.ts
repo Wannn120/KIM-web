@@ -22,6 +22,10 @@ export interface NotificationPayload {
   orderId?: string;
   reason?: string;
   invoiceNumber?: string;
+  attachment?: {
+    filename: string;
+    content: string;
+  };
 }
 
 export interface NotificationResult {
@@ -103,16 +107,25 @@ function getEmailSubject(event: NotificationEvent) {
 
 async function sendEmail(event: NotificationEvent, payload: NotificationPayload) {
   const to = payload.email;
-  const from = process.env.RESEND_FROM_EMAIL;
+  const configuredFrom = process.env.RESEND_FROM_EMAIL?.trim();
+  const from = configuredFrom && configuredFrom.includes("<") ? configuredFrom : configuredFrom ? configuredFrom : "MiniSoccer <onboarding@resend.dev>";
   const resendClient = getResendClient();
 
-  if (!to || !from) {
-    throw new Error("Missing email recipient or sender configuration.");
+  if (!to) {
+    throw new Error("Missing email recipient configuration.");
   }
 
   if (!resendClient) {
     throw new Error("Resend API key is not configured.");
   }
+
+  console.info("[notifications] Preparing email send", {
+    event,
+    to,
+    from,
+    configuredFrom: configuredFrom ?? null,
+    timestamp: new Date().toISOString(),
+  });
 
   const { message } = buildMessage(event, payload);
   const subject = getEmailSubject(event);
@@ -132,12 +145,45 @@ async function sendEmail(event: NotificationEvent, payload: NotificationPayload)
       </div>`
     : `<p>${message}</p>`;
 
-  await resendClient.emails.send({
+  const emailPayload: Parameters<typeof resendClient.emails.send>[0] = {
     from,
     to,
     subject,
     html: body,
+  };
+
+  if (payload.attachment) {
+    emailPayload.attachments = [
+      {
+        filename: payload.attachment.filename,
+        content: payload.attachment.content,
+      },
+    ];
+  }
+
+  console.info("[notifications] Sending email", {
+    event,
+    recipient: to,
+    hasAttachment: Boolean(payload.attachment),
+    attachmentName: payload.attachment?.filename,
+    attachmentBytes: payload.attachment?.content?.length ?? 0,
+    timestamp: new Date().toISOString(),
   });
+
+  const response = await resendClient.emails.send(emailPayload);
+
+  console.info("[notifications] Email send response", {
+    event,
+    recipient: to,
+    sender: from,
+    response,
+    timestamp: new Date().toISOString(),
+  });
+
+  if (typeof response === "object" && response && "error" in response && response.error) {
+    const resendError = response.error as { message?: string };
+    throw new Error(resendError.message ?? "Resend email send failed.");
+  }
 }
 
 export async function sendNotification(event: NotificationEvent, payload: NotificationPayload): Promise<NotificationResult> {

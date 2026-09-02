@@ -1,15 +1,19 @@
 import { AnimatedCard } from "@/components/animated-card";
+import TimeSlotSelector, { Slot } from "@/components/time-slot-selector";
 import { DEFAULT_FIELD } from "@/lib/venue";
 import { getFieldHourlyRate } from "@/lib/site-content";
 
-const availability = [
-  { time: "08:00", available: true },
-  { time: "09:00", available: false },
-  { time: "10:00", available: true },
-  { time: "11:00", available: true },
-  { time: "12:00", available: false },
-  { time: "13:00", available: true },
-];
+  const availability: Slot[] = [
+    { time: "07:00", available: true },
+    { time: "08:00", available: true },
+    { time: "09:00", available: true },
+    { time: "10:00", available: true },
+    { time: "11:00", available: true },
+    { time: "12:00", available: true },
+    { time: "13:00", available: true },
+    { time: "14:00", available: true },
+    { time: "15:00", available: true },
+  ];
 
 export const dynamic = "force-dynamic";
 
@@ -41,16 +45,14 @@ export default async function BookingPage() {
               <h2 className="text-xl font-semibold text-white">Availability</h2>
               <span className="text-sm text-[color:var(--muted)]">Today</span>
             </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-                {availability.map((slot) => (
-                <button
-                  key={slot.time}
-                  disabled={!slot.available}
-                  className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${slot.available ? "border-[color:rgba(16,185,129,0.12)] bg-[color:rgba(16,185,129,0.06)] text-[color:var(--accent)] hover:bg-[color:rgba(16,185,129,0.08)]" : "cursor-not-allowed border-white/10 card-surface text-slate-500"}`}
-                >
-                  {slot.time}
-                </button>
-              ))}
+            <div>
+              <TimeSlotSelector
+                availability={availability}
+                onChange={(selected) => {
+                  // TODO: wire selected times into booking summary / checkout
+                  console.log("selected slots", selected);
+                }}
+              />
             </div>
           </div>
         </AnimatedCard>

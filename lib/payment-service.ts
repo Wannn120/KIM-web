@@ -5,6 +5,7 @@ import { sendNotification } from "@/lib/notifications";
 import { createMidtransTransaction, getMidtransTransactionStatus, resolveMidtransTransactionStatus } from "@/lib/midtrans";
 import { DEFAULT_FIELD_NAME } from "@/lib/venue";
 import { buildMidtransCustomerDetails, isUuid } from "@/lib/payment-utils";
+import { buildInvoiceAttachment } from "@/lib/invoice-pdf";
 
 const paymentProvider = new DemoPaymentProvider();
 
@@ -77,27 +78,78 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
     orderBy: { createdAt: "desc" },
   });
 
-  if (existingPayment && !input.forceNew && existingPayment.status === "pending" && existingPayment.expiredAt && existingPayment.expiredAt > new Date() && existingPayment.snapToken && existingPayment.snapUrl) {
-    return {
-      transactionId: existingPayment.transactionId,
-      expiresAt: existingPayment.expiredAt?.toISOString() ?? new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-      paymentMethod: existingPayment.paymentMethod as PaymentMethod,
-      amount: existingPayment.amount,
-      status: existingPayment.status,
-      providerName: existingPayment.provider,
-      snapUrl: existingPayment.snapUrl,
-      snapToken: existingPayment.snapToken,
-    };
+  if (existingPayment && !input.forceNew) {
+    const alreadyResolved = existingPayment.status === "success" || booking.status === "confirmed";
+    if (alreadyResolved) {
+      const refreshed = await prisma.payment.findUnique({
+        where: { id: existingPayment.id },
+        include: { booking: true },
+      });
+
+      if (refreshed) {
+        return {
+          transactionId: refreshed.transactionId,
+          expiresAt: refreshed.expiredAt?.toISOString() ?? new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+          paymentMethod: refreshed.paymentMethod as PaymentMethod,
+          amount: refreshed.amount,
+          status: refreshed.status,
+          providerName: refreshed.provider,
+          snapUrl: refreshed.snapUrl,
+          snapToken: refreshed.snapToken,
+          existing: true,
+        };
+      }
+    }
+
+    if (existingPayment.status === "pending") {
+      // If an existing pending payment exists, check Midtrans live status before creating a new link.
+      try {
+        if (existingPayment.midtransOrderId) {
+          const midResp = await getMidtransTransactionStatus(existingPayment.midtransOrderId);
+          const liveStatus = normalizePaymentStatus(resolveMidtransTransactionStatus(midResp));
+          if (liveStatus !== "pending") {
+            // process webhook locally to update DB
+            await processWebhookEvent(existingPayment.transactionId, liveStatus);
+            const refreshed = await prisma.payment.findUnique({ where: { id: existingPayment.id } });
+            if (refreshed) {
+              return {
+                transactionId: refreshed.transactionId,
+                expiresAt: refreshed.expiredAt?.toISOString() ?? new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+                paymentMethod: refreshed.paymentMethod as PaymentMethod,
+                amount: refreshed.amount,
+                status: refreshed.status,
+                providerName: refreshed.provider,
+                snapUrl: refreshed.snapUrl,
+                snapToken: refreshed.snapToken,
+                existing: true,
+              };
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("[payment-service] live Midtrans status check failed for existing payment", { err: err instanceof Error ? err.message : String(err) });
+      }
+
+      if (existingPayment.expiredAt && existingPayment.expiredAt > new Date() && existingPayment.snapToken && existingPayment.snapUrl) {
+        return {
+          transactionId: existingPayment.transactionId,
+          expiresAt: existingPayment.expiredAt?.toISOString() ?? new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+          paymentMethod: existingPayment.paymentMethod as PaymentMethod,
+          amount: existingPayment.amount,
+          status: existingPayment.status,
+          providerName: existingPayment.provider,
+          snapUrl: existingPayment.snapUrl,
+          snapToken: existingPayment.snapToken,
+          existing: true,
+        };
+      }
+    }
   }
 
   const appBaseUrl = input.appBaseUrl || process.env.NEXT_PUBLIC_APP_URL || "https://klaten-international-minisoccer.vercel.app";
-  const uniqueTransactionId = `${normalizedBookingId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const shortBookingId = normalizedBookingId.replace(/-/g, "").slice(0, 12);
-  const orderSuffix = Math.random().toString(36).slice(2, 6);
-  const midtransOrderId = `ORD-${shortBookingId}-${orderSuffix}`;
-  if (midtransOrderId.length > 50) {
-    throw new Error(`Invalid Midtrans payload: transaction_details.order_id must be 50 characters or less. Generated id=${midtransOrderId}`);
-  }
+  // Generate a short, unique transaction id and use it as Midtrans order_id so webhooks map reliably.
+  const uniqueTransactionId = `TX-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  const midtransOrderId = uniqueTransactionId; // keep order id equal to our transaction id
   const customerDetails = buildMidtransCustomerDetails(input.customerName, input.email, input.phone);
   const midtransPayload = {
     transaction_details: {
@@ -123,40 +175,62 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
       unit: "minutes",
       duration: 15,
     },
-  };
+    };
 
-  const midtransResponse = await createMidtransTransaction(midtransPayload);
+  // Create a local payment record first so webhooks can map to it even if delivered early.
+  const expiry = new Date(Date.now() + 15 * 60 * 1000);
 
-  const paymentRecord = existingPayment
-    ? await prisma.payment.update({
-        where: { id: existingPayment.id },
-        data: {
-          transactionId: uniqueTransactionId,
-          midtransOrderId,
-          snapToken: midtransResponse.token,
-          snapUrl: midtransResponse.redirect_url,
-          paymentMethod: input.paymentMethod as PaymentMethod,
-          amount: input.amount,
-          status: "pending",
-          provider: "Midtrans",
-          expiredAt: new Date(Date.now() + 15 * 60 * 1000),
-          updatedAt: new Date(),
-        },
-      })
-    : await prisma.payment.create({
-        data: {
-          bookingId: normalizedBookingId,
-          transactionId: uniqueTransactionId,
-          midtransOrderId,
-          snapToken: midtransResponse.token,
-          snapUrl: midtransResponse.redirect_url,
-          paymentMethod: input.paymentMethod as PaymentMethod,
-          amount: input.amount,
-          status: "pending",
-          provider: "Midtrans",
-          expiredAt: new Date(Date.now() + 15 * 60 * 1000),
-        },
-      });
+  let paymentRecord = null;
+
+  if (existingPayment) {
+    paymentRecord = await prisma.payment.update({
+      where: { id: existingPayment.id },
+      data: {
+        transactionId: uniqueTransactionId,
+        midtransOrderId: midtransOrderId,
+        paymentMethod: input.paymentMethod as PaymentMethod,
+        amount: input.amount,
+        status: "pending",
+        provider: "Midtrans",
+        expiredAt: expiry,
+        updatedAt: new Date(),
+      },
+    });
+  } else {
+    paymentRecord = await prisma.payment.create({
+      data: {
+        bookingId: normalizedBookingId,
+        transactionId: uniqueTransactionId,
+        midtransOrderId: midtransOrderId,
+        paymentMethod: input.paymentMethod as PaymentMethod,
+        amount: input.amount,
+        status: "pending",
+        provider: "Midtrans",
+        expiredAt: expiry,
+      },
+    });
+  }
+
+  // Call Midtrans to create transaction (order_id matches our transaction id)
+  let midtransResponse;
+  try {
+    midtransResponse = await createMidtransTransaction(midtransPayload);
+  } catch (err) {
+    // If Midtrans creation fails, mark payment as failed and rethrow
+    await prisma.payment.update({ where: { id: paymentRecord.id }, data: { status: "failed", updatedAt: new Date() } });
+    throw err;
+  }
+
+  // Persist Midtrans response (snap token / url)
+  paymentRecord = await prisma.payment.update({
+    where: { id: paymentRecord.id },
+    data: {
+      snapToken: midtransResponse.token,
+      snapUrl: midtransResponse.redirect_url,
+      midtransOrderId: midtransOrderId,
+      updatedAt: new Date(),
+    },
+  });
 
   await prisma.invoice.upsert({
     where: { bookingId: booking.id },
@@ -192,6 +266,7 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
     providerName: "Midtrans",
     snapUrl: midtransResponse.redirect_url,
     snapToken: midtransResponse.token,
+    existing: false,
   };
 }
 
@@ -238,6 +313,26 @@ export async function reconcilePaymentStatus(transactionId: string, status?: str
   }
 
   return payment.status || normalized || null;
+}
+
+export function shouldReclaimBookingStatus(status: string | undefined | null): boolean {
+  const normalized = status?.trim().toLowerCase();
+  if (!normalized) {
+    return false;
+  }
+
+  return ["expired", "cancelled", "refunded"].includes(normalized);
+}
+
+export function resolvePaymentUpdateTransactionId(
+  inputIdentifier: string,
+  payment: { transactionId: string; midtransOrderId?: string | null }
+): string {
+  if (payment?.transactionId) {
+    return payment.transactionId;
+  }
+
+  return inputIdentifier;
 }
 
 export async function syncBookingStatusesFromPayments() {
@@ -349,7 +444,7 @@ export async function getPaymentSimulationDetails(method: PaymentMethod): Promis
   return paymentProvider.getSimulationDetails(method);
 }
 
-export async function processWebhookEvent(transactionId: string, status: PaymentStatus) {
+export async function processWebhookEvent(transactionId: string, status: PaymentStatus, eventHash?: string) {
   const normalized = normalizePaymentStatus(status);
 
   const payment = await findPaymentByIdentifier(transactionId);
@@ -379,28 +474,21 @@ export async function processWebhookEvent(transactionId: string, status: Payment
     updateData.expiredAt = now;
   }
 
-  await prisma.payment.update({
-    where: { transactionId },
-    data: updateData,
-  });
+  const paymentUpdateTransactionId = resolvePaymentUpdateTransactionId(transactionId, payment);
 
-  let nextBookingStatus: BookingStatus = booking.status as BookingStatus;
-  if (normalized === "success") {
-    nextBookingStatus = "confirmed";
-  } else if (normalized === "refunded") {
-    nextBookingStatus = "refunded";
-  } else if (normalized === "expired") {
-    nextBookingStatus = "expired";
-  } else if (normalized === "cancelled" || normalized === "failed") {
-    nextBookingStatus = "cancelled";
-  }
+  // Perform DB updates atomically to avoid partially applied state.
+  const bookingStatusMap: Record<PaymentStatus, BookingStatus> = {
+    pending: "pending",
+    success: "confirmed",
+    failed: "cancelled",
+    expired: "expired",
+    cancelled: "cancelled",
+    refunded: "refunded",
+  };
 
-  await prisma.booking.update({
-    where: { id: booking.id },
-    data: { status: nextBookingStatus },
-  });
+  const nextBookingStatus = bookingStatusMap[normalized] ?? booking.status;
 
-  await prisma.invoice.upsert({
+  const invoiceUpsert = prisma.invoice.upsert({
     where: { bookingId: booking.id },
     update: {
       status: normalized === "success" ? "paid" : "issued",
@@ -425,19 +513,62 @@ export async function processWebhookEvent(transactionId: string, status: Payment
     },
   });
 
+  const [updatedPayment, _updatedBooking, _upsertedInvoice] = await prisma.$transaction([
+    prisma.payment.update({ where: { transactionId: paymentUpdateTransactionId }, data: updateData }),
+    prisma.booking.update({ where: { id: booking.id }, data: { status: nextBookingStatus, updatedAt: now } }),
+    invoiceUpsert,
+  ]);
+
+  // Mark webhook event as processed if provided
+  if (eventHash) {
+    try {
+      await prisma.webhookEvent.updateMany({ where: { eventHash }, data: { processed: true, processedAt: now } });
+    } catch (err) {
+      console.warn("[payment-service] Failed to mark webhook event processed", { err: err instanceof Error ? err.message : String(err), eventHash });
+    }
+  }
+
+  // Send notifications after DB transaction commits
   if (normalized === "success") {
     const invoice = await prisma.invoice.findUnique({ where: { bookingId: booking.id } });
+
+    const attachment = invoice
+      ? buildInvoiceAttachment({
+          invoiceNumber: invoice.invoiceNumber,
+          customerName: invoice.customerName ?? booking.customerName,
+          customerEmail: invoice.customerEmail ?? booking.customerEmail,
+          customerPhone: invoice.customerPhone ?? booking.customerPhone,
+          status: invoice.status,
+          subtotal: invoice.subtotal,
+          discount: invoice.discount,
+          tax: invoice.tax,
+          total: invoice.total,
+          issuedAt: invoice.issuedAt,
+          booking: {
+            id: booking.id,
+            bookingDate: booking.bookingDate,
+            startTime: booking.startTime,
+            endTime: booking.endTime,
+          },
+          payment: {
+            transactionId: updatedPayment.transactionId,
+            paymentMethod: updatedPayment.paymentMethod,
+            provider: updatedPayment.provider,
+          },
+        })
+      : undefined;
 
     await sendNotification("email-confirmation", {
       bookingId: booking.id,
       invoiceNumber: invoice?.invoiceNumber,
-      amount: payment.amount,
+      amount: updatedPayment.amount,
       customerName: booking.customerName,
       fieldName: DEFAULT_FIELD_NAME,
       startAt: `${booking.bookingDate.toISOString().slice(0, 10)} ${booking.startTime}`,
       endAt: `${booking.bookingDate.toISOString().slice(0, 10)} ${booking.endTime}`,
       email: booking.customerEmail ?? undefined,
       phone: booking.customerPhone,
+      attachment,
     });
   }
 

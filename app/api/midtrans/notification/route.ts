@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { processWebhookEvent } from "@/lib/payment-service";
 import { verifyMidtransSignature } from "@/lib/midtrans";
 import type { PaymentStatus } from "@/lib/payment-provider";
+import { prisma } from "@/lib/prisma";
+import crypto from "crypto";
 
 function resolveTransactionId(body: Record<string, unknown>) {
   return (
@@ -34,16 +36,48 @@ export async function POST(request: Request) {
 
     const transactionId = resolveTransactionId(body as Record<string, unknown>);
     const status = resolveTransactionStatus(body as Record<string, unknown>) as PaymentStatus;
+    const eventHash = crypto.createHash("sha256").update(rawBody).digest("hex");
 
     if (!transactionId || !status) {
       console.warn("[MIDTRANS] Missing transaction id or status", { body, timestamp: new Date().toISOString() });
       return NextResponse.json({ success: false, message: "Missing transaction identifier or status." }, { status: 400 });
     }
 
-    console.info("[MIDTRANS] Notification received", { transactionId, status, timestamp: new Date().toISOString() });
-    await processWebhookEvent(transactionId, status);
+    try {
+      await prisma.webhookEvent.create({
+        data: {
+          eventHash,
+          orderId: transactionId,
+          eventType: status,
+          payload: body,
+        },
+      });
+    } catch (err) {
+      const exists = await prisma.webhookEvent.findUnique({ where: { eventHash } });
+      if (exists) {
+        console.info("[MIDTRANS] Duplicate notification ignored", { eventHash, transactionId, status });
+        return NextResponse.json({ success: true, message: "Duplicate Midtrans notification ignored." });
+      }
+      console.error("[MIDTRANS] Failed to record webhook event", { err: err instanceof Error ? err.message : String(err), eventHash });
+      return NextResponse.json({ success: false, message: "Failed to record webhook event." }, { status: 500 });
+    }
 
-    return NextResponse.json({ success: true, message: "Midtrans notification processed." });
+    console.info("[MIDTRANS] Notification received", { transactionId, status, timestamp: new Date().toISOString() });
+    try {
+      await processWebhookEvent(transactionId, status, eventHash);
+      return NextResponse.json({ success: true, message: "Midtrans notification processed." });
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      const orderIdField = (body as Record<string, unknown>)?.order_id ?? (body as Record<string, unknown>)?.orderId;
+      if (typeof orderIdField === "string" && orderIdField) {
+        const payment = await prisma.payment.findFirst({ where: { midtransOrderId: orderIdField } });
+        if (payment) {
+          await processWebhookEvent(payment.transactionId, status, eventHash);
+          return NextResponse.json({ success: true, message: "Midtrans notification processed via fallback." });
+        }
+      }
+      throw new Error(errMsg);
+    }
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     console.error("[MIDTRANS] Notification error:", { message: errorMsg, stack: error instanceof Error ? error.stack : undefined, timestamp: new Date().toISOString() });

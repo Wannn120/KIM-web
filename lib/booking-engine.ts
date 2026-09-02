@@ -3,10 +3,16 @@ import { prisma } from "@/lib/prisma";
 export type BookingStatus = "pending" | "confirmed" | "completed" | "cancelled" | "expired" | "refunded" | "rescheduled";
 
 export const BLOCKING_BOOKING_STATUSES: BookingStatus[] = ["pending", "confirmed", "completed", "rescheduled"];
+export const RECLAIMABLE_BOOKING_STATUSES: BookingStatus[] = ["expired", "cancelled", "refunded"];
 
 export function isBookingSlotBlocked(status: string | undefined | null): boolean {
   const normalized = status?.trim().toLowerCase();
   return !!normalized && BLOCKING_BOOKING_STATUSES.includes(normalized as BookingStatus);
+}
+
+export function shouldReclaimBookingStatus(status: string | undefined | null): boolean {
+  const normalized = status?.trim().toLowerCase();
+  return !!normalized && RECLAIMABLE_BOOKING_STATUSES.includes(normalized as BookingStatus);
 }
 
 export function isBookingStatusAvailableInSlot(status: string | undefined | null): boolean {

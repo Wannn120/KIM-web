@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { getPopupBlockedMessage, isPopupWindowOpenable } from "@/lib/popup-fallback";
+import { getPopupBlockedMessage, isPopupWindowOpenable, shouldPreferDirectNavigation } from "@/lib/popup-fallback";
 import { formatCurrency } from "@/utils/formatting";
 
 declare global {
@@ -256,6 +256,14 @@ export function BookingPaymentEmbed({
   const openSnap = useCallback(async (token: string, snapUrl?: string | null) => {
     if (!token.trim()) {
       setError("Invalid Snap token.");
+      return;
+    }
+
+    const useDirectNavigation = shouldPreferDirectNavigation();
+    if (useDirectNavigation && snapUrl) {
+      setStatus("ready");
+      setMessage("This browser restricts pop-ups, so we are opening the secure payment page directly.");
+      window.location.href = snapUrl;
       return;
     }
 

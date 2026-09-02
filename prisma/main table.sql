@@ -17,6 +17,7 @@ DROP TABLE IF EXISTS field CASCADE;
 DROP TABLE IF EXISTS venue_feature CASCADE;
 DROP TABLE IF EXISTS venue_gallery CASCADE;
 DROP TABLE IF EXISTS schedule_slot CASCADE;
+DROP TABLE IF EXISTS webhook_event CASCADE;
 
 -- NOTE: `field` table removed per request — application will treat the system
 -- as a single-venue setup. Bookings no longer reference `field_id`.
@@ -32,6 +33,8 @@ CREATE TABLE IF NOT EXISTS _prisma_migrations (
   started_at timestamptz NOT NULL,
   applied_steps_count int4 NOT NULL
 );
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- NOTE: `field_schedule` removed. Availability is derived from `booking` and `payment` statuses.
 
@@ -117,6 +120,21 @@ CREATE TABLE payment (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ==================== WEBHOOK EVENT LOG ====================
+CREATE TABLE webhook_event (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_hash VARCHAR(255) UNIQUE NOT NULL,
+  order_id VARCHAR(255),
+  event_type VARCHAR(100),
+  payload JSONB NOT NULL,
+  processed BOOLEAN DEFAULT false,
+  processed_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_webhook_event_order_id ON webhook_event(order_id);
+CREATE INDEX IF NOT EXISTS idx_webhook_event_processed ON webhook_event(processed);
 
 -- ==================== INVOICE & RECEIPT ====================
 CREATE TABLE invoice (

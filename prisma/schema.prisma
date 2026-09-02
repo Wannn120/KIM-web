@@ -76,11 +76,12 @@ model Booking {
   createdAt     DateTime      @default(now()) @map("created_at")
   updatedAt     DateTime      @updatedAt @map("updated_at")
 
-  payments      Payment[]
-  invoice       Invoice?
-  reviews       Review[]
+  payments Payment[]
+  invoice  Invoice?
+  reviews  Review[]
 
-  @@unique([bookingDate, startTime])
+  // Active-slot uniqueness is enforced by a partial DB index in migration SQL so
+  // expired/cancelled/refunded records can be reclaimed without blocking new bookings.
   @@map("booking")
 }
 
@@ -101,30 +102,30 @@ model Payment {
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
 
-  invoice         Invoice?
+  invoice Invoice?
 
   @@map("payment")
 }
 
 model Invoice {
   id            String        @id @default(uuid()) @map("id")
-  invoiceNumber  String        @unique @map("invoice_number")
-  bookingId      String        @unique @map("booking_id")
-  booking        Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  paymentId      String        @unique @map("payment_id")
-  payment        Payment       @relation(fields: [paymentId], references: [id], onDelete: Cascade)
-  customerName   String?       @map("customer_name")
-  customerEmail  String?       @map("customer_email")
-  customerPhone  String?       @map("customer_phone")
-  subtotal       Int           @map("subtotal")
-  tax            Int           @default(0) @map("tax")
-  discount       Int           @default(0) @map("discount")
-  total          Int           @map("total")
-  status         InvoiceStatus @default(issued) @map("status")
-  issuedAt       DateTime      @default(now()) @map("issued_at")
-  paidAt         DateTime?     @map("paid_at")
-  createdAt      DateTime      @default(now()) @map("created_at")
-  updatedAt      DateTime      @updatedAt @map("updated_at")
+  invoiceNumber String        @unique @map("invoice_number")
+  bookingId     String        @unique @map("booking_id")
+  booking       Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  paymentId     String        @unique @map("payment_id")
+  payment       Payment       @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  customerName  String?       @map("customer_name")
+  customerEmail String?       @map("customer_email")
+  customerPhone String?       @map("customer_phone")
+  subtotal      Int           @map("subtotal")
+  tax           Int           @default(0) @map("tax")
+  discount      Int           @default(0) @map("discount")
+  total         Int           @map("total")
+  status        InvoiceStatus @default(issued) @map("status")
+  issuedAt      DateTime      @default(now()) @map("issued_at")
+  paidAt        DateTime?     @map("paid_at")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
 
   @@map("invoice")
 }
@@ -151,19 +152,19 @@ model ScheduleSlot {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@map("schedule_slot")
   @@index([sortOrder])
+  @@map("schedule_slot")
 }
 
 model AuditLog {
-  id             String    @id @default(uuid()) @map("id")
-  action         String    @map("action")
-  entity         String    @map("entity")
-  entityId       String    @map("entity_id")
-  changes        String?   @map("changes")
-  ipAddress      String?   @map("ip_address")
-  referenceEmail String?   @map("reference_email")
-  createdAt      DateTime  @default(now()) @map("created_at")
+  id             String   @id @default(uuid()) @map("id")
+  action         String   @map("action")
+  entity         String   @map("entity")
+  entityId       String   @map("entity_id")
+  changes        String?  @map("changes")
+  ipAddress      String?  @map("ip_address")
+  referenceEmail String?  @map("reference_email")
+  createdAt      DateTime @default(now()) @map("created_at")
 
   @@map("audit_log")
 }
@@ -180,17 +181,17 @@ model AdminSetting {
 }
 
 model AdminUser {
-  id              String     @id @default(uuid()) @map("id")
-  name            String     @map("name")
-  email           String     @unique @map("email")
-  passwordHash    String     @map("password_hash")
-  role            AdminRole  @default(staff) @map("role")
-  isActive        Boolean    @default(true) @map("is_active")
-  lastLoginAt     DateTime?  @map("last_login_at")
-  createdAt       DateTime   @default(now()) @map("created_at")
-  updatedAt       DateTime   @updatedAt @map("updated_at")
+  id           String    @id @default(uuid()) @map("id")
+  name         String    @map("name")
+  email        String    @unique @map("email")
+  passwordHash String    @map("password_hash")
+  role         AdminRole @default(staff) @map("role")
+  isActive     Boolean   @default(true) @map("is_active")
+  lastLoginAt  DateTime? @map("last_login_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
-  sessions       AdminSession[]
+  sessions AdminSession[]
 
   @@map("admin_user")
 }
@@ -207,15 +208,15 @@ model AdminSession {
 }
 
 model VenueFeature {
-  id          String   @id @default(uuid()) @map("id")
-  name        String   @map("name")
-  description String   @map("description")
-  imageUrl    String   @map("image_url")
-  imagePublicId String? @map("image_public_id")
-  sortOrder   Int      @default(0) @map("sort_order")
-  isActive    Boolean  @default(true) @map("is_active")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id            String   @id @default(uuid()) @map("id")
+  name          String   @map("name")
+  description   String   @map("description")
+  imageUrl      String   @map("image_url")
+  imagePublicId String?  @map("image_public_id")
+  sortOrder     Int      @default(0) @map("sort_order")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   @@index([isActive, sortOrder])
   @@map("venue_feature")
@@ -233,4 +234,20 @@ model VenueGallery {
 
   @@index([isActive, sortOrder])
   @@map("venue_gallery")
+}
+
+/// Webhook events table to record incoming payment provider notifications and
+/// prevent duplicate processing. This is used by the payments webhook route to
+/// ensure idempotency and for auditing.
+model WebhookEvent {
+  id         String   @id @default(uuid()) @map("id")
+  eventHash  String   @unique @map("event_hash")
+  orderId    String?  @map("order_id")
+  eventType  String?  @map("event_type")
+  payload    Json     @map("payload")
+  processed  Boolean  @default(false) @map("processed")
+  processedAt DateTime? @map("processed_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("webhook_event")
 }
