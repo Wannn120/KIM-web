@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: npm ci
+      - name: Check required env variables
+        run: npm run ci:check-env
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
+          MIDTRANS_SERVER_KEY: ${{ secrets.MIDTRANS_SERVER_KEY }}
+          MIDTRANS_CLIENT_KEY: ${{ secrets.MIDTRANS_CLIENT_KEY }}
+      - name: Build
+        run: npm run vercel-build
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
+          MIDTRANS_SERVER_KEY: ${{ secrets.MIDTRANS_SERVER_KEY }}
+          MIDTRANS_CLIENT_KEY: ${{ secrets.MIDTRANS_CLIENT_KEY }}
