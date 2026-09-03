@@ -1,8 +1,8 @@
+// RESEND_FROM_EMAIL is optional in CI (emails can be disabled in some envs)
 const required = [
   'DATABASE_URL',
   'DIRECT_URL',
   'RESEND_API_KEY',
-  'RESEND_FROM_EMAIL',
   'MIDTRANS_SERVER_KEY',
   'MIDTRANS_CLIENT_KEY'
 ];
