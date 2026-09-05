@@ -9,18 +9,31 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      JWT_SECRET: test-secret
-      RATE_LIMIT_MAX: 60
-      RATE_LIMIT_WINDOW_MS: 60000
-      COOKIE_SECURE: false
-      DATABASE_URL: ${{ secrets.DATABASE_URL || secrets.POSTGRES_PRISMA_URL || secrets.POSTGRES_URL_NON_POOLING }}
-      DIRECT_URL: ${{ secrets.DIRECT_URL || secrets.DATABASE_URL || secrets.POSTGRES_PRISMA_URL || secrets.POSTGRES_URL_NON_POOLING }}
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
-      - run: npm run build
+
+      - name: Install dependencies (skip optional native modules)
+        run: npm install --no-optional
+
+      - name: Check required environment variables
+        run: npm run ci:check-env
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || secrets.POSTGRES_PRISMA_URL || secrets.POSTGRES_URL_NON_POOLING || secrets.POSTGRES_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || secrets.DATABASE_URL || secrets.POSTGRES_PRISMA_URL || secrets.POSTGRES_URL_NON_POOLING || secrets.POSTGRES_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          MIDTRANS_SERVER_KEY: ${{ secrets.MIDTRANS_SERVER_KEY }}
+          MIDTRANS_CLIENT_KEY: ${{ secrets.MIDTRANS_CLIENT_KEY }}
+
+      - name: Build app
+        run: npm run vercel-build
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || secrets.POSTGRES_PRISMA_URL || secrets.POSTGRES_URL_NON_POOLING || secrets.POSTGRES_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || secrets.DATABASE_URL || secrets.POSTGRES_PRISMA_URL || secrets.POSTGRES_URL_NON_POOLING || secrets.POSTGRES_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          MIDTRANS_SERVER_KEY: ${{ secrets.MIDTRANS_SERVER_KEY }}
+          MIDTRANS_CLIENT_KEY: ${{ secrets.MIDTRANS_CLIENT_KEY }}
