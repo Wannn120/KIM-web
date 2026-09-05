@@ -119,7 +119,6 @@ export function applySecurityHeaders(response: NextResponse, request?: NextReque
   response.headers.set("x-content-type-options", "nosniff");
   response.headers.set("x-frame-options", "DENY");
   response.headers.set("referrer-policy", "no-referrer");
-  response.headers.set("permissions-policy", "geolocation=(), microphone=(), camera=(), fullscreen=(self)");
   response.headers.set("x-xss-protection", "1; mode=block");
 
   if (request?.headers.get("x-forwarded-proto") === "https" || process.env.NODE_ENV === "production") {
