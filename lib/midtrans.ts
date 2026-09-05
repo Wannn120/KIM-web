@@ -1,6 +1,9 @@
 import crypto from "crypto";
 
-const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY ?? "";
+function getMidtransServerKey() {
+  return process.env.MIDTRANS_SERVER_KEY ?? "";
+}
+
 const MIDTRANS_CLIENT_KEY = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY ?? process.env.MIDTRANS_CLIENT_KEY ?? "";
 const MIDTRANS_IS_PRODUCTION = String(process.env.MIDTRANS_IS_PRODUCTION ?? "false").toLowerCase() === "true";
 const MIDTRANS_SANDBOX_URL = process.env.MIDTRANS_SANDBOX_URL ?? "https://app.sandbox.midtrans.com";
@@ -43,7 +46,8 @@ export interface MidtransTransactionResponse {
 }
 
 export async function createMidtransTransaction(payload: MidtransCreatePayload): Promise<MidtransTransactionResponse> {
-  if (!MIDTRANS_SERVER_KEY.trim()) {
+  const serverKey = getMidtransServerKey();
+  if (!serverKey.trim()) {
     const token = `mock-${Math.random().toString(36).slice(2, 12)}`;
     const redirectUrl = `${MIDTRANS_SANDBOX_URL}/snap/pay/${payload.transaction_details.order_id}`;
 
@@ -68,7 +72,7 @@ export async function createMidtransTransaction(payload: MidtransCreatePayload):
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Basic ${Buffer.from(`${MIDTRANS_SERVER_KEY}:`).toString("base64")}`,
+      Authorization: `Basic ${Buffer.from(`${serverKey}:`).toString("base64")}`,
     },
     body: JSON.stringify(payload),
   });
@@ -98,7 +102,8 @@ export async function createMidtransTransaction(payload: MidtransCreatePayload):
 }
 
 export async function getMidtransTransactionStatus(orderId: string): Promise<Record<string, unknown>> {
-  if (!MIDTRANS_SERVER_KEY.trim()) {
+  const serverKey = getMidtransServerKey();
+  if (!serverKey.trim()) {
     throw new Error("Midtrans server key is required to fetch transaction status.");
   }
 
@@ -106,7 +111,7 @@ export async function getMidtransTransactionStatus(orderId: string): Promise<Rec
   const response = await fetch(url, {
     method: "GET",
     headers: {
-      Authorization: `Basic ${Buffer.from(`${MIDTRANS_SERVER_KEY}:`).toString("base64")}`,
+      Authorization: `Basic ${Buffer.from(`${serverKey}:`).toString("base64")}`,
       "Accept": "application/json",
     },
   });
@@ -148,53 +153,49 @@ function parseMidtransBody(rawBody: string) {
 }
 
 export function verifyMidtransSignature(rawBody: string, signature: string) {
-  if (!MIDTRANS_SERVER_KEY || !signature.trim()) {
+  const serverKey = getMidtransServerKey();
+  if (!serverKey || !signature.trim()) {
     return false;
   }
 
-  const normalizedSignature = signature.trim().toLowerCase();
-  const expectedFromRawBody = crypto
-    .createHash("sha512")
-    .update(`${rawBody}${MIDTRANS_SERVER_KEY}`)
-    .digest("hex");
-
-  const expectedBuffer = Buffer.from(expectedFromRawBody, "hex");
-  const providedBuffer = Buffer.from(normalizedSignature, "hex");
-
-  if (expectedBuffer.length === providedBuffer.length && crypto.timingSafeEqual(expectedBuffer, providedBuffer)) {
-    return true;
+  const providedBuffer = Buffer.from(signature.trim(), "hex");
+  if (providedBuffer.length === 0) {
+    return false;
   }
 
   const parsedBody = parseMidtransBody(rawBody);
-  if (!parsedBody) {
-    return false;
+  const orderId = parsedBody && (typeof parsedBody.order_id === "string" ? parsedBody.order_id : typeof parsedBody.orderId === "string" ? parsedBody.orderId : "");
+  const statusCode = parsedBody && (typeof parsedBody.status_code === "string" ? parsedBody.status_code : typeof parsedBody.statusCode === "string" ? parsedBody.statusCode : "");
+  const grossAmount = parsedBody && (typeof parsedBody.gross_amount === "string" ? parsedBody.gross_amount : typeof parsedBody.grossAmount === "string" ? parsedBody.grossAmount : "");
+
+  const officialSignature = orderId && statusCode && grossAmount
+    ? crypto.createHash("sha512").update(`${orderId}${statusCode}${grossAmount}${serverKey}`).digest("hex")
+    : null;
+
+  if (officialSignature) {
+    const expectedOfficialBuffer = Buffer.from(officialSignature, "hex");
+    if (expectedOfficialBuffer.length === providedBuffer.length && crypto.timingSafeEqual(expectedOfficialBuffer, providedBuffer)) {
+      return true;
+    }
   }
 
-  const orderId = typeof parsedBody.order_id === "string" ? parsedBody.order_id : typeof parsedBody.orderId === "string" ? parsedBody.orderId : "";
-  const statusCode = typeof parsedBody.status_code === "string" ? parsedBody.status_code : typeof parsedBody.statusCode === "string" ? parsedBody.statusCode : "";
-  const grossAmount = typeof parsedBody.gross_amount === "string" ? parsedBody.gross_amount : typeof parsedBody.grossAmount === "string" ? parsedBody.grossAmount : "";
-
-  if (!orderId || !statusCode || !grossAmount) {
-    return false;
-  }
-
-  const expectedFromFields = crypto
+  const expectedFromRawBody = crypto
     .createHash("sha512")
-    .update(`${orderId}${statusCode}${grossAmount}${MIDTRANS_SERVER_KEY}`)
+    .update(`${rawBody}${serverKey}`)
     .digest("hex");
 
-  const expectedFieldBuffer = Buffer.from(expectedFromFields, "hex");
-  if (expectedFieldBuffer.length !== providedBuffer.length) {
+  const expectedRawBodyBuffer = Buffer.from(expectedFromRawBody, "hex");
+  if (expectedRawBodyBuffer.length !== providedBuffer.length) {
     return false;
   }
 
-  return crypto.timingSafeEqual(expectedFieldBuffer, providedBuffer);
+  return crypto.timingSafeEqual(expectedRawBodyBuffer, providedBuffer);
 }
 
 export function getMidtransConfig() {
   return {
     clientKey: MIDTRANS_CLIENT_KEY,
-    serverKey: MIDTRANS_SERVER_KEY,
+    serverKey: getMidtransServerKey(),
     baseUrl: MIDTRANS_BASE_URL,
     snapScriptUrl: MIDTRANS_SNAP_SCRIPT_URL,
   };
