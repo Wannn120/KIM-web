@@ -26,7 +26,10 @@ export async function getVenueFeatures(): Promise<FacilityImage[]> {
       isActive: boolean;
       sortOrder: number;
     }> = records.filter(
-      (feature: { imageUrl?: string | null }) => typeof feature.imageUrl === "string" && feature.imageUrl.trim().length > 0,
+      (feature: { imageUrl?: string | null }) => {
+        const value = typeof feature.imageUrl === "string" ? feature.imageUrl.trim().replace(/[\r\n\t]+/g, "") : "";
+        return value.length > 0;
+      },
     );
 
     if (activeRecords.length > 0) {
@@ -34,7 +37,7 @@ export async function getVenueFeatures(): Promise<FacilityImage[]> {
         id: feature.id,
         title: feature.name,
         description: feature.description,
-        imageUrl: feature.imageUrl.trim(),
+        imageUrl: feature.imageUrl.trim().replace(/[\r\n\t]+/g, ""),
         isActive: feature.isActive,
         sortOrder: feature.sortOrder,
       }));
@@ -58,9 +61,12 @@ export async function getVenueGallery(): Promise<VenueGalleryImage[]> {
   try {
     const records = await prisma.venueGallery.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } });
     const activeRecords: Array<{ id: string; title: string; imageUrl: string; sortOrder: number; isActive: boolean }> = records.filter(
-      (image: { imageUrl?: string | null }) => typeof image.imageUrl === "string" && image.imageUrl.trim().length > 0,
+      (image: { imageUrl?: string | null }) => {
+        const value = typeof image.imageUrl === "string" ? image.imageUrl.trim().replace(/[\r\n\t]+/g, "") : "";
+        return value.length > 0;
+      },
     );
-    return activeRecords.length > 0 ? activeRecords.map((image) => ({ ...image, imageUrl: image.imageUrl.trim() })) : fallback;
+    return activeRecords.length > 0 ? activeRecords.map((image) => ({ ...image, imageUrl: image.imageUrl.trim().replace(/[\r\n\t]+/g, "") })) : fallback;
   } catch (error) {
     console.error("[DATA] Unable to load venue gallery:", error);
     return fallback;

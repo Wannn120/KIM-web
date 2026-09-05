@@ -21,7 +21,7 @@ export async function getSiteContent(): Promise<SiteContent> {
       records.map((record: { key: string; value: string }) => [record.key, record.value]),
     ) as Record<string, string>;
     const merged = { ...siteContent, ...values } as SiteContent;
-    const backgroundImageUrl = typeof merged.backgroundImageUrl === "string" ? merged.backgroundImageUrl.trim() : "";
+    const backgroundImageUrl = typeof merged.backgroundImageUrl === "string" ? merged.backgroundImageUrl.trim().replace(/[\r\n\t]+/g, "") : "";
 
     if (backgroundImageUrl && /^https?:\/\//i.test(backgroundImageUrl)) {
       merged.backgroundImageUrl = backgroundImageUrl;

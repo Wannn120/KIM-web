@@ -4,10 +4,16 @@ import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import type { FacilityImage, SiteContent } from "@/types";
 
+function normalizeRemoteImageUrl(url?: string) {
+  if (typeof url !== "string") return "";
+  return url.trim().replace(/[\r\n\t]+/g, "");
+}
+
 function isValidRemoteImageUrl(url?: string) {
-  if (!url) return false;
+  const normalized = normalizeRemoteImageUrl(url);
+  if (!normalized) return false;
   try {
-    const parsed = new URL(url);
+    const parsed = new URL(normalized);
     return parsed.protocol === "http:" || parsed.protocol === "https:";
   } catch {
     return false;
@@ -23,15 +29,16 @@ export function HeroSection({ facilities, content = {} as Partial<SiteContent> }
     () => displayFacilities.filter((facility) => typeof facility.imageUrl === "string" && facility.imageUrl.trim().length > 0),
     [displayFacilities],
   );
-  const facilityUrls = useMemo(() => validFacilities.map((facility) => facility.imageUrl).join("|"), [validFacilities]);
-  const heroBackgroundUrl = isValidRemoteImageUrl(content.backgroundImageUrl) ? content.backgroundImageUrl : "";
+  const facilityUrls = useMemo(() => validFacilities.map((facility) => normalizeRemoteImageUrl(facility.imageUrl)).join("|"), [validFacilities]);
+  const heroBackgroundUrl = isValidRemoteImageUrl(content.backgroundImageUrl) ? normalizeRemoteImageUrl(content.backgroundImageUrl) : "";
   const heroImageSrc = heroImageFailed || !heroBackgroundUrl ? "/placeholder-image.svg" : heroBackgroundUrl;
   const safeFacilityImage = (facility: FacilityImage) => {
     const id = facility.id ?? facility.title;
     if (brokenFacilityImages[id]) {
       return "/placeholder-image.svg";
     }
-    return isValidRemoteImageUrl(facility.imageUrl) ? facility.imageUrl : "/placeholder-image.svg";
+    const normalizedUrl = normalizeRemoteImageUrl(facility.imageUrl);
+    return isValidRemoteImageUrl(normalizedUrl) ? normalizedUrl : "/placeholder-image.svg";
   };
 
   useEffect(() => {
