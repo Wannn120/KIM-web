@@ -236,14 +236,14 @@ export function BookingForm({ fields }: { fields: Field[] }) {
                         ? isSelected
                           ? "border-emerald-300 bg-gradient-to-br from-emerald-400 to-emerald-500 text-white shadow-[0_0_0_3px_rgba(16,185,129,0.18),0_18px_32px_rgba(16,185,129,0.35)]"
                           : "border-white/10 bg-[color:var(--background)] text-white hover:border-emerald-400/70 hover:bg-[color:rgba(16,185,129,0.12)]"
-                        : "border-white/5 bg-white/5 text-[color:var(--muted)] cursor-not-allowed"
+                        : "border-red-300 bg-gradient-to-br from-red-400 to-red-500 text-white cursor-not-allowed shadow-[0_0_0_3px_rgba(239,68,68,0.12)]"
                     }`}
                     disabled={!slot.isAvailable}
                   >
                     <div className="flex items-center justify-between gap-4">
                       <div>
-                        <p className={`text-sm font-semibold ${isSelected ? "text-white" : "text-white"}`}>{label}</p>
-                        <p className={`mt-1 text-sm ${isSelected ? "text-emerald-50" : "text-[color:var(--muted)]"}`}>
+                        <p className="text-sm font-semibold text-white">{label}</p>
+                        <p className={`mt-1 text-sm ${slot.isAvailable ? "text-[color:var(--muted)]" : "text-red-50"}`}>
                           {slot.isAvailable ? "Available" : "Booked"}
                         </p>
                       </div>
@@ -253,7 +253,7 @@ export function BookingForm({ fields }: { fields: Field[] }) {
                             ? isSelected
                               ? "bg-white/20 text-white"
                               : "bg-emerald-500/10 text-emerald-200"
-                            : "bg-rose-500/10 text-rose-200"
+                            : "bg-white/20 text-white"
                         }`}
                       >
                         {slot.isAvailable ? "Open" : "Unavailable"}
