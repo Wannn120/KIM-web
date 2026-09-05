@@ -137,9 +137,8 @@ export async function getMidtransTransactionStatus(orderId: string): Promise<Rec
 }
 
 export function resolveMidtransTransactionStatus(body: Record<string, unknown>): string {
-  if (typeof body?.transaction_status === "string") return body.transaction_status;
-  if (typeof body?.status === "string") return body.status;
-  if (typeof body?.transactionStatus === "string") return body.transactionStatus;
+  const transactionStatus = body?.transaction_status ?? body?.status ?? body?.transactionStatus;
+  if (typeof transactionStatus === "string" && transactionStatus.trim()) return transactionStatus;
 
   const statusCodeRaw = body?.status_code ?? body?.statusCode;
   const statusCode = typeof statusCodeRaw === "number" || typeof statusCodeRaw === "string" ? String(statusCodeRaw) : "";
@@ -147,11 +146,11 @@ export function resolveMidtransTransactionStatus(body: Record<string, unknown>):
     return "";
   }
 
-  if (statusCode === "200") return "settlement";
-  if (statusCode === "201") return "pending";
-  if (statusCode === "202") return "pending";
-  if (["400", "401", "403", "404", "407"].includes(statusCode)) return "failed";
+  if (["200", "201", "202"].includes(statusCode)) {
+    return statusCode === "200" ? "settlement" : "pending";
+  }
 
+  if (["400", "401", "403", "404", "407", "500"].includes(statusCode)) return "failed";
   return statusCode;
 }
 

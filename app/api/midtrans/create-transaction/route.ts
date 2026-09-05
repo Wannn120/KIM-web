@@ -18,9 +18,10 @@ export async function POST(request: Request) {
     const requestUrl = new URL(request.url);
     const forwardedHost = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
     const forwardedProto = request.headers.get("x-forwarded-proto") ?? requestUrl.protocol.replace(/:$/, "");
-    const appBaseUrl = forwardedHost
+    const resolvedBaseUrl = forwardedHost
       ? `${forwardedProto}://${forwardedHost}`
-      : process.env.NEXT_PUBLIC_APP_URL ?? "https://klaten-international-minisoccer.vercel.app";
+      : process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://klaten-international-minisoccer.vercel.app");
+    const appBaseUrl = resolvedBaseUrl.replace(/\/+$/, "");
 
     const bookingId = typeof body?.bookingId === "string" ? body.bookingId.trim() : "";
     const amount = typeof body?.amount === "number" ? body.amount : typeof body?.amount === "string" ? Number(body.amount) : 0;

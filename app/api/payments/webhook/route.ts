@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { PaymentStatus } from "@/lib/payment-provider";
-import { processWebhookEvent } from "@/lib/payment-service";
+import { normalizePaymentStatus, processWebhookEvent } from "@/lib/payment-service";
 import { verifyMidtransSignature } from "@/lib/midtrans";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
@@ -16,16 +16,12 @@ function resolveTransactionId(body: Record<string, unknown>) {
 }
 
 function resolveTransactionStatus(body: Record<string, unknown>): PaymentStatus | "" {
-  if (typeof body?.transaction_status === "string") return body.transaction_status as PaymentStatus;
-  if (typeof body?.status === "string") return body.status as PaymentStatus;
-  if (typeof body?.transactionStatus === "string") return body.transactionStatus as PaymentStatus;
-
-  const statusCodeValue = body?.status_code ?? body?.statusCode;
-  if (typeof statusCodeValue === "string" || typeof statusCodeValue === "number") {
-    return String(statusCodeValue) as PaymentStatus;
+  const rawValue = body?.transaction_status ?? body?.status ?? body?.transactionStatus ?? body?.status_code ?? body?.statusCode;
+  if (rawValue === undefined || rawValue === null || rawValue === "") {
+    return "";
   }
 
-  return "";
+  return normalizePaymentStatus(String(rawValue)) as PaymentStatus;
 }
 
 export async function POST(request: Request) {

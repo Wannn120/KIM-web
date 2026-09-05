@@ -9,16 +9,21 @@ import { buildInvoiceAttachment } from "@/lib/invoice-pdf";
 
 const paymentProvider = new DemoPaymentProvider();
 
-export function normalizePaymentStatus(status: string): PaymentStatus {
-  const lower = status.toLowerCase().trim();
+function resolveAppBaseUrl(explicitBaseUrl?: string) {
+  const configured = explicitBaseUrl?.trim() || process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://klaten-international-minisoccer.vercel.app");
+  return configured.replace(/\/+$/, "");
+}
 
-  if (["capture", "settlement", "success", "accepted"].includes(lower)) return "success";
+export function normalizePaymentStatus(status: string): PaymentStatus {
+  const lower = String(status ?? "").toLowerCase().trim();
+
+  if (["capture", "settlement", "success", "accepted", "completed"].includes(lower)) return "success";
   if (["200"].includes(lower)) return "success";
-  if (["deny", "failure", "failed"].includes(lower)) return "failed";
-  if (["expire", "expired"].includes(lower)) return "expired";
-  if (["cancel", "cancelled"].includes(lower)) return "cancelled";
+  if (["deny", "failure", "failed", "decline", "error", "fraud", "invalid"].includes(lower)) return "failed";
+  if (["expire", "expired", "410"].includes(lower)) return "expired";
+  if (["cancel", "cancelled", "canceled", "void"].includes(lower)) return "cancelled";
   if (["refund", "refunded"].includes(lower)) return "refunded";
-  if (["201", "202", "pending", "challenge"].includes(lower)) return "pending";
+  if (["pending", "processing", "challenge", "authorizing", "201", "202"].includes(lower)) return "pending";
   return "pending";
 }
 
@@ -148,7 +153,9 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
     }
   }
 
-  const appBaseUrl = input.appBaseUrl || process.env.NEXT_PUBLIC_APP_URL || "https://klaten-international-minisoccer.vercel.app";
+  const appBaseUrl = resolveAppBaseUrl(input.appBaseUrl);
+  const explicitNotificationUrl = process.env.MIDTRANS_NOTIFICATION_URL?.trim();
+  const notificationUrl = explicitNotificationUrl ? explicitNotificationUrl.replace(/\/+$/, "") : `${appBaseUrl}/api/payments/webhook`;
   // Generate a short, unique transaction id and use it as Midtrans order_id so webhooks map reliably.
   const uniqueTransactionId = `TX-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
   const midtransOrderId = uniqueTransactionId; // keep order id equal to our transaction id
@@ -172,7 +179,7 @@ export async function createPaymentTransaction(input: PaymentTransactionInput & 
       error: `${appBaseUrl}/payment/failure?transactionId=${encodeURIComponent(uniqueTransactionId)}`,
       pending: `${appBaseUrl}/payment/success?transactionId=${encodeURIComponent(uniqueTransactionId)}`,
     },
-    notification_url: `${appBaseUrl}/api/payments/webhook`,
+    notification_url: notificationUrl,
     expiry: {
       unit: "minutes",
       duration: 15,

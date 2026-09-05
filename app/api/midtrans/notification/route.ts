@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { processWebhookEvent } from "@/lib/payment-service";
+import { normalizePaymentStatus, processWebhookEvent } from "@/lib/payment-service";
 import { verifyMidtransSignature } from "@/lib/midtrans";
 import type { PaymentStatus } from "@/lib/payment-provider";
 import { prisma } from "@/lib/prisma";
@@ -16,16 +16,12 @@ function resolveTransactionId(body: Record<string, unknown>) {
 }
 
 function resolveTransactionStatus(body: Record<string, unknown>) {
-  if (typeof body?.transaction_status === "string") return body.transaction_status;
-  if (typeof body?.status === "string") return body.status;
-  if (typeof body?.transactionStatus === "string") return body.transactionStatus;
-
-  const statusCodeValue = body?.status_code ?? body?.statusCode;
-  if (typeof statusCodeValue === "string" || typeof statusCodeValue === "number") {
-    return String(statusCodeValue);
+  const rawValue = body?.transaction_status ?? body?.status ?? body?.transactionStatus ?? body?.status_code ?? body?.statusCode;
+  if (rawValue === undefined || rawValue === null || rawValue === "") {
+    return "";
   }
 
-  return "";
+  return normalizePaymentStatus(String(rawValue));
 }
 
 export async function POST(request: Request) {
