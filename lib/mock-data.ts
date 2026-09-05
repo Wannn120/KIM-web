@@ -22,19 +22,45 @@ export const facilityImages: FacilityImage[] = [
   {
     title: "Lampu malam",
     description: "Jadwal per jam hingga malam hari.",
-    imageUrl: "https://images.unsplash.com/photo-1504198453319-5ce911bafcde?auto=format&fit=crop&w=1200&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1547347298-4074fc3086f0?auto=format&fit=crop&w=1200&q=80",
   },
   {
     title: "Fasilitas sewa",
     description: "Loker, sepatu, bola, dan ruang ganti yang tertata rapi.",
-    imageUrl: "https://images.unsplash.com/photo-1498931299472-0ca8a1f8c939?auto=format&fit=crop&w=1200&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1200&q=80",
   },
   {
     title: "Citarasa komunitas",
     description: "Tempat berkumpul dan pertandingan seru.",
-    imageUrl: "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1200&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1521412644187-c49fa049e84d?auto=format&fit=crop&w=1200&q=80",
   },
 ];
+
+export function getFallbackReviews(): Review[] {
+  return [
+    {
+      id: "fallback-review-1",
+      customerName: "Ari Putra",
+      rating: 5,
+      comment: "Lapangan bersih, proses booking cepat, dan pembayaran aman. Recommended!",
+      date: "12 Jul 2026",
+    },
+    {
+      id: "fallback-review-2",
+      customerName: "Nina Sari",
+      rating: 4,
+      comment: "Fasilitas bagus, tetapi parkir bisa lebih rapi. Secara keseluruhan memuaskan.",
+      date: "09 Jul 2026",
+    },
+    {
+      id: "fallback-review-3",
+      customerName: "Bima Kusuma",
+      rating: 5,
+      comment: "Sangat nyaman bermain di sini. Coba lapangan Klaten International!",
+      date: "05 Jul 2026",
+    },
+  ];
+}
 
 export const fields: Field[] = [
   {

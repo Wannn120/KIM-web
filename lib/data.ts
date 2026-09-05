@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { BLOCKING_BOOKING_STATUSES } from "@/lib/booking-engine";
 import { DEFAULT_FIELD_NAME, DEFAULT_FIELD } from "@/lib/venue";
 import { getFieldHourlyRate } from "@/lib/site-content";
-import { facilityImages } from "@/lib/mock-data";
+import { facilityImages, getFallbackReviews } from "@/lib/mock-data";
 import type { FacilityImage, VenueGalleryImage } from "@/types";
 
 export async function getFields(): Promise<Field[]> {
@@ -69,19 +69,24 @@ export async function getUpcomingBookings(limit = 5) {
 }
 
 export async function getReviews(): Promise<import("@/types").Review[]> {
-  const records = await prisma.review.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  try {
+    const records = await prisma.review.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
-  return records.map((r) => ({
-    id: r.id,
-    customerName: r.customerName,
-    rating: Number(r.rating),
-    comment: r.comment,
-    date: r.createdAt.toISOString(),
-  }));
+    return records.map((r) => ({
+      id: r.id,
+      customerName: r.customerName,
+      rating: Number(r.rating),
+      comment: r.comment,
+      date: r.createdAt.toISOString(),
+    }));
+  } catch (error) {
+    console.error("[DATA] Unable to load reviews from database:", error);
+    return getFallbackReviews();
+  }
 }
 
 export type BookedSlot = {

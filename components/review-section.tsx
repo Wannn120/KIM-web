@@ -104,18 +104,22 @@ export function ReviewSection({ initialReviews }: { initialReviews: Review[] }) 
               <h2 className="mt-2 text-3xl font-semibold text-[color:var(--foreground)] sm:text-4xl">Tell us about your game experience</h2>
               <form onSubmit={handleSubmit} className="mt-6 space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
-                  <label className="block text-sm text-[color:var(--muted)]">
+                  <label htmlFor="review-name" className="block text-sm text-[color:var(--muted)]">
                     <span className="mb-2 block">Name</span>
                     <input
+                      id="review-name"
+                      name="review-name"
                       value={name}
                       onChange={(event) => setName(event.target.value)}
                       className="w-full rounded-2xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-4 py-3 text-[color:var(--foreground)] outline-none"
                       placeholder="Your name"
                     />
                   </label>
-                  <label className="block text-sm text-[color:var(--muted)]">
+                  <label htmlFor="review-rating" className="block text-sm text-[color:var(--muted)]">
                     <span className="mb-2 block">Rating</span>
                     <select
+                      id="review-rating"
+                      name="review-rating"
                       value={rating}
                       onChange={(event) => setRating(Number(event.target.value))}
                       className="w-full rounded-2xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-4 py-3 text-[color:var(--foreground)] outline-none"
@@ -126,9 +130,11 @@ export function ReviewSection({ initialReviews }: { initialReviews: Review[] }) 
                     </select>
                   </label>
                 </div>
-                <label className="block text-sm text-[color:var(--muted)]">
+                <label htmlFor="review-comment" className="block text-sm text-[color:var(--muted)]">
                   <span className="mb-2 block">Comment</span>
                   <textarea
+                    id="review-comment"
+                    name="review-comment"
                     value={comment}
                     onChange={(event) => setComment(event.target.value)}
                     className="w-full rounded-3xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-4 py-4 text-[color:var(--foreground)] outline-none min-h-[180px]"
