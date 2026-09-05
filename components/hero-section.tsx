@@ -31,14 +31,14 @@ export function HeroSection({ facilities, content = {} as Partial<SiteContent> }
   );
   const facilityUrls = useMemo(() => validFacilities.map((facility) => normalizeRemoteImageUrl(facility.imageUrl)).join("|"), [validFacilities]);
   const heroBackgroundUrl = isValidRemoteImageUrl(content.backgroundImageUrl) ? normalizeRemoteImageUrl(content.backgroundImageUrl) : "";
-  const heroImageSrc = heroImageFailed || !heroBackgroundUrl ? "/placeholder-image.svg" : heroBackgroundUrl;
+  const heroImageSrc = heroBackgroundUrl || "/kim-logo.svg";
   const safeFacilityImage = (facility: FacilityImage) => {
     const id = facility.id ?? facility.title;
     if (brokenFacilityImages[id]) {
-      return "/placeholder-image.svg";
+      return "/kim-logo.svg";
     }
     const normalizedUrl = normalizeRemoteImageUrl(facility.imageUrl);
-    return isValidRemoteImageUrl(normalizedUrl) ? normalizedUrl : "/placeholder-image.svg";
+    return isValidRemoteImageUrl(normalizedUrl) ? normalizedUrl : "/kim-logo.svg";
   };
 
   useEffect(() => {
