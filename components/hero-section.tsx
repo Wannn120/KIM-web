@@ -19,15 +19,26 @@ export function HeroSection({ facilities, content = siteContent }: { facilities:
   const [assetsReady, setAssetsReady] = useState(false);
   const [heroImageFailed, setHeroImageFailed] = useState(false);
   const [brokenFacilityImages, setBrokenFacilityImages] = useState<Record<string, boolean>>({});
-  const facilityUrls = useMemo(() => facilities.map((facility) => facility.imageUrl).join("|"), [facilities]);
+  const validFacilities = useMemo(
+    () => facilities.filter((facility) => typeof facility.imageUrl === "string" && facility.imageUrl.trim().length > 0),
+    [facilities],
+  );
+  const facilityUrls = useMemo(() => validFacilities.map((facility) => facility.imageUrl).join("|"), [validFacilities]);
   const heroBackgroundUrl = isValidRemoteImageUrl(content.backgroundImageUrl)
     ? content.backgroundImageUrl
     : siteContent.backgroundImageUrl;
   const heroImageSrc = heroImageFailed ? "/placeholder-image.svg" : heroBackgroundUrl;
+  const safeFacilityImage = (facility: FacilityImage) => {
+    const id = facility.id ?? facility.title;
+    if (brokenFacilityImages[id]) {
+      return "/placeholder-image.svg";
+    }
+    return isValidRemoteImageUrl(facility.imageUrl) ? facility.imageUrl : "/placeholder-image.svg";
+  };
 
   useEffect(() => {
     let cancelled = false;
-    const facilityUrlsToLoad = facilities.map((facility) => facility.imageUrl).filter(Boolean);
+    const facilityUrlsToLoad = validFacilities.map((facility) => facility.imageUrl).filter(Boolean);
     let completed = 0;
 
     const finishAsset = () => {
@@ -65,7 +76,7 @@ export function HeroSection({ facilities, content = siteContent }: { facilities:
         image.onerror = null;
       });
     };
-  }, [facilityUrls, facilities]);
+  }, [facilityUrls, validFacilities]);
 
   if (!assetsReady) {
     return (
@@ -141,11 +152,11 @@ export function HeroSection({ facilities, content = siteContent }: { facilities:
           </div>
 
           <div className="mt-14 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {facilities.map((facility) => (
+            {validFacilities.map((facility) => (
               <div key={facility.id ?? facility.title} className="rounded-[2rem] border border-[color:var(--border-strong)] bg-[color:var(--surface)] p-4 shadow-sm backdrop-blur-xl">
                 <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-[color:var(--surface)] sm:aspect-[16/9]">
                   <Image
-                    src={brokenFacilityImages[facility.id ?? facility.title] ? "/placeholder-image.svg" : facility.imageUrl}
+                    src={safeFacilityImage(facility)}
                     alt={facility.title}
                     fill
                     sizes="(max-width: 768px) 100vw, 25vw"
