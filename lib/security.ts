@@ -58,10 +58,10 @@ export function getRateLimitResult(identifier: string, limit = Number(getEnv("RA
 export function applySecurityHeaders(response: NextResponse, request?: NextRequest) {
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://app.sandbox.midtrans.com https://app.midtrans.com https://snap-assets.sandbox.midtrans.com https://snap-assets.midtrans.com https://api.sandbox.midtrans.com https://api.midtrans.com https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "img-src 'self' data: https://snap-assets.sandbox.midtrans.com https://snap-assets.midtrans.com https://api.sandbox.midtrans.com https://api.midtrans.com https://pay.google.com https://g.alicdn.com",
-    "connect-src 'self' https://app.sandbox.midtrans.com https://app.midtrans.com https://api.sandbox.midtrans.com https://api.midtrans.com https://snap-assets.sandbox.midtrans.com",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://app.sandbox.midtrans.com https://app.midtrans.com https://snap-assets.sandbox.midtrans.com https://snap-assets.midtrans.com https://api.sandbox.midtrans.com https://api.midtrans.com https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com https://images.unsplash.com https://*.images.unsplash.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://images.unsplash.com https://*.images.unsplash.com",
+    "img-src 'self' data: https://images.unsplash.com https://*.images.unsplash.com https://snap-assets.sandbox.midtrans.com https://snap-assets.midtrans.com https://api.sandbox.midtrans.com https://api.midtrans.com https://pay.google.com https://g.alicdn.com https://res.cloudinary.com",
+    "connect-src 'self' https://app.sandbox.midtrans.com https://app.midtrans.com https://api.sandbox.midtrans.com https://api.midtrans.com https://snap-assets.sandbox.midtrans.com https://images.unsplash.com https://*.images.unsplash.com",
     "frame-src https://app.sandbox.midtrans.com https://app.midtrans.com",
     "child-src https://app.sandbox.midtrans.com https://app.midtrans.com",
     "frame-ancestors 'none'",
@@ -73,7 +73,7 @@ export function applySecurityHeaders(response: NextResponse, request?: NextReque
   response.headers.set("x-content-type-options", "nosniff");
   response.headers.set("x-frame-options", "DENY");
   response.headers.set("referrer-policy", "no-referrer");
-  response.headers.set("permissions-policy", "geolocation=(), microphone=(), camera=(), payment=()");
+  response.headers.set("permissions-policy", "geolocation=(), microphone=(), camera=(), payment=(), fullscreen=(self)");
   response.headers.set("x-xss-protection", "1; mode=block");
 
   if (request?.headers.get("x-forwarded-proto") === "https" || process.env.NODE_ENV === "production") {
