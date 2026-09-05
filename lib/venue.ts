@@ -7,8 +7,7 @@ export const DEFAULT_FIELD = {
   type: "Mini Soccer",
   size: "5v5",
   rating: 4.9,
-  imageUrl:
-    "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1200&q=80",
+  imageUrl: "",
 };
 
 export const DEFAULT_FIELD_ID = DEFAULT_FIELD.id;

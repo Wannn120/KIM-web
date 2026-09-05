@@ -17,18 +17,22 @@ export const FIELD_HOURLY_RATE_KEY = "field_hourly_rate";
 export async function getSiteContent(): Promise<SiteContent> {
   try {
     const records = await prisma.adminSetting.findMany({ where: { key: { in: [...SITE_CONTENT_KEYS] } } });
-    const values = Object.fromEntries(records.map((record) => [record.key, record.value]));
+    const values: Record<string, string> = Object.fromEntries(
+      records.map((record: { key: string; value: string }) => [record.key, record.value]),
+    ) as Record<string, string>;
     const merged = { ...siteContent, ...values } as SiteContent;
     const backgroundImageUrl = typeof merged.backgroundImageUrl === "string" ? merged.backgroundImageUrl.trim() : "";
-    if (backgroundImageUrl) {
+
+    if (backgroundImageUrl && /^https?:\/\//i.test(backgroundImageUrl)) {
       merged.backgroundImageUrl = backgroundImageUrl;
       return merged;
     }
-    merged.backgroundImageUrl = siteContent.backgroundImageUrl;
+
+    merged.backgroundImageUrl = "";
     return merged;
   } catch (error) {
     console.error("[CONTENT] Unable to load site content:", error);
-    return siteContent;
+    return { ...siteContent, backgroundImageUrl: "" };
   }
 }
 

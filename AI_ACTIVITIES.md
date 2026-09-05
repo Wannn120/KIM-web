@@ -46,14 +46,36 @@ This file records the main activities, changes, fixes, and decisions made by the
 - Verified production build with `npm run vercel-build` using placeholder environment values.
 - Confirmed the production build succeeds after the workflow fixes.
 
+## 2026-09-06
+
+### 10. Final image regression fix and DB-first asset loading
+- Investigated the remaining issue where the homepage still showed stale Unsplash images even after the database values were confirmed correct.
+- Traced the actual render path and found that the app still had stale fallback values and default data objects that were overriding valid DB content.
+- Removed hardcoded image fallbacks from the main content and mock/default objects so valid database URLs are no longer replaced by legacy Unsplash sources.
+- Updated the hero and facility rendering logic to only render remote images if the URL is valid, otherwise use a safe placeholder/gradient instead of requesting a stale remote asset.
+- Kept the site content logic DB-first, with strict validation for image URLs before accepting values.
+
+### 11. Seed and config cleanup for production safety
+- Removed stale Unsplash URLs from the database seed script so fresh environments no longer get legacy image references by default.
+- Removed Unsplash from the production image remote config and tightened CSP rules to only allow required hosts for the app and payment provider.
+- Confirmed there are no remaining stale Unsplash references in the project source, seed scripts, and key config files.
+
+### 12. Verification and regression checks
+- Ran `npm test -- --runInBand` and verified all tests pass.
+- Confirmed the project no longer contains stale Unsplash image URL patterns in the main codebase.
+- Verified the fix through source audit and test coverage rather than just relying on redeploy status.
+
 ## Current Status
 
 - The frontend slot selection behavior is fixed and visually clear for available, selected, and booked states.
 - The GitHub Actions build pipeline is repaired and the CI build command now completes successfully in local validation.
 - Secret cleanup is complete from the repository state; real credentials should stay in GitHub/Vercel secrets only.
+- The remaining stale image issue was traced to code-level fallback data, not database configuration, and was fixed.
+- The project is in a stable source state with cleaner DB-first image handling and a verified test pass.
 - Any remaining live deployment issues are environment-dependent, especially database credentials, Midtrans keys, and email provider configuration in the hosting platform.
 
 ## Notes
 
 - Real secrets must be stored in GitHub/Vercel environment variables or in a local untracked `.env` file outside the repository.
 - This log is intended to document major AI-driven fixes and changes for future troubleshooting and handoff.
+- When a database value is valid, the app should prefer it and avoid legacy fallback data that can silently override correct values.

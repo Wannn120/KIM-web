@@ -18,7 +18,16 @@ export async function getVenueFeatures(): Promise<FacilityImage[]> {
       orderBy: { sortOrder: "asc" },
     });
 
-    const activeRecords = records.filter((feature) => typeof feature.imageUrl === "string" && feature.imageUrl.trim().length > 0);
+    const activeRecords: Array<{
+      id: string;
+      name: string;
+      description: string;
+      imageUrl: string;
+      isActive: boolean;
+      sortOrder: number;
+    }> = records.filter(
+      (feature: { imageUrl?: string | null }) => typeof feature.imageUrl === "string" && feature.imageUrl.trim().length > 0,
+    );
 
     if (activeRecords.length > 0) {
       return activeRecords.map((feature) => ({
@@ -48,7 +57,9 @@ export async function getVenueGallery(): Promise<VenueGalleryImage[]> {
   }));
   try {
     const records = await prisma.venueGallery.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } });
-    const activeRecords = records.filter((image) => typeof image.imageUrl === "string" && image.imageUrl.trim().length > 0);
+    const activeRecords: Array<{ id: string; title: string; imageUrl: string; sortOrder: number; isActive: boolean }> = records.filter(
+      (image: { imageUrl?: string | null }) => typeof image.imageUrl === "string" && image.imageUrl.trim().length > 0,
+    );
     return activeRecords.length > 0 ? activeRecords.map((image) => ({ ...image, imageUrl: image.imageUrl.trim() })) : fallback;
   } catch (error) {
     console.error("[DATA] Unable to load venue gallery:", error);
@@ -82,7 +93,7 @@ export async function getReviews(): Promise<import("@/types").Review[]> {
       },
     });
 
-    return records.map((r) => ({
+    return records.map((r: { id: string; customerName: string; rating: number | string; comment: string; createdAt: Date }) => ({
       id: r.id,
       customerName: r.customerName,
       rating: Number(r.rating),

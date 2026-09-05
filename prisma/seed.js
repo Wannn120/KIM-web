@@ -337,7 +337,7 @@ async function main() {
         { key: 'heroSubtitle', value: 'Satu lapangan premium dengan jadwal per jam, booking mudah, dan suasana lapangan terbaik untuk komunitas futsal dan mini soccer.', description: 'Deskripsi utama website' },
         { key: 'ctaPrimary', value: 'Pesan sekarang', description: 'Teks tombol booking utama' },
         { key: 'ctaSecondary', value: 'Lihat riwayat booking', description: 'Teks tombol riwayat booking' },
-        { key: 'backgroundImageUrl', value: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1600&q=80', description: 'Background utama hero website' },
+        { key: 'backgroundImageUrl', value: '', description: 'Background utama hero website' },
         { key: 'field_hourly_rate', value: '110000', description: 'Hourly rental rate for the default field in Indonesian Rupiah' },
       ],
     });
@@ -347,10 +347,10 @@ async function main() {
   if (existingFeatures.length === 0) {
     await prisma.venueFeature.createMany({
       data: [
-        { name: 'Lapangan premium', description: 'Surface terbaik untuk 5v5 dan mini soccer.', imageUrl: 'https://images.unsplash.com/photo-1521412644187-c49fa049e84d?auto=format&fit=crop&w=1200&q=80', imagePublicId: 'lapangan_premium_aqejyy', sortOrder: 0 },
-        { name: 'Lampu malam', description: 'Jadwal per jam hingga malam hari.', imageUrl: 'https://images.unsplash.com/photo-1504198453319-5ce911bafcde?auto=format&fit=crop&w=1200&q=80', imagePublicId: 'lampu_malam_xntenr', sortOrder: 1 },
-        { name: 'Fasilitas sewa', description: 'Loker, sepatu, bola, dan ruang ganti yang tertata rapi.', imageUrl: 'https://images.unsplash.com/photo-1498931299472-0ca8a1f8c939?auto=format&fit=crop&w=1200&q=80', imagePublicId: 'fasilitas_sewa_o0uptk', sortOrder: 2 },
-        { name: 'Citarasa komunitas', description: 'Tempat berkumpul dan pertandingan seru.', imageUrl: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1200&q=80', imagePublicId: 'citarasa_komunitas_ey2pmm', sortOrder: 3 },
+        { name: 'Lapangan premium', description: 'Surface terbaik untuk 5v5 dan mini soccer.', imageUrl: '', imagePublicId: 'lapangan_premium_aqejyy', sortOrder: 0 },
+        { name: 'Lampu malam', description: 'Jadwal per jam hingga malam hari.', imageUrl: '', imagePublicId: 'lampu_malam_xntenr', sortOrder: 1 },
+        { name: 'Fasilitas sewa', description: 'Loker, sepatu, bola, dan ruang ganti yang tertata rapi.', imageUrl: '', imagePublicId: 'fasilitas_sewa_o0uptk', sortOrder: 2 },
+        { name: 'Citarasa komunitas', description: 'Tempat berkumpul dan pertandingan seru.', imageUrl: '', imagePublicId: 'citarasa_komunitas_ey2pmm', sortOrder: 3 },
       ],
     });
   }

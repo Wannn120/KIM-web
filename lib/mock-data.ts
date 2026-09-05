@@ -1,8 +1,6 @@
 import type { AdminStat, BookingItem, Field, FacilityImage, SiteContent, StepItem } from "@/types";
 import type { Review } from "@/types";
 
-const stableUnsplashUrl = (id: string, width = 1600) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${width}&q=80`;
-
 export const siteContent: SiteContent = {
   locationLabel: "Klaten, Jawa Tengah",
   heroTitle: "Klaten International Minisoccer",
@@ -10,7 +8,7 @@ export const siteContent: SiteContent = {
     "Satu lapangan premium dengan jadwal per jam, booking mudah, dan suasana lapangan terbaik untuk komunitas futsal dan mini soccer.",
   ctaPrimary: "Pesan sekarang",
   ctaSecondary: "Lihat riwayat booking",
-  backgroundImageUrl: stableUnsplashUrl("photo-1504384308090-c894fdcc538d", 1600),
+  backgroundImageUrl: "",
   contactEmail: "info@klatenminisoccer.id",
   contactPhone: "+62 821-1234-5678",
 };
@@ -19,22 +17,22 @@ export const facilityImages: FacilityImage[] = [
   {
     title: "Lapangan premium",
     description: "Surface terbaik untuk 5v5 dan mini soccer.",
-    imageUrl: stableUnsplashUrl("photo-1521412644187-c49fa049e84d", 1200),
+    imageUrl: "",
   },
   {
     title: "Lampu malam",
     description: "Jadwal per jam hingga malam hari.",
-    imageUrl: stableUnsplashUrl("photo-1547347298-4074fc3086f0", 1200),
+    imageUrl: "",
   },
   {
     title: "Fasilitas sewa",
     description: "Loker, sepatu, bola, dan ruang ganti yang tertata rapi.",
-    imageUrl: stableUnsplashUrl("photo-1517649763962-0c623066013b", 1200),
+    imageUrl: "",
   },
   {
     title: "Citarasa komunitas",
     description: "Tempat berkumpul dan pertandingan seru.",
-    imageUrl: stableUnsplashUrl("photo-1543326727-cf8c8d0d4d4d", 1200),
+    imageUrl: "",
   },
 ];
 
@@ -73,8 +71,7 @@ export const fields: Field[] = [
     type: "Mini Soccer",
     size: "5v5",
     rating: 4.9,
-    imageUrl:
-      "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1200&q=80",
+    imageUrl: "",
   },
 ];
 

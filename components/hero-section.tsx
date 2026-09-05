@@ -2,8 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import { siteContent } from "@/lib/mock-data";
-import type { FacilityImage } from "@/types";
+import type { FacilityImage, SiteContent } from "@/types";
 
 function isValidRemoteImageUrl(url?: string) {
   if (!url) return false;
@@ -15,7 +14,7 @@ function isValidRemoteImageUrl(url?: string) {
   }
 }
 
-export function HeroSection({ facilities, content = siteContent }: { facilities: FacilityImage[]; content?: typeof siteContent }) {
+export function HeroSection({ facilities, content = {} as Partial<SiteContent> }: { facilities: FacilityImage[]; content?: Partial<SiteContent> }) {
   const [assetsReady, setAssetsReady] = useState(false);
   const [heroImageFailed, setHeroImageFailed] = useState(false);
   const [brokenFacilityImages, setBrokenFacilityImages] = useState<Record<string, boolean>>({});
@@ -24,10 +23,8 @@ export function HeroSection({ facilities, content = siteContent }: { facilities:
     [facilities],
   );
   const facilityUrls = useMemo(() => validFacilities.map((facility) => facility.imageUrl).join("|"), [validFacilities]);
-  const heroBackgroundUrl = isValidRemoteImageUrl(content.backgroundImageUrl)
-    ? content.backgroundImageUrl
-    : siteContent.backgroundImageUrl;
-  const heroImageSrc = heroImageFailed ? "/placeholder-image.svg" : heroBackgroundUrl;
+  const heroBackgroundUrl = isValidRemoteImageUrl(content.backgroundImageUrl) ? content.backgroundImageUrl : "";
+  const heroImageSrc = heroImageFailed || !heroBackgroundUrl ? "/placeholder-image.svg" : heroBackgroundUrl;
   const safeFacilityImage = (facility: FacilityImage) => {
     const id = facility.id ?? facility.title;
     if (brokenFacilityImages[id]) {
@@ -101,20 +98,24 @@ export function HeroSection({ facilities, content = siteContent }: { facilities:
       className="relative -mt-16 overflow-hidden bg-[color:var(--background)] pt-20 sm:pt-24"
     >
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-        <Image
-          src={heroImageSrc}
-          alt="Hero background"
-          fill
-          priority
-          unoptimized
-          className="object-cover brightness-110"
-          onError={() => {
-            if (!heroImageFailed) {
-              console.warn("Hero background image failed to load:", heroBackgroundUrl);
-              setHeroImageFailed(true);
-            }
-          }}
-        />
+        {heroBackgroundUrl ? (
+          <Image
+            src={heroImageSrc}
+            alt="Hero background"
+            fill
+            priority
+            unoptimized
+            className="object-cover brightness-110"
+            onError={() => {
+              if (!heroImageFailed) {
+                console.warn("Hero background image failed to load:", heroBackgroundUrl);
+                setHeroImageFailed(true);
+              }
+            }}
+          />
+        ) : (
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(14,165,233,0.28),transparent_30%),linear-gradient(120deg,rgba(15,23,42,0.94),rgba(15,23,42,0.8))]" />
+        )}
         <div className="absolute inset-0 bg-[color:var(--background)]/5" />
       </div>
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(14,165,233,0.12),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.08),transparent_35%)]" />
