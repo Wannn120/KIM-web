@@ -18,9 +18,10 @@ export function HeroSection({ facilities, content = {} as Partial<SiteContent> }
   const [assetsReady, setAssetsReady] = useState(false);
   const [heroImageFailed, setHeroImageFailed] = useState(false);
   const [brokenFacilityImages, setBrokenFacilityImages] = useState<Record<string, boolean>>({});
+  const displayFacilities = useMemo(() => facilities.filter((facility) => facility && typeof facility.title === "string"), [facilities]);
   const validFacilities = useMemo(
-    () => facilities.filter((facility) => typeof facility.imageUrl === "string" && facility.imageUrl.trim().length > 0),
-    [facilities],
+    () => displayFacilities.filter((facility) => typeof facility.imageUrl === "string" && facility.imageUrl.trim().length > 0),
+    [displayFacilities],
   );
   const facilityUrls = useMemo(() => validFacilities.map((facility) => facility.imageUrl).join("|"), [validFacilities]);
   const heroBackgroundUrl = isValidRemoteImageUrl(content.backgroundImageUrl) ? content.backgroundImageUrl : "";
@@ -153,7 +154,7 @@ export function HeroSection({ facilities, content = {} as Partial<SiteContent> }
           </div>
 
           <div className="mt-14 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {validFacilities.map((facility) => (
+            {displayFacilities.map((facility) => (
               <div key={facility.id ?? facility.title} className="rounded-[2rem] border border-[color:var(--border-strong)] bg-[color:var(--surface)] p-4 shadow-sm backdrop-blur-xl">
                 <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-[color:var(--surface)] sm:aspect-[16/9]">
                   <Image
