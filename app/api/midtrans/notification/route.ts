@@ -19,7 +19,12 @@ function resolveTransactionStatus(body: Record<string, unknown>) {
   if (typeof body?.transaction_status === "string") return body.transaction_status;
   if (typeof body?.status === "string") return body.status;
   if (typeof body?.transactionStatus === "string") return body.transactionStatus;
-  if (typeof body?.status_code === "string") return body.status_code;
+
+  const statusCodeValue = body?.status_code ?? body?.statusCode;
+  if (typeof statusCodeValue === "string" || typeof statusCodeValue === "number") {
+    return String(statusCodeValue);
+  }
+
   return "";
 }
 

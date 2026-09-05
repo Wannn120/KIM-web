@@ -140,8 +140,19 @@ export function resolveMidtransTransactionStatus(body: Record<string, unknown>):
   if (typeof body?.transaction_status === "string") return body.transaction_status;
   if (typeof body?.status === "string") return body.status;
   if (typeof body?.transactionStatus === "string") return body.transactionStatus;
-  if (typeof body?.status_code === "string") return body.status_code;
-  return "";
+
+  const statusCodeRaw = body?.status_code ?? body?.statusCode;
+  const statusCode = typeof statusCodeRaw === "number" || typeof statusCodeRaw === "string" ? String(statusCodeRaw) : "";
+  if (!statusCode) {
+    return "";
+  }
+
+  if (statusCode === "200") return "settlement";
+  if (statusCode === "201") return "pending";
+  if (statusCode === "202") return "pending";
+  if (["400", "401", "403", "404", "407"].includes(statusCode)) return "failed";
+
+  return statusCode;
 }
 
 function parseMidtransBody(rawBody: string) {
@@ -164,9 +175,27 @@ export function verifyMidtransSignature(rawBody: string, signature: string) {
   }
 
   const parsedBody = parseMidtransBody(rawBody);
-  const orderId = parsedBody && (typeof parsedBody.order_id === "string" ? parsedBody.order_id : typeof parsedBody.orderId === "string" ? parsedBody.orderId : "");
-  const statusCode = parsedBody && (typeof parsedBody.status_code === "string" ? parsedBody.status_code : typeof parsedBody.statusCode === "string" ? parsedBody.statusCode : "");
-  const grossAmount = parsedBody && (typeof parsedBody.gross_amount === "string" ? parsedBody.gross_amount : typeof parsedBody.grossAmount === "string" ? parsedBody.grossAmount : "");
+  const orderId = parsedBody
+    ? (typeof parsedBody.order_id === "string" || typeof parsedBody.order_id === "number"
+        ? String(parsedBody.order_id)
+        : typeof parsedBody.orderId === "string" || typeof parsedBody.orderId === "number"
+          ? String(parsedBody.orderId)
+          : "")
+    : "";
+  const statusCode = parsedBody
+    ? (typeof parsedBody.status_code === "string" || typeof parsedBody.status_code === "number"
+        ? String(parsedBody.status_code)
+        : typeof parsedBody.statusCode === "string" || typeof parsedBody.statusCode === "number"
+          ? String(parsedBody.statusCode)
+          : "")
+    : "";
+  const grossAmount = parsedBody
+    ? (typeof parsedBody.gross_amount === "string" || typeof parsedBody.gross_amount === "number"
+        ? String(parsedBody.gross_amount)
+        : typeof parsedBody.grossAmount === "string" || typeof parsedBody.grossAmount === "number"
+          ? String(parsedBody.grossAmount)
+          : "")
+    : "";
 
   const officialSignature = orderId && statusCode && grossAmount
     ? crypto.createHash("sha512").update(`${orderId}${statusCode}${grossAmount}${serverKey}`).digest("hex")

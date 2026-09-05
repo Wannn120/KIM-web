@@ -10,13 +10,15 @@ import { buildInvoiceAttachment } from "@/lib/invoice-pdf";
 const paymentProvider = new DemoPaymentProvider();
 
 export function normalizePaymentStatus(status: string): PaymentStatus {
-  const lower = status.toLowerCase();
+  const lower = status.toLowerCase().trim();
 
-  if (["capture", "settlement", "success"].includes(lower)) return "success";
+  if (["capture", "settlement", "success", "accepted"].includes(lower)) return "success";
+  if (["200"].includes(lower)) return "success";
   if (["deny", "failure", "failed"].includes(lower)) return "failed";
   if (["expire", "expired"].includes(lower)) return "expired";
   if (["cancel", "cancelled"].includes(lower)) return "cancelled";
   if (["refund", "refunded"].includes(lower)) return "refunded";
+  if (["201", "202", "pending", "challenge"].includes(lower)) return "pending";
   return "pending";
 }
 

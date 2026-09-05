@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { getPopupBlockedMessage, isPopupWindowOpenable, shouldPreferDirectNavigation } from "../lib/popup-fallback";
-import { resolvePaymentUpdateTransactionId, shouldReclaimBookingStatus } from "../lib/payment-service";
-import { verifyMidtransSignature } from "../lib/midtrans";
+import { normalizePaymentStatus, resolvePaymentUpdateTransactionId, shouldReclaimBookingStatus } from "../lib/payment-service";
+import { resolveMidtransTransactionStatus, verifyMidtransSignature } from "../lib/midtrans";
 
 describe("popup fallback UX", () => {
   it("returns a clear message when the browser blocks the payment popup", () => {
@@ -34,6 +34,14 @@ describe("popup fallback UX", () => {
     expect(shouldReclaimBookingStatus("refunded")).toBe(true);
     expect(shouldReclaimBookingStatus("confirmed")).toBe(false);
     expect(shouldReclaimBookingStatus("pending")).toBe(false);
+  });
+
+  it("maps Midtrans status_code values to the correct payment state", () => {
+    expect(normalizePaymentStatus("200")).toBe("success");
+    expect(normalizePaymentStatus("201")).toBe("pending");
+    expect(normalizePaymentStatus("202")).toBe("pending");
+    expect(resolveMidtransTransactionStatus({ status_code: "200" })).toBe("settlement");
+    expect(normalizePaymentStatus(resolveMidtransTransactionStatus({ status_code: "200" }))).toBe("success");
   });
 
   it("verifies Midtrans signatures using the standard order_id + status_code + gross_amount + server_key format", () => {
