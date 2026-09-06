@@ -2,23 +2,8 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import { FALLBACK_REMOTE_IMAGES, getSafeRemoteImageUrl, normalizeRemoteImageUrl } from "@/lib/remote-image";
 import type { FacilityImage, SiteContent } from "@/types";
-
-function normalizeRemoteImageUrl(url?: string) {
-  if (typeof url !== "string") return "";
-  return url.trim().replace(/[\r\n\t]+/g, "");
-}
-
-function isValidRemoteImageUrl(url?: string) {
-  const normalized = normalizeRemoteImageUrl(url);
-  if (!normalized) return false;
-  try {
-    const parsed = new URL(normalized);
-    return parsed.protocol === "http:" || parsed.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
 
 export function HeroSection({ facilities, content = {} as Partial<SiteContent> }: { facilities: FacilityImage[]; content?: Partial<SiteContent> }) {
   const [assetsReady, setAssetsReady] = useState(false);
@@ -30,15 +15,14 @@ export function HeroSection({ facilities, content = {} as Partial<SiteContent> }
     [displayFacilities],
   );
   const facilityUrls = useMemo(() => validFacilities.map((facility) => normalizeRemoteImageUrl(facility.imageUrl)).join("|"), [validFacilities]);
-  const heroBackgroundUrl = isValidRemoteImageUrl(content.backgroundImageUrl) ? normalizeRemoteImageUrl(content.backgroundImageUrl) : "";
-  const heroImageSrc = heroBackgroundUrl || "/kim-logo.svg";
+  const heroBackgroundUrl = getSafeRemoteImageUrl(content.backgroundImageUrl, FALLBACK_REMOTE_IMAGES);
+  const heroImageSrc = heroBackgroundUrl;
   const safeFacilityImage = (facility: FacilityImage) => {
     const id = facility.id ?? facility.title;
     if (brokenFacilityImages[id]) {
-      return "/kim-logo.svg";
+      return getSafeRemoteImageUrl("", FALLBACK_REMOTE_IMAGES);
     }
-    const normalizedUrl = normalizeRemoteImageUrl(facility.imageUrl);
-    return isValidRemoteImageUrl(normalizedUrl) ? normalizedUrl : "/kim-logo.svg";
+    return getSafeRemoteImageUrl(facility.imageUrl, FALLBACK_REMOTE_IMAGES);
   };
 
   useEffect(() => {

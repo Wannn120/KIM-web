@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { siteContent } from "@/lib/mock-data";
+import { FALLBACK_REMOTE_IMAGES, getSafeRemoteImageUrl, normalizeRemoteImageUrl } from "@/lib/remote-image";
 import { getDefaultFieldPrice } from "@/lib/venue";
 import type { SiteContent } from "@/types";
 
@@ -21,18 +22,14 @@ export async function getSiteContent(): Promise<SiteContent> {
       records.map((record: { key: string; value: string }) => [record.key, record.value]),
     ) as Record<string, string>;
     const merged = { ...siteContent, ...values } as SiteContent;
-    const backgroundImageUrl = typeof merged.backgroundImageUrl === "string" ? merged.backgroundImageUrl.trim().replace(/[\r\n\t]+/g, "") : "";
+    const backgroundImageUrl = normalizeRemoteImageUrl(merged.backgroundImageUrl);
+    const safeBackgroundImage = getSafeRemoteImageUrl(backgroundImageUrl, FALLBACK_REMOTE_IMAGES);
 
-    if (backgroundImageUrl && /^https?:\/\//i.test(backgroundImageUrl)) {
-      merged.backgroundImageUrl = backgroundImageUrl;
-      return merged;
-    }
-
-    merged.backgroundImageUrl = siteContent.backgroundImageUrl;
+    merged.backgroundImageUrl = safeBackgroundImage;
     return merged;
   } catch (error) {
     console.error("[CONTENT] Unable to load site content:", error);
-    return { ...siteContent, backgroundImageUrl: siteContent.backgroundImageUrl };
+    return { ...siteContent, backgroundImageUrl: getSafeRemoteImageUrl(siteContent.backgroundImageUrl, FALLBACK_REMOTE_IMAGES) };
   }
 }
 

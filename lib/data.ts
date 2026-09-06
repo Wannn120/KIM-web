@@ -4,6 +4,7 @@ import { BLOCKING_BOOKING_STATUSES } from "@/lib/booking-engine";
 import { DEFAULT_FIELD_NAME, DEFAULT_FIELD } from "@/lib/venue";
 import { getFieldHourlyRate } from "@/lib/site-content";
 import { facilityImages, getFallbackReviews } from "@/lib/mock-data";
+import { FALLBACK_REMOTE_IMAGES, getSafeRemoteImageUrl, normalizeRemoteImageUrl } from "@/lib/remote-image";
 import type { FacilityImage, VenueGalleryImage } from "@/types";
 
 export async function getFields(): Promise<Field[]> {
@@ -27,7 +28,7 @@ export async function getVenueFeatures(): Promise<FacilityImage[]> {
       sortOrder: number;
     }> = records.filter(
       (feature: { imageUrl?: string | null }) => {
-        const value = typeof feature.imageUrl === "string" ? feature.imageUrl.trim().replace(/[\r\n\t]+/g, "") : "";
+        const value = normalizeRemoteImageUrl(feature.imageUrl);
         return value.length > 0;
       },
     );
@@ -37,13 +38,16 @@ export async function getVenueFeatures(): Promise<FacilityImage[]> {
         id: feature.id,
         title: feature.name,
         description: feature.description,
-        imageUrl: feature.imageUrl.trim().replace(/[\r\n\t]+/g, ""),
+        imageUrl: getSafeRemoteImageUrl(feature.imageUrl, FALLBACK_REMOTE_IMAGES),
         isActive: feature.isActive,
         sortOrder: feature.sortOrder,
       }));
     }
 
-    return facilityImages;
+    return facilityImages.map((facility) => ({
+      ...facility,
+      imageUrl: getSafeRemoteImageUrl(facility.imageUrl, FALLBACK_REMOTE_IMAGES),
+    }));
   } catch (error) {
     console.error("[DATA] Unable to load venue features:", error);
     return facilityImages;
@@ -62,11 +66,13 @@ export async function getVenueGallery(): Promise<VenueGalleryImage[]> {
     const records = await prisma.venueGallery.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } });
     const activeRecords: Array<{ id: string; title: string; imageUrl: string; sortOrder: number; isActive: boolean }> = records.filter(
       (image: { imageUrl?: string | null }) => {
-        const value = typeof image.imageUrl === "string" ? image.imageUrl.trim().replace(/[\r\n\t]+/g, "") : "";
+        const value = normalizeRemoteImageUrl(image.imageUrl);
         return value.length > 0;
       },
     );
-    return activeRecords.length > 0 ? activeRecords.map((image) => ({ ...image, imageUrl: image.imageUrl.trim().replace(/[\r\n\t]+/g, "") })) : fallback;
+    return activeRecords.length > 0
+      ? activeRecords.map((image) => ({ ...image, imageUrl: getSafeRemoteImageUrl(image.imageUrl, FALLBACK_REMOTE_IMAGES) }))
+      : fallback.map((image) => ({ ...image, imageUrl: getSafeRemoteImageUrl(image.imageUrl, FALLBACK_REMOTE_IMAGES) }));
   } catch (error) {
     console.error("[DATA] Unable to load venue gallery:", error);
     return fallback;
