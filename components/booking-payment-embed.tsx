@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { getPopupBlockedMessage, isPopupWindowOpenable, shouldPreferDirectNavigation } from "@/lib/popup-fallback";
+import { resolvePaymentSuccessTransactionId } from "@/lib/payment-utils";
 import { formatCurrency } from "@/utils/formatting";
 
 declare global {
@@ -189,6 +190,7 @@ export function BookingPaymentEmbed({
     }
 
     const paymentRecord: PaymentRecord = {
+      transactionId: data.payment.transactionId ?? null,
       status: normalizeStatus(data.payment.status),
       snapToken: data.payment.snapToken ?? null,
       snapUrl: data.payment.snapUrl ?? null,
@@ -232,6 +234,7 @@ export function BookingPaymentEmbed({
       }
 
       const paymentRecord: PaymentRecord = {
+        transactionId: data.transaction?.transactionId ?? null,
         status: normalizeStatus(data.transaction?.status),
         snapToken: data.snapToken ?? null,
         snapUrl: data.snapUrl ?? null,
@@ -293,18 +296,20 @@ export function BookingPaymentEmbed({
         }
       };
 
+      const successTransactionId = resolvePaymentSuccessTransactionId(bookingId, payment ?? null);
+
       window.snap.pay(token, {
         onSuccess: () => {
           clearFallback();
           setStatus("success");
           setMessage("Payment successful. Redirecting...");
-          window.location.href = `/payment/success?transactionId=${encodeURIComponent(bookingId)}`;
+          window.location.href = `/payment/success?transactionId=${encodeURIComponent(successTransactionId)}`;
         },
         onPending: () => {
           clearFallback();
           setStatus("pending");
           setMessage("Payment pending. Confirming status...");
-          window.location.href = `/payment/success?transactionId=${encodeURIComponent(bookingId)}`;
+          window.location.href = `/payment/success?transactionId=${encodeURIComponent(successTransactionId)}`;
         },
         onError: () => {
           clearFallback();
@@ -487,8 +492,8 @@ export function BookingPaymentEmbed({
         // Check if payment was already processed before component loaded
         const paymentRecord = results[1];
         if (paymentRecord?.status === "success") {
-          // Redirect immediately if payment already completed
-          window.location.href = `/payment/success?transactionId=${encodeURIComponent(bookingId)}`;
+          const successTransactionId = resolvePaymentSuccessTransactionId(bookingId, paymentRecord ?? null);
+          window.location.href = `/payment/success?transactionId=${encodeURIComponent(successTransactionId)}`;
         } else if (["failed", "cancelled", "expired"].includes(paymentRecord?.status ?? "")) {
           // Show error if payment already failed
           setError(`Payment ${paymentRecord?.status}. Please try again.`);
@@ -542,8 +547,8 @@ export function BookingPaymentEmbed({
         // If payment status changed
         if (paymentRecord.status !== status) {
           if (paymentRecord.status === "success") {
-            // Redirect to success page
-            window.location.href = `/payment/success?transactionId=${encodeURIComponent(bookingId)}`;
+            const successTransactionId = resolvePaymentSuccessTransactionId(bookingId, paymentRecord ?? null);
+            window.location.href = `/payment/success?transactionId=${encodeURIComponent(successTransactionId)}`;
           } else if (["failed", "cancelled", "expired"].includes(paymentRecord.status)) {
             setError(`Payment ${paymentRecord.status}. Please try again.`);
             setUiState("ready");

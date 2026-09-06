@@ -65,6 +65,47 @@ This file records the main activities, changes, fixes, and decisions made by the
 - Confirmed the project no longer contains stale Unsplash image URL patterns in the main codebase.
 - Verified the fix through source audit and test coverage rather than just relying on redeploy status.
 
+### 13. Production database and Vercel runtime repair
+- Investigated the live deployment issue where the app worked locally but failed in production because Prisma/Vercel was using the wrong Supabase connection pattern.
+- Corrected the runtime configuration so the production environment used the pooled Supabase connection settings appropriate for serverless deployment.
+- Updated the Vercel environment variables for `DATABASE_URL` and `DIRECT_URL` to the correct live values and redeployed the app.
+- Re-validated the public site after deployment instead of assuming localhost behavior matched production.
+
+### 14. Booking API live validation
+- Tested the live booking endpoint against the production website to confirm the app could create bookings successfully after the database env fix.
+- Confirmed the production bug was not only code logic but also runtime env alignment with the database provider.
+- Verified the booking creation flow was functional again in the public deployment.
+
+### 15. Payment status reconciliation fix
+- Traced the payment status bug to incorrect lookup logic when Midtrans identifiers were not UUIDs.
+- Fixed the lookup logic so it searches by `transactionId` and `midtransOrderId`, and only includes `bookingId` when the identifier is a valid UUID.
+- This resolved the case where successful Midtrans payment results still left bookings and payments in `pending` state.
+- Added a regression test to lock the fix so similar non-UUID transaction IDs do not break reconciliation again.
+
+### 16. End-to-end status synchronization hardening
+- Ensured successful payment updates propagate to the related booking and invoice state.
+- Hardened the reconciliation logic so failed, expired, cancelled, and successful payment events update the database consistently.
+- Reduced the chance of duplicate or stale payment state after repeated webhook or callback processing.
+
+### 17. Deployment confirmation and source audit
+- Ran the production deploy command with Vercel and confirmed the app completed the deployment successfully.
+- Reviewed the live runtime state and source changes instead of relying on assumptions from local development only.
+- Cross-checked the code paths for image URLs, booking creation, and payment reconciliation to ensure the fixes matched the production behavior.
+
+### 18. Final verification and production proof
+- Confirmed the bug fix with a fresh automated verification run using `npm test -- --runInBand`.
+- Verified the final project state with evidence from the test suite: 4 suites passed and 20 tests passed.
+- Treated the public deployment as the real source of truth; localhost behavior was not assumed to be equivalent to production.
+- Recorded the final set of fixes in the project log so future debugging and handoff work can trace the actual root causes and remedies.
+
+### 19. Popup payment redirect fix
+- Identified the popup-only bug where the success flow redirected using the booking ID instead of the actual Midtrans payment transaction ID.
+- This caused successful popup payments to land on a success page that could not resolve the right payment record, leaving the booking/payment state stuck in a pending or mismatched condition.
+- Fixed the redirect logic so popup and polling success callbacks use the payment transaction ID when available, while still falling back to the booking ID only when needed.
+- Persisted transactionId in the client-side payment state so the redirect logic stays aligned with the actual created payment record.
+- Added a regression test to cover this popup case and prevent it from recurring.
+- Verified with `npm test -- --runInBand` after the fix: 4 test suites passed and 21 tests passed.
+
 ## Current Status
 
 - The frontend slot selection behavior is fixed and visually clear for available, selected, and booked states.

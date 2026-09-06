@@ -30,3 +30,27 @@ export function buildMidtransCustomerDetails(customerName?: string, email?: stri
     ...(normalizedPhone ? { phone: normalizedPhone } : {}),
   };
 }
+
+export function resolvePaymentSuccessTransactionId(
+  bookingId: string,
+  payment?: { transactionId?: string | null; midtransOrderId?: string | null; bookingId?: string | null } | null,
+): string {
+  const cleanedBookingId = bookingId?.trim() ?? "";
+  const transactionId = payment?.transactionId?.trim();
+  const midtransOrderId = payment?.midtransOrderId?.trim();
+  const paymentBookingId = payment?.bookingId?.trim();
+
+  if (transactionId) {
+    return transactionId;
+  }
+
+  if (midtransOrderId) {
+    return midtransOrderId;
+  }
+
+  if (paymentBookingId && isUuid(paymentBookingId)) {
+    return paymentBookingId;
+  }
+
+  return cleanedBookingId;
+}
