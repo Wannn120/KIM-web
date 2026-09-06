@@ -2,11 +2,28 @@
 
 import { useEffect, useState } from "react";
 
+function readStoredTheme(): "light" | "dark" {
+  try {
+    const savedTheme = window.localStorage.getItem("minisoccer-theme");
+    return savedTheme === "dark" || savedTheme === "light" ? savedTheme : "light";
+  } catch {
+    return "light";
+  }
+}
+
+function writeStoredTheme(nextTheme: "light" | "dark") {
+  try {
+    window.localStorage.setItem("minisoccer-theme", nextTheme);
+  } catch {
+    // Ignore storage issues in restricted or private browsing environments.
+  }
+}
+
 export function ThemeToggle() {
-  const [theme, setTheme] = useState("light");
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
-    const savedTheme = window.localStorage.getItem("minisoccer-theme") || "light";
+    const savedTheme = readStoredTheme();
     setTheme(savedTheme);
     document.documentElement.setAttribute("data-theme", savedTheme);
   }, []);
@@ -14,7 +31,7 @@ export function ThemeToggle() {
   const toggle = () => {
     const next = theme === "light" ? "dark" : "light";
     setTheme(next);
-    window.localStorage.setItem("minisoccer-theme", next);
+    writeStoredTheme(next);
     document.documentElement.setAttribute("data-theme", next);
   };
 
