@@ -10,13 +10,25 @@ export function normalizeRemoteImageUrl(url?: string | null) {
   return url.trim().replace(/[\r\n\t]+/g, "");
 }
 
+const KNOWN_STALE_CLOUDINARY_URLS = new Set([
+  "https://res.cloudinary.com/ljbxjpox/image/upload/v1785465835/utama_cifncb.jpg",
+  "https://res.cloudinary.com/ljbxjpox/image/upload/v1785465834/lapangan_premium_aqejyy.jpg",
+  "https://res.cloudinary.com/ljbxjpox/image/upload/v1785465837/lampu_malam_xntenr.jpg",
+  "https://res.cloudinary.com/ljbxjpox/image/upload/v1785465837/fasilitas_sewa_o0uptk.jpg",
+  "https://res.cloudinary.com/ljbxjpox/image/upload/v1785465837/citarasa_komunitas_ey2pmm.jpg",
+]);
+
 export function isValidRemoteImageUrl(url?: string | null) {
   const normalized = normalizeRemoteImageUrl(url);
   if (!normalized) return false;
 
+  if (KNOWN_STALE_CLOUDINARY_URLS.has(normalized)) {
+    return false;
+  }
+
   try {
     const parsed = new URL(normalized);
-    return parsed.protocol === "http:" || parsed.protocol === "https:";
+    return (parsed.protocol === "http:" || parsed.protocol === "https:") && !KNOWN_STALE_CLOUDINARY_URLS.has(normalized);
   } catch {
     return false;
   }
