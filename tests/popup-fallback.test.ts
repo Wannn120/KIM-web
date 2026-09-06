@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { getPopupBlockedMessage, isPopupWindowOpenable, shouldPreferDirectNavigation } from "../lib/popup-fallback";
-import { normalizePaymentStatus, resolvePaymentUpdateTransactionId, shouldReclaimBookingStatus } from "../lib/payment-service";
+import { buildPaymentLookupWhere, normalizePaymentStatus, resolvePaymentUpdateTransactionId, shouldReclaimBookingStatus } from "../lib/payment-service";
 import { resolveMidtransTransactionStatus, verifyMidtransSignature } from "../lib/midtrans";
 
 describe("popup fallback UX", () => {
@@ -26,6 +26,19 @@ describe("popup fallback UX", () => {
   it("uses the stored transaction ID when Midtrans reports an order_id instead of transaction_id", () => {
     expect(resolvePaymentUpdateTransactionId("ORD-123", { transactionId: "txn-abc", midtransOrderId: "ORD-123" })).toBe("txn-abc");
     expect(resolvePaymentUpdateTransactionId("txn-abc", { transactionId: "txn-abc", midtransOrderId: "ORD-123" })).toBe("txn-abc");
+  });
+
+  it("only includes bookingId in payment lookup when the identifier is a valid UUID", () => {
+    expect(buildPaymentLookupWhere("TX-STATUS-123")).toEqual([
+      { transactionId: "TX-STATUS-123" },
+      { midtransOrderId: "TX-STATUS-123" },
+    ]);
+
+    expect(buildPaymentLookupWhere("550e8400-e29b-41d4-a716-446655440000")).toEqual([
+      { transactionId: "550e8400-e29b-41d4-a716-446655440000" },
+      { midtransOrderId: "550e8400-e29b-41d4-a716-446655440000" },
+      { bookingId: "550e8400-e29b-41d4-a716-446655440000" },
+    ]);
   });
 
   it("treats expired and cancelled bookings as reclaimable for a reopened slot", () => {

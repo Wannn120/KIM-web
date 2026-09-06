@@ -27,18 +27,33 @@ export function normalizePaymentStatus(status: string): PaymentStatus {
   return "pending";
 }
 
+export function buildPaymentLookupWhere(identifier: string) {
+  const normalizedIdentifier = identifier?.trim() ?? "";
+  if (!normalizedIdentifier) {
+    return [] as Array<Record<string, string>>;
+  }
+
+  const conditions: Array<Record<string, string>> = [
+    { transactionId: normalizedIdentifier },
+    { midtransOrderId: normalizedIdentifier },
+  ];
+
+  if (isUuid(normalizedIdentifier)) {
+    conditions.push({ bookingId: normalizedIdentifier });
+  }
+
+  return conditions;
+}
+
 async function findPaymentByIdentifier(identifier: string) {
-  if (!identifier || !identifier.trim()) {
+  const conditions = buildPaymentLookupWhere(identifier);
+  if (conditions.length === 0) {
     return null;
   }
 
   return prisma.payment.findFirst({
     where: {
-      OR: [
-        { transactionId: identifier },
-        { midtransOrderId: identifier },
-        { bookingId: identifier },
-      ],
+      OR: conditions,
     },
     include: { booking: true },
   });
