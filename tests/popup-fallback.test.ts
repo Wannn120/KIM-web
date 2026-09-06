@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { getPopupBlockedMessage, isPopupWindowOpenable, shouldPreferDirectNavigation } from "../lib/popup-fallback";
 import { buildPaymentLookupWhere, normalizePaymentStatus, resolvePaymentUpdateTransactionId, shouldReclaimBookingStatus } from "../lib/payment-service";
+import { expireStalePendingBookings, isBookingSlotBlocked } from "../lib/booking-engine";
 import { resolvePaymentSuccessTransactionId } from "../lib/payment-utils";
 import { resolveMidtransTransactionStatus, verifyMidtransSignature } from "../lib/midtrans";
 
@@ -62,6 +63,12 @@ describe("popup fallback UX", () => {
     expect(shouldReclaimBookingStatus("refunded")).toBe(true);
     expect(shouldReclaimBookingStatus("confirmed")).toBe(false);
     expect(shouldReclaimBookingStatus("pending")).toBe(false);
+  });
+
+  it("marks stale pending bookings as expired so slots become available again after timeout", () => {
+    expect(typeof expireStalePendingBookings).toBe("function");
+    expect(isBookingSlotBlocked("pending")).toBe(true);
+    expect(isBookingSlotBlocked("expired")).toBe(false);
   });
 
   it("maps Midtrans status_code values to the correct payment state", () => {

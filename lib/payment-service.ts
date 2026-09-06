@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { DemoPaymentProvider, PaymentMethod, PaymentStatus, PaymentTransactionInput, PaymentSimulationDetails } from "@/lib/payment-provider";
-import { BookingStatus } from "@/lib/booking-engine";
+import { BookingStatus, expireStalePendingBookings } from "@/lib/booking-engine";
 import { sendNotification } from "@/lib/notifications";
 import { createMidtransTransaction, getMidtransTransactionStatus, resolveMidtransTransactionStatus } from "@/lib/midtrans";
 import { DEFAULT_FIELD_NAME } from "@/lib/venue";
@@ -388,6 +388,7 @@ export async function syncBookingStatusesFromPayments() {
 
 export async function expirePendingPayments() {
   const now = new Date();
+  await expireStalePendingBookings(now);
   await syncBookingStatusesFromPayments();
 
   const overduePayments = await prisma.payment.findMany({

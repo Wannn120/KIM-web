@@ -199,7 +199,7 @@ function isMaintenanceConflict(bookingDate: string, startTime: string, endTime: 
   });
 }
 
-async function purgeExpiredReservations(now: Date = new Date()) {
+export async function expireStalePendingBookings(now: Date = new Date()) {
   const expirationCutoff = new Date(now.getTime() - 15 * 60 * 1000);
 
   await prisma.booking.updateMany({
@@ -281,7 +281,7 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingR
     };
   }
 
-  await purgeExpiredReservations(new Date());
+  await expireStalePendingBookings(new Date());
 
   if (await hasOverlap(input.bookingDate, startTime, endTime)) {
     return {
