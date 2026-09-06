@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { getPopupBlockedMessage, isPopupWindowOpenable, shouldPreferDirectNavigation } from "@/lib/popup-fallback";
-import { resolvePaymentSuccessTransactionId } from "@/lib/payment-utils";
+import { buildPaymentSuccessRedirectUrl, resolvePaymentSuccessTransactionId } from "@/lib/payment-utils";
 import { formatCurrency } from "@/utils/formatting";
 
 declare global {
@@ -256,7 +256,7 @@ export function BookingPaymentEmbed({
     }
   }, [actionLoading, bookingId, amount, customerEmail, customerName, customerPhone]);
 
-  const openSnap = useCallback(async (token: string, snapUrl?: string | null) => {
+  const openSnap = useCallback(async (token: string, snapUrl?: string | null, paymentRecord?: { transactionId?: string | null; midtransOrderId?: string | null; bookingId?: string | null } | null) => {
     if (!token.trim()) {
       setError("Invalid Snap token.");
       return;
@@ -296,20 +296,22 @@ export function BookingPaymentEmbed({
         }
       };
 
-      const successTransactionId = resolvePaymentSuccessTransactionId(bookingId, payment ?? null);
+      const successTransactionId = resolvePaymentSuccessTransactionId(bookingId, paymentRecord ?? payment ?? null);
 
       window.snap.pay(token, {
-        onSuccess: () => {
+        onSuccess: (result) => {
           clearFallback();
           setStatus("success");
           setMessage("Payment successful. Redirecting...");
-          window.location.href = `/payment/success?transactionId=${encodeURIComponent(successTransactionId)}`;
+          const successUrl = buildPaymentSuccessRedirectUrl(result as any, successTransactionId);
+          window.location.href = successUrl;
         },
-        onPending: () => {
+        onPending: (result) => {
           clearFallback();
           setStatus("pending");
           setMessage("Payment pending. Confirming status...");
-          window.location.href = `/payment/success?transactionId=${encodeURIComponent(successTransactionId)}`;
+          const successUrl = buildPaymentSuccessRedirectUrl(result as any, successTransactionId);
+          window.location.href = successUrl;
         },
         onError: () => {
           clearFallback();
@@ -427,7 +429,7 @@ export function BookingPaymentEmbed({
       return;
     }
 
-    await openSnap(paymentRecord.snapToken, paymentRecord.snapUrl);
+    await openSnap(paymentRecord.snapToken, paymentRecord.snapUrl, paymentRecord);
   }, [actionLoading, createTransaction, openSnap, status]);
 
   const refreshPayment = useCallback(async () => {

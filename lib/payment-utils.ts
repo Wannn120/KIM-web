@@ -54,3 +54,29 @@ export function resolvePaymentSuccessTransactionId(
 
   return cleanedBookingId;
 }
+
+export function buildPaymentSuccessRedirectUrl(
+  result: {
+    transaction_id?: string | null;
+    transactionId?: string | null;
+    order_id?: string | null;
+    orderId?: string | null;
+    status_code?: string | number | null;
+    transaction_status?: string | null;
+    transactionStatus?: string | null;
+  } | null | undefined,
+  fallbackTransactionId: string,
+) {
+  const transactionId = result?.transaction_id?.toString().trim() || result?.transactionId?.toString().trim() || fallbackTransactionId;
+  const orderId = result?.order_id?.toString().trim() || result?.orderId?.toString().trim() || transactionId;
+  const statusCode = result?.status_code?.toString().trim() || "";
+  const transactionStatus = result?.transaction_status?.toString().trim() || result?.transactionStatus?.toString().trim() || "";
+
+  const params = new URLSearchParams();
+  params.set("transactionId", transactionId);
+  if (orderId) params.set("order_id", orderId);
+  if (statusCode) params.set("status_code", statusCode);
+  if (transactionStatus) params.set("transaction_status", transactionStatus);
+  if (transactionId && transactionId !== orderId) params.set("transaction_id", transactionId);
+  return `/payment/success?${params.toString()}`;
+}

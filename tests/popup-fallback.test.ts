@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { getPopupBlockedMessage, isPopupWindowOpenable, shouldPreferDirectNavigation } from "../lib/popup-fallback";
 import { buildPaymentLookupWhere, normalizePaymentStatus, resolvePaymentUpdateTransactionId, shouldReclaimBookingStatus } from "../lib/payment-service";
 import { expireStalePendingBookings, isBookingSlotBlocked, reclaimExpiredSlotBookings } from "../lib/booking-engine";
-import { resolvePaymentSuccessTransactionId } from "../lib/payment-utils";
+import { buildPaymentSuccessRedirectUrl, resolvePaymentSuccessTransactionId } from "../lib/payment-utils";
 import { resolveMidtransTransactionStatus, verifyMidtransSignature } from "../lib/midtrans";
 
 describe("popup fallback UX", () => {
@@ -73,6 +73,20 @@ describe("popup fallback UX", () => {
 
   it("cleans up stale reclaimable bookings before reusing an identical slot", async () => {
     expect(typeof reclaimExpiredSlotBookings).toBe("function");
+  });
+
+  it("preserves Midtrans settlement status when redirecting from a popup payment flow", () => {
+    const redirectUrl = buildPaymentSuccessRedirectUrl({
+      transactionId: "TX-midtrans-123",
+      order_id: "TX-midtrans-123",
+      status_code: "200",
+      transaction_status: "settlement",
+    }, "550e8400-e29b-41d4-a716-446655440000");
+
+    expect(redirectUrl).toContain("transactionId=TX-midtrans-123");
+    expect(redirectUrl).toContain("status_code=200");
+    expect(redirectUrl).toContain("transaction_status=settlement");
+    expect(redirectUrl).toContain("order_id=TX-midtrans-123");
   });
 
   it("maps Midtrans status_code values to the correct payment state", () => {
