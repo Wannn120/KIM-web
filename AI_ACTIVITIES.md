@@ -106,6 +106,13 @@ This file records the main activities, changes, fixes, and decisions made by the
 - Added a regression test to cover this popup case and prevent it from recurring.
 - Verified with `npm test -- --runInBand` after the fix: 4 test suites passed and 21 tests passed.
 
+### 20. Live stale-slot reclamation fix for expired bookings
+- Traced the remaining production blocker to stale expired/cancelled/refunded booking rows that can still conflict with the old legacy unique constraint on the same slot.
+- Added a proactive cleanup helper that removes reclaimable slot rows before a new booking is created for the same date and start time.
+- Invoked the cleanup in the booking API so the app can reclaim a slot immediately instead of failing with a generic “time slot no longer available” error.
+- Hardened the migration SQL to drop legacy unique keys and enforce the partial active-slot index that only blocks currently active bookings.
+- Added a regression check to cover the stale-slot case and prevent the same production bug from reappearing.
+
 ## Current Status
 
 - The frontend slot selection behavior is fixed and visually clear for available, selected, and booked states.

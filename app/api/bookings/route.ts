@@ -3,7 +3,7 @@ import { auditLog } from "@/lib/audit-log";
 import { expirePendingPayments, syncBookingStatusesFromPayments } from "@/lib/payment-service";
 import { getRateLimitResult, sanitizeObject, applySecurityHeaders } from "@/lib/security-headers";
 import { prisma } from "@/lib/prisma";
-import { BLOCKING_BOOKING_STATUSES, getRequestedScheduleBlocks, getScheduleSlots } from "@/lib/booking-engine";
+import { BLOCKING_BOOKING_STATUSES, getRequestedScheduleBlocks, getScheduleSlots, reclaimExpiredSlotBookings } from "@/lib/booking-engine";
 import { DEFAULT_FIELD_ID, DEFAULT_FIELD_NAME } from "@/lib/venue";
 import { getFieldHourlyRate } from "@/lib/site-content";
 
@@ -82,6 +82,7 @@ export async function POST(request: NextRequest) {
 
     await syncBookingStatusesFromPayments();
     await expirePendingPayments();
+    await reclaimExpiredSlotBookings(range.start, startTime);
 
     const overlappingBooking = await prisma.booking.findFirst({
       where: {

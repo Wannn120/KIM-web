@@ -18,6 +18,30 @@ export function shouldReclaimBookingStatus(status: string | undefined | null): b
 export function isBookingStatusAvailableInSlot(status: string | undefined | null): boolean {
   return !isBookingSlotBlocked(status);
 }
+
+export async function reclaimExpiredSlotBookings(bookingDate?: string | Date, startTime?: string) {
+  const where: Record<string, unknown> = {
+    status: {
+      in: RECLAIMABLE_BOOKING_STATUSES,
+    },
+  };
+
+  if (bookingDate) {
+    const normalizedDate = bookingDate instanceof Date ? bookingDate : new Date(`${bookingDate}T00:00:00.000Z`);
+    if (!Number.isNaN(normalizedDate.getTime())) {
+      where.bookingDate = normalizedDate;
+    }
+  }
+
+  if (startTime) {
+    where.startTime = startTime;
+  }
+
+  return prisma.booking.deleteMany({
+    where,
+  });
+}
+
 export interface ScheduleSlotRecord {
   id: string;
   startTime: string;
