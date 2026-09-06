@@ -20,4 +20,13 @@ describe("image fallback helpers", () => {
     expect(getSafeRemoteImageUrl(cloudinaryUrl)).toBe(cloudinaryUrl);
     expect(getSafeRemoteImageUrl(`  ${cloudinaryUrl}\n\r\t`)).toBe(cloudinaryUrl);
   });
+
+  it("rejects known stale Cloudinary URLs that currently return 404s", () => {
+    const staleUrl = "https://res.cloudinary.com/ljbxjpox/image/upload/v1785465835/utama_cifncb.jpg";
+    const fallback = [
+      "https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1200&q=80",
+    ];
+    expect(getSafeRemoteImageUrl(staleUrl, fallback)).toBe(fallback[0]);
+  });
 });
