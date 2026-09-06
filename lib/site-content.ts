@@ -28,11 +28,11 @@ export async function getSiteContent(): Promise<SiteContent> {
       return merged;
     }
 
-    merged.backgroundImageUrl = "";
+    merged.backgroundImageUrl = siteContent.backgroundImageUrl;
     return merged;
   } catch (error) {
     console.error("[CONTENT] Unable to load site content:", error);
-    return { ...siteContent, backgroundImageUrl: "" };
+    return { ...siteContent, backgroundImageUrl: siteContent.backgroundImageUrl };
   }
 }
 

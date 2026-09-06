@@ -8,7 +8,7 @@ export const siteContent: SiteContent = {
     "Satu lapangan premium dengan jadwal per jam, booking mudah, dan suasana lapangan terbaik untuk komunitas futsal dan mini soccer.",
   ctaPrimary: "Pesan sekarang",
   ctaSecondary: "Lihat riwayat booking",
-  backgroundImageUrl: "",
+  backgroundImageUrl: "https://res.cloudinary.com/ljbxjpox/image/upload/v1785465835/utama_cifncb.jpg",
   contactEmail: "info@klatenminisoccer.id",
   contactPhone: "+62 821-1234-5678",
 };
@@ -17,22 +17,22 @@ export const facilityImages: FacilityImage[] = [
   {
     title: "Lapangan premium",
     description: "Surface terbaik untuk 5v5 dan mini soccer.",
-    imageUrl: "",
+    imageUrl: "https://res.cloudinary.com/ljbxjpox/image/upload/v1785465834/lapangan_premium_aqejyy.jpg",
   },
   {
     title: "Lampu malam",
     description: "Jadwal per jam hingga malam hari.",
-    imageUrl: "",
+    imageUrl: "https://res.cloudinary.com/ljbxjpox/image/upload/v1785465837/lampu_malam_xntenr.jpg",
   },
   {
     title: "Fasilitas sewa",
     description: "Loker, sepatu, bola, dan ruang ganti yang tertata rapi.",
-    imageUrl: "",
+    imageUrl: "https://res.cloudinary.com/ljbxjpox/image/upload/v1785465837/fasilitas_sewa_o0uptk.jpg",
   },
   {
     title: "Citarasa komunitas",
     description: "Tempat berkumpul dan pertandingan seru.",
-    imageUrl: "",
+    imageUrl: "https://res.cloudinary.com/ljbxjpox/image/upload/v1785465837/citarasa_komunitas_ey2pmm.jpg",
   },
 ];
 
