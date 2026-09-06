@@ -14,4 +14,10 @@ describe("image fallback helpers", () => {
     expect(getSafeRemoteImageUrl("not-a-url", fallback)).toBe(fallback[0]);
     expect(getSafeRemoteImageUrl("not-a-url", fallback, 1)).toBe(fallback[1]);
   });
+
+  it("keeps a valid Cloudinary database URL instead of replacing it with a fallback", () => {
+    const cloudinaryUrl = "https://res.cloudinary.com/demo/image/upload/v1234567890/hero.jpg";
+    expect(getSafeRemoteImageUrl(cloudinaryUrl)).toBe(cloudinaryUrl);
+    expect(getSafeRemoteImageUrl(`  ${cloudinaryUrl}\n\r\t`)).toBe(cloudinaryUrl);
+  });
 });

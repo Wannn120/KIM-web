@@ -145,7 +145,7 @@ export function HeroSection({ facilities, content = {} as Partial<SiteContent> }
           </div>
 
           <div className="mt-14 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {displayFacilities.map((facility) => (
+            {displayFacilities.map((facility, index) => (
               <div key={facility.id ?? facility.title} className="rounded-[2rem] border border-[color:var(--border-strong)] bg-[color:var(--surface)] p-4 shadow-sm backdrop-blur-xl">
                 <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-[color:var(--surface)] sm:aspect-[16/9]">
                   <Image
