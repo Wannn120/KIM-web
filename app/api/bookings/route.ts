@@ -7,6 +7,8 @@ import { BLOCKING_BOOKING_STATUSES, getRequestedScheduleBlocks, getScheduleSlots
 import { DEFAULT_FIELD_ID, DEFAULT_FIELD_NAME } from "@/lib/venue";
 import { getFieldHourlyRate } from "@/lib/site-content";
 
+export const dynamic = "force-dynamic";
+
 function getDateRange(dateString: string) {
   const start = new Date(`${dateString}T00:00:00.000Z`);
   if (Number.isNaN(start.getTime())) {
@@ -46,26 +48,36 @@ export async function POST(request: NextRequest) {
 
     const rateLimit = getRateLimitResult(`booking:${clientIp}`);
     if (!rateLimit.allowed) {
-      return NextResponse.json({ success: false, message: "Too many booking attempts. Please try again later." }, { status: 429 });
+      const response = NextResponse.json({ success: false, message: "Too many booking attempts. Please try again later." }, { status: 429 });
+      response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+      return response;
     }
 
     if (fieldId && fieldId !== DEFAULT_FIELD_ID) {
-      return NextResponse.json({ success: false, message: "The selected field is not available." }, { status: 404 });
+      const response = NextResponse.json({ success: false, message: "The selected field is not available." }, { status: 404 });
+      response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+      return response;
     }
 
     if (!bookingDate || !startTime || !endTime) {
-      return NextResponse.json({ success: false, message: "Missing required booking details." }, { status: 400 });
+      const response = NextResponse.json({ success: false, message: "Missing required booking details." }, { status: 400 });
+      response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+      return response;
     }
 
     const range = getDateRange(bookingDate);
     if (!range) {
-      return NextResponse.json({ success: false, message: "Invalid booking date." }, { status: 400 });
+      const response = NextResponse.json({ success: false, message: "Invalid booking date." }, { status: 400 });
+      response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+      return response;
     }
 
     const scheduleSlots = await getScheduleSlots();
     const requestedBlocks = getRequestedScheduleBlocks(startTime, endTime, scheduleSlots);
     if (requestedBlocks.length === 0) {
-      return NextResponse.json({ success: false, message: "Invalid booking time range." }, { status: 400 });
+      const response = NextResponse.json({ success: false, message: "Invalid booking time range." }, { status: 400 });
+      response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+      return response;
     }
 
     await syncBookingStatusesFromPayments();
@@ -83,15 +95,21 @@ export async function POST(request: NextRequest) {
     });
 
     if (overlappingBooking) {
-      return NextResponse.json({ success: false, message: "This time slot is not available." }, { status: 409 });
+      const response = NextResponse.json({ success: false, message: "This time slot is not available." }, { status: 409 });
+      response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+      return response;
     }
 
     if (validateOnly) {
-      return NextResponse.json({ success: true, message: "Slot available." });
+      const response = NextResponse.json({ success: true, message: "Slot available." });
+      response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+      return response;
     }
 
     if (!customerName || !customerPhone || !customerEmail) {
-      return NextResponse.json({ success: false, message: "Customer name, email, and phone are required." }, { status: 400 });
+      const response = NextResponse.json({ success: false, message: "Customer name, email, and phone are required." }, { status: 400 });
+      response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+      return response;
     }
 
     const startMinutes = parseTimeToMinutes(startTime);
@@ -130,6 +148,7 @@ export async function POST(request: NextRequest) {
       message: "Booking created successfully.",
       booking,
     });
+    response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
 
     return applySecurityHeaders(response);
   } catch (error) {

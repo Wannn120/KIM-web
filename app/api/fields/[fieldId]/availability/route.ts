@@ -5,6 +5,8 @@ import { BLOCKING_BOOKING_STATUSES, buildTimeSlots, getScheduleSlots } from "@/l
 import { DEFAULT_FIELD, DEFAULT_FIELD_ID } from "@/lib/venue";
 import { getFieldHourlyRate } from "@/lib/site-content";
 
+export const dynamic = "force-dynamic";
+
 function getDateRange(dateString: string) {
   const start = new Date(`${dateString}T00:00:00.000Z`);
   if (Number.isNaN(start.getTime())) {
@@ -56,11 +58,13 @@ export async function GET(request: Request, props: { params: Promise<{ fieldId: 
     const schedules = buildTimeSlots(date, bookings, scheduleSlots);
     const hourlyRate = await getFieldHourlyRate();
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       field: { ...DEFAULT_FIELD, price: hourlyRate },
       schedules,
     });
+    response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+    return response;
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     console.error(`[API] Field availability error for ${fieldId} on ${date}:`, {
@@ -70,6 +74,8 @@ export async function GET(request: Request, props: { params: Promise<{ fieldId: 
     });
 
     const schedules = buildTimeSlots(date, []);
-    return NextResponse.json({ success: true, field: DEFAULT_FIELD, schedules, _debug: `Fallback due to ${errorMsg}` });
+    const response = NextResponse.json({ success: true, field: DEFAULT_FIELD, schedules, _debug: `Fallback due to ${errorMsg}` });
+    response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+    return response;
   }
 }
