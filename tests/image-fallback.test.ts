@@ -6,8 +6,12 @@ describe("image fallback helpers", () => {
   });
 
   it("returns a valid fallback image when the database value is missing or invalid", () => {
-    const fallback = ["https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=1200&q=80"];
+    const fallback = [
+      "https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1200&q=80",
+    ];
     expect(getSafeRemoteImageUrl("", fallback)).toBe(fallback[0]);
     expect(getSafeRemoteImageUrl("not-a-url", fallback)).toBe(fallback[0]);
+    expect(getSafeRemoteImageUrl("not-a-url", fallback, 1)).toBe(fallback[1]);
   });
 });

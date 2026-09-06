@@ -34,19 +34,19 @@ export async function getVenueFeatures(): Promise<FacilityImage[]> {
     );
 
     if (activeRecords.length > 0) {
-      return activeRecords.map((feature) => ({
+      return activeRecords.map((feature, index) => ({
         id: feature.id,
         title: feature.name,
         description: feature.description,
-        imageUrl: getSafeRemoteImageUrl(feature.imageUrl, FALLBACK_REMOTE_IMAGES),
+        imageUrl: getSafeRemoteImageUrl(feature.imageUrl, FALLBACK_REMOTE_IMAGES, index),
         isActive: feature.isActive,
         sortOrder: feature.sortOrder,
       }));
     }
 
-    return facilityImages.map((facility) => ({
+    return facilityImages.map((facility, index) => ({
       ...facility,
-      imageUrl: getSafeRemoteImageUrl(facility.imageUrl, FALLBACK_REMOTE_IMAGES),
+      imageUrl: getSafeRemoteImageUrl(facility.imageUrl, FALLBACK_REMOTE_IMAGES, index),
     }));
   } catch (error) {
     console.error("[DATA] Unable to load venue features:", error);
@@ -71,8 +71,8 @@ export async function getVenueGallery(): Promise<VenueGalleryImage[]> {
       },
     );
     return activeRecords.length > 0
-      ? activeRecords.map((image) => ({ ...image, imageUrl: getSafeRemoteImageUrl(image.imageUrl, FALLBACK_REMOTE_IMAGES) }))
-      : fallback.map((image) => ({ ...image, imageUrl: getSafeRemoteImageUrl(image.imageUrl, FALLBACK_REMOTE_IMAGES) }));
+      ? activeRecords.map((image, index) => ({ ...image, imageUrl: getSafeRemoteImageUrl(image.imageUrl, FALLBACK_REMOTE_IMAGES, index) }))
+      : fallback.map((image, index) => ({ ...image, imageUrl: getSafeRemoteImageUrl(image.imageUrl, FALLBACK_REMOTE_IMAGES, index) }));
   } catch (error) {
     console.error("[DATA] Unable to load venue gallery:", error);
     return fallback;

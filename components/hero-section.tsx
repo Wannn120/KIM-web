@@ -15,14 +15,14 @@ export function HeroSection({ facilities, content = {} as Partial<SiteContent> }
     [displayFacilities],
   );
   const facilityUrls = useMemo(() => validFacilities.map((facility) => normalizeRemoteImageUrl(facility.imageUrl)).join("|"), [validFacilities]);
-  const heroBackgroundUrl = getSafeRemoteImageUrl(content.backgroundImageUrl, FALLBACK_REMOTE_IMAGES);
+  const heroBackgroundUrl = getSafeRemoteImageUrl(content.backgroundImageUrl, FALLBACK_REMOTE_IMAGES, 0);
   const heroImageSrc = heroBackgroundUrl;
-  const safeFacilityImage = (facility: FacilityImage) => {
+  const safeFacilityImage = (facility: FacilityImage, index: number) => {
     const id = facility.id ?? facility.title;
     if (brokenFacilityImages[id]) {
-      return getSafeRemoteImageUrl("", FALLBACK_REMOTE_IMAGES);
+      return getSafeRemoteImageUrl("", FALLBACK_REMOTE_IMAGES, index);
     }
-    return getSafeRemoteImageUrl(facility.imageUrl, FALLBACK_REMOTE_IMAGES);
+    return getSafeRemoteImageUrl(facility.imageUrl, FALLBACK_REMOTE_IMAGES, index);
   };
 
   useEffect(() => {
@@ -149,7 +149,7 @@ export function HeroSection({ facilities, content = {} as Partial<SiteContent> }
               <div key={facility.id ?? facility.title} className="rounded-[2rem] border border-[color:var(--border-strong)] bg-[color:var(--surface)] p-4 shadow-sm backdrop-blur-xl">
                 <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-[color:var(--surface)] sm:aspect-[16/9]">
                   <Image
-                    src={safeFacilityImage(facility)}
+                    src={safeFacilityImage(facility, index)}
                     alt={facility.title}
                     fill
                     sizes="(max-width: 768px) 100vw, 25vw"

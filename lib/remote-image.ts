@@ -22,10 +22,13 @@ export function isValidRemoteImageUrl(url?: string | null) {
   }
 }
 
-export function getSafeRemoteImageUrl(candidate?: string, fallbackUrls: string[] = FALLBACK_REMOTE_IMAGES) {
+export function getSafeRemoteImageUrl(candidate?: string, fallbackUrls: string[] = FALLBACK_REMOTE_IMAGES, fallbackIndex = 0) {
   const normalized = normalizeRemoteImageUrl(candidate);
   if (isValidRemoteImageUrl(normalized)) return normalized;
 
-  const safeFallback = fallbackUrls.find((url) => isValidRemoteImageUrl(url));
-  return safeFallback ?? fallbackUrls[0] ?? "";
+  const safeFallbacks = fallbackUrls.filter((url) => isValidRemoteImageUrl(url));
+  if (safeFallbacks.length === 0) return "";
+
+  const index = Math.abs(fallbackIndex) % safeFallbacks.length;
+  return safeFallbacks[index] ?? safeFallbacks[0];
 }
