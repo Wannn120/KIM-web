@@ -17,12 +17,18 @@ export interface InvoicePdfInput {
     bookingDate: Date;
     startTime: string;
     endTime: string;
+    customerName?: string | null;
+    customerEmail?: string | null;
+    customerPhone?: string | null;
+    durationHours?: number | null;
+    totalPrice?: number | null;
   };
   payment: {
     transactionId: string;
     paymentMethod?: string | null;
     provider?: string | null;
     paidAt?: Date | null;
+    midtransOrderId?: string | null;
   };
 }
 
@@ -105,9 +111,9 @@ export function generateInvoicePdfBuffer(invoice: InvoicePdfInput) {
   const tax = Number(invoice.tax ?? 0);
   const total = Number(invoice.total ?? subtotal - discount + tax);
 
-  const customerName = invoice.customerName?.trim() || "Guest";
-  const customerEmail = invoice.customerEmail?.trim() || "-";
-  const customerPhone = invoice.customerPhone?.trim() || "-";
+  const customerName = (invoice.customerName || invoice.booking.customerName || "Guest").toString().trim();
+  const customerEmail = (invoice.customerEmail || invoice.booking.customerEmail || "-").toString().trim();
+  const customerPhone = (invoice.customerPhone || invoice.booking.customerPhone || "-").toString().trim();
   const paymentMethod = invoice.payment.paymentMethod ?? "Midtrans";
   const provider = invoice.payment.provider ?? "Midtrans";
   const fieldName = DEFAULT_FIELD_NAME;
@@ -164,7 +170,7 @@ export function generateInvoicePdfBuffer(invoice: InvoicePdfInput) {
     writeText("Time", 328, 670, 8),
     writeText(timeRange, 392, 670, 8),
     writeText("Duration", 328, 656, 8),
-    writeText(`${durationHours} Hours`, 392, 656, 8),
+    writeText(`${invoice.booking.durationHours ?? durationHours} Hours`, 392, 656, 8),
     writeText("Payment", 328, 642, 8),
     writeText(paymentLabel, 392, 642, 8),
     writeText("Paid", 328, 630, 7),
@@ -203,6 +209,7 @@ export function generateInvoicePdfBuffer(invoice: InvoicePdfInput) {
     writeText(`Provider: ${provider}`, 48, 332, 8),
     writeText(`Transaction ID: ${invoice.payment.transactionId}`, 48, 318, 8),
     writeText(`Invoice No: ${invoice.invoiceNumber}`, 48, 304, 8),
+    writeText(`Order ID: ${invoice.payment.midtransOrderId ?? '-'}`, 48, 290, 8),
   ];
 
   const amountBreakdown = summaryRows.map((row, index) => {

@@ -38,12 +38,18 @@ export async function GET(request: Request) {
       bookingDate: invoice.booking.bookingDate,
       startTime: invoice.booking.startTime,
       endTime: invoice.booking.endTime,
+      customerName: invoice.booking.customerName,
+      customerEmail: invoice.booking.customerEmail,
+      customerPhone: invoice.booking.customerPhone,
+      durationHours: invoice.booking.durationHours,
+      totalPrice: invoice.booking.totalPrice,
     },
     payment: {
       transactionId: invoice.payment.transactionId,
       paymentMethod: invoice.payment.paymentMethod,
       provider: invoice.payment.provider,
       paidAt: invoice.payment.paidAt ?? null,
+      midtransOrderId: invoice.payment.midtransOrderId ?? null,
     },
     paidAt: invoice.paidAt ?? invoice.payment.paidAt ?? null,
   });
