@@ -19,7 +19,7 @@ export default async function PaymentSuccessPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const resolvedSearchParams = await searchParams;
-  const transactionId = getSearchParam(resolvedSearchParams.transactionId) || getSearchParam(resolvedSearchParams.order_id) || getSearchParam(resolvedSearchParams.transaction_id);
+  const transactionId = getSearchParam(resolvedSearchParams.order_id) || getSearchParam(resolvedSearchParams.transactionId) || getSearchParam(resolvedSearchParams.transaction_id);
   const transactionStatus = getSearchParam(resolvedSearchParams.transaction_status) || getSearchParam(resolvedSearchParams.status) || getSearchParam(resolvedSearchParams.transactionStatus);
 
   if (transactionId) {

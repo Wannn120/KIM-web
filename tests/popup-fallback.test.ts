@@ -84,18 +84,18 @@ describe("popup fallback UX", () => {
     expect(typeof reclaimExpiredSlotBookings).toBe("function");
   });
 
-  it("preserves Midtrans settlement status when redirecting from a popup payment flow", () => {
+  it("prefers the stable order_id for redirect reconciliation when Midtrans returns a separate transaction UUID", () => {
     const redirectUrl = buildPaymentSuccessRedirectUrl({
-      transactionId: "TX-midtrans-123",
-      order_id: "TX-midtrans-123",
+      transaction_id: "73e79bf3-3172-4e86-b0ec-c10669f5e8fa",
+      order_id: "TX-mtqq5mti-yo65hk",
       status_code: "200",
       transaction_status: "settlement",
     }, "550e8400-e29b-41d4-a716-446655440000");
 
-    expect(redirectUrl).toContain("transactionId=TX-midtrans-123");
-    expect(redirectUrl).toContain("status_code=200");
+    expect(redirectUrl).toContain("transactionId=TX-mtqq5mti-yo65hk");
+    expect(redirectUrl).toContain("order_id=TX-mtqq5mti-yo65hk");
     expect(redirectUrl).toContain("transaction_status=settlement");
-    expect(redirectUrl).toContain("order_id=TX-midtrans-123");
+    expect(redirectUrl).toContain("transaction_id=73e79bf3-3172-4e86-b0ec-c10669f5e8fa");
   });
 
   it("maps Midtrans status_code values to the correct payment state", () => {

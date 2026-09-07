@@ -67,16 +67,19 @@ export function buildPaymentSuccessRedirectUrl(
   } | null | undefined,
   fallbackTransactionId: string,
 ) {
-  const transactionId = result?.transaction_id?.toString().trim() || result?.transactionId?.toString().trim() || fallbackTransactionId;
-  const orderId = result?.order_id?.toString().trim() || result?.orderId?.toString().trim() || transactionId;
+  const gatewayTransactionId = result?.transaction_id?.toString().trim() || result?.transactionId?.toString().trim() || "";
+  const orderId = result?.order_id?.toString().trim() || result?.orderId?.toString().trim() || fallbackTransactionId;
+  const canonicalAppTransactionId = orderId || fallbackTransactionId || gatewayTransactionId;
   const statusCode = result?.status_code?.toString().trim() || "";
   const transactionStatus = result?.transaction_status?.toString().trim() || result?.transactionStatus?.toString().trim() || "";
 
   const params = new URLSearchParams();
-  params.set("transactionId", transactionId);
+  params.set("transactionId", canonicalAppTransactionId);
   if (orderId) params.set("order_id", orderId);
   if (statusCode) params.set("status_code", statusCode);
   if (transactionStatus) params.set("transaction_status", transactionStatus);
-  if (transactionId && transactionId !== orderId) params.set("transaction_id", transactionId);
+  if (gatewayTransactionId && gatewayTransactionId !== canonicalAppTransactionId) {
+    params.set("transaction_id", gatewayTransactionId);
+  }
   return `/payment/success?${params.toString()}`;
 }

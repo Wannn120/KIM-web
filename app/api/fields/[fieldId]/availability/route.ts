@@ -67,7 +67,7 @@ export async function GET(request: Request, props: { params: Promise<{ fieldId: 
     return response;
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    console.error(`[API] Field availability error for ${fieldId} on ${date}:`, {
+    console.error(`[API] Field availability error for ${normalizedFieldId} on ${date}:`, {
       error: errorMsg,
       stack: error instanceof Error ? error.stack : undefined,
       timestamp: new Date().toISOString(),
