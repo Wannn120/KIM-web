@@ -4,7 +4,7 @@ import { expirePendingPayments, syncBookingStatusesFromPayments } from "@/lib/pa
 import { getRateLimitResult, sanitizeObject, applySecurityHeaders } from "@/lib/security-headers";
 import { prisma } from "@/lib/prisma";
 import { BLOCKING_BOOKING_STATUSES, getRequestedScheduleBlocks, getScheduleSlots, reclaimExpiredSlotBookings } from "@/lib/booking-engine";
-import { DEFAULT_FIELD_ID, DEFAULT_FIELD_NAME } from "@/lib/venue";
+import { DEFAULT_FIELD_ID, DEFAULT_FIELD_NAME, normalizeFieldId } from "@/lib/venue";
 import { getFieldHourlyRate } from "@/lib/site-content";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const safeBody = sanitizeObject(body as Record<string, unknown>);
-    const fieldId = typeof safeBody?.fieldId === "string" ? safeBody.fieldId : "";
+    const fieldId = normalizeFieldId(typeof safeBody?.fieldId === "string" ? safeBody.fieldId : "");
     const bookingDate = typeof safeBody?.bookingDate === "string" ? safeBody.bookingDate : "";
     const startTime = typeof safeBody?.startTime === "string" ? safeBody.startTime : "";
     const endTime = typeof safeBody?.endTime === "string" ? safeBody.endTime : "";

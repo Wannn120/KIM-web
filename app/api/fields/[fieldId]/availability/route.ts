@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { expirePendingPayments, syncBookingStatusesFromPayments } from "@/lib/payment-service";
 import { BLOCKING_BOOKING_STATUSES, buildTimeSlots, getScheduleSlots } from "@/lib/booking-engine";
-import { DEFAULT_FIELD, DEFAULT_FIELD_ID } from "@/lib/venue";
+import { DEFAULT_FIELD, DEFAULT_FIELD_ID, isSupportedFieldId, normalizeFieldId } from "@/lib/venue";
 import { getFieldHourlyRate } from "@/lib/site-content";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +20,7 @@ function getDateRange(dateString: string) {
 
 export async function GET(request: Request, props: { params: Promise<{ fieldId: string }> }) {
   const params = await props.params;
-  const fieldId = params?.fieldId ?? DEFAULT_FIELD_ID;
+  const normalizedFieldId = normalizeFieldId(params?.fieldId ?? DEFAULT_FIELD_ID);
   const { searchParams } = new URL(request.url);
   const date = searchParams.get("date");
 
@@ -28,7 +28,7 @@ export async function GET(request: Request, props: { params: Promise<{ fieldId: 
     return NextResponse.json({ success: false, message: "Date is required." }, { status: 400 });
   }
 
-  if (fieldId !== DEFAULT_FIELD_ID) {
+  if (!isSupportedFieldId(normalizedFieldId)) {
     return NextResponse.json({ success: false, message: "The requested field is not available." }, { status: 404 });
   }
 

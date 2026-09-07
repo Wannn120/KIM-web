@@ -4,6 +4,7 @@ import { buildPaymentLookupWhere, normalizePaymentStatus, resolvePaymentUpdateTr
 import { expireStalePendingBookings, isBookingSlotBlocked, reclaimExpiredSlotBookings } from "../lib/booking-engine";
 import { buildPaymentSuccessRedirectUrl, resolvePaymentSuccessTransactionId } from "../lib/payment-utils";
 import { resolveMidtransTransactionStatus, verifyMidtransSignature } from "../lib/midtrans";
+import { isSupportedFieldId, normalizeFieldId } from "../lib/venue";
 
 describe("popup fallback UX", () => {
   it("returns a clear message when the browser blocks the payment popup", () => {
@@ -23,6 +24,14 @@ describe("popup fallback UX", () => {
     expect(shouldPreferDirectNavigation("Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36")).toBe(true);
     expect(shouldPreferDirectNavigation("Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/126.0.0.0 Mobile Safari/537.36")).toBe(true);
     expect(shouldPreferDirectNavigation("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")).toBe(false);
+  });
+
+  it("accepts legacy field IDs used by older booking links while keeping the canonical field ID", () => {
+    expect(isSupportedFieldId("1")).toBe(true);
+    expect(isSupportedFieldId("field-1")).toBe(true);
+    expect(isSupportedFieldId("klaten-field-1")).toBe(true);
+    expect(normalizeFieldId("1")).toBe("klaten-field-1");
+    expect(normalizeFieldId("field-1")).toBe("klaten-field-1");
   });
 
   it("uses the stored transaction ID when Midtrans reports an order_id instead of transaction_id", () => {

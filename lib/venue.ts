@@ -10,14 +10,37 @@ export const DEFAULT_FIELD = {
   imageUrl: "",
 };
 
+export const LEGACY_FIELD_IDS = ["1", "field-1", "klaten-field-1"] as const;
 export const DEFAULT_FIELD_ID = DEFAULT_FIELD.id;
 export const DEFAULT_FIELD_NAME = DEFAULT_FIELD.name;
 export const DEFAULT_FIELD_PRICE = DEFAULT_FIELD.price;
+
+export function normalizeFieldId(fieldId?: string | null) {
+  const normalized = String(fieldId ?? "").trim();
+  if (!normalized) {
+    return DEFAULT_FIELD_ID;
+  }
+
+  if (normalized === DEFAULT_FIELD_ID || normalized === "field-1") {
+    return DEFAULT_FIELD_ID;
+  }
+
+  if (normalized === "1") {
+    return DEFAULT_FIELD_ID;
+  }
+
+  return normalized;
+}
+
+export function isSupportedFieldId(fieldId?: string | null) {
+  const normalized = normalizeFieldId(fieldId);
+  return normalized === DEFAULT_FIELD_ID || LEGACY_FIELD_IDS.includes(normalized as typeof LEGACY_FIELD_IDS[number]);
+}
 
 export function getDefaultFieldPrice() {
   return DEFAULT_FIELD.price;
 }
 
 export function isDefaultFieldId(fieldId?: string) {
-  return !fieldId || fieldId === DEFAULT_FIELD_ID;
+  return !fieldId || normalizeFieldId(fieldId) === DEFAULT_FIELD_ID;
 }
