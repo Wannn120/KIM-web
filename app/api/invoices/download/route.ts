@@ -1,5 +1,12 @@
 import { NextResponse } from "next/server";
 import { generateInvoicePdfBuffer } from "@/lib/invoice-pdf";
+let generateInvoicePdfBufferHtml: any = null;
+if (process.env.USE_HTML_PDF === 'true') {
+  // dynamic import to avoid requiring puppeteer unless enabled
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  generateInvoicePdfBufferHtml = require('@/lib/invoice-html-pdf').generateInvoicePdfBufferHtml;
+}
 import { prisma } from "@/lib/prisma";
 
 export async function GET(request: Request) {
@@ -22,7 +29,39 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, message: "Invoice not found." }, { status: 404 });
   }
 
-  const pdfData = generateInvoicePdfBuffer({
+  const pdfData = process.env.USE_HTML_PDF === 'true' && generateInvoicePdfBufferHtml
+    ? await generateInvoicePdfBufferHtml({
+        invoiceNumber: invoice.invoiceNumber,
+        customerName: invoice.customerName,
+        customerEmail: invoice.customerEmail,
+        customerPhone: invoice.customerPhone,
+        status: invoice.status,
+        subtotal: invoice.subtotal,
+        discount: invoice.discount,
+        tax: invoice.tax,
+        total: invoice.total,
+        issuedAt: invoice.issuedAt,
+        booking: {
+          id: invoice.booking.id,
+          bookingDate: invoice.booking.bookingDate,
+          startTime: invoice.booking.startTime,
+          endTime: invoice.booking.endTime,
+          customerName: invoice.booking.customerName,
+          customerEmail: invoice.booking.customerEmail,
+          customerPhone: invoice.booking.customerPhone,
+          durationHours: invoice.booking.durationHours,
+          totalPrice: invoice.booking.totalPrice,
+        },
+        payment: {
+          transactionId: invoice.payment.transactionId,
+          paymentMethod: invoice.payment.paymentMethod,
+          provider: invoice.payment.provider,
+          paidAt: invoice.payment.paidAt ?? null,
+          midtransOrderId: invoice.payment.midtransOrderId ?? null,
+        },
+        paidAt: invoice.paidAt ?? invoice.payment.paidAt ?? null,
+      })
+    : generateInvoicePdfBuffer({
     invoiceNumber: invoice.invoiceNumber,
     customerName: invoice.customerName,
     customerEmail: invoice.customerEmail,
