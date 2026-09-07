@@ -11,6 +11,7 @@ export interface InvoicePdfInput {
   tax?: number | null;
   total: number;
   issuedAt: Date;
+  paidAt?: Date | null;
   booking: {
     id: string;
     bookingDate: Date;
@@ -21,6 +22,7 @@ export interface InvoicePdfInput {
     transactionId: string;
     paymentMethod?: string | null;
     provider?: string | null;
+    paidAt?: Date | null;
   };
 }
 
@@ -94,6 +96,7 @@ function createInvoicePdf(contentLines: string[]) {
 export function generateInvoicePdfBuffer(invoice: InvoicePdfInput) {
   const bookingDate = formatDate(invoice.booking.bookingDate);
   const issueDate = formatDate(invoice.issuedAt);
+  const paidDate = invoice.paidAt ? formatDate(invoice.paidAt) : invoice.payment.paidAt ? formatDate(invoice.payment.paidAt) : "-";
   const statusText = (invoice.status ?? "pending").toUpperCase();
   const statusBadge = statusText === "SUCCESS" ? "PAID" : statusText === "FAILED" ? "UNPAID" : statusText;
 
@@ -154,6 +157,8 @@ export function generateInvoicePdfBuffer(invoice: InvoicePdfInput) {
     writeRect(312, 620, 250, 108),
     writeText("BOOKING", 328, 705, 10),
     writeLine(312, 698, 562, 698),
+    writeText("Booking ID", 328, 688, 7),
+    writeText(invoice.booking.id, 392, 688, 7),
     writeText("Date", 328, 684, 8),
     writeText(bookingDate, 392, 684, 8),
     writeText("Time", 328, 670, 8),
@@ -162,6 +167,8 @@ export function generateInvoicePdfBuffer(invoice: InvoicePdfInput) {
     writeText(`${durationHours} Hours`, 392, 656, 8),
     writeText("Payment", 328, 642, 8),
     writeText(paymentLabel, 392, 642, 8),
+    writeText("Paid", 328, 630, 7),
+    writeText(paidDate, 392, 630, 7),
   ];
 
   const tableHeader = [
@@ -195,6 +202,7 @@ export function generateInvoicePdfBuffer(invoice: InvoicePdfInput) {
     writeText(`Time Slot: ${timeRange}`, 48, 346, 8),
     writeText(`Provider: ${provider}`, 48, 332, 8),
     writeText(`Transaction ID: ${invoice.payment.transactionId}`, 48, 318, 8),
+    writeText(`Invoice No: ${invoice.invoiceNumber}`, 48, 304, 8),
   ];
 
   const amountBreakdown = summaryRows.map((row, index) => {

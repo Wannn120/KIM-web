@@ -43,7 +43,9 @@ export async function GET(request: Request) {
       transactionId: invoice.payment.transactionId,
       paymentMethod: invoice.payment.paymentMethod,
       provider: invoice.payment.provider,
+      paidAt: invoice.payment.paidAt ?? null,
     },
+    paidAt: invoice.paidAt ?? invoice.payment.paidAt ?? null,
   });
 
   return new NextResponse(pdfData, {
