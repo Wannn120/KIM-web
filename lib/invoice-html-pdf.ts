@@ -7,7 +7,8 @@ export async function generateInvoicePdfBufferHtml(invoice) {
   const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
   try {
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
+    const baseUrl = `file://${process.cwd().replace(/\\/g, '/')}/`;
+    await page.setContent(html, { waitUntil: 'networkidle0', url: baseUrl });
     const pdf = await page.pdf({ format: 'A4', printBackground: true, margin: { top: '36px', bottom: '36px', left: '36px', right: '36px' } });
     return pdf;
   } finally {
