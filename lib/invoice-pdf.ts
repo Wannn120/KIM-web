@@ -41,11 +41,19 @@ function writeRect(x: number, y: number, width: number, height: number) {
 }
 
 function formatCurrency(amount: number) {
-  return amount.toLocaleString("id-ID", {
+  return new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+function formatDate(date: Date) {
+  return new Date(date).toLocaleDateString("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
   });
 }
 
@@ -84,87 +92,144 @@ function createInvoicePdf(contentLines: string[]) {
 }
 
 export function generateInvoicePdfBuffer(invoice: InvoicePdfInput) {
-  const bookingDate = invoice.booking.bookingDate.toISOString().slice(0, 10);
-  const invoiceStatus = invoice.status?.toUpperCase() ?? "PENDING";
-  const invoiceBadge = invoiceStatus === "SUCCESS" ? "PAID" : invoiceStatus === "FAILED" ? "UNPAID" : invoiceStatus;
+  const bookingDate = formatDate(invoice.booking.bookingDate);
+  const issueDate = formatDate(invoice.issuedAt);
+  const statusText = (invoice.status ?? "pending").toUpperCase();
+  const statusBadge = statusText === "SUCCESS" ? "PAID" : statusText === "FAILED" ? "UNPAID" : statusText;
+
+  const subtotal = Number(invoice.subtotal ?? 0);
+  const discount = Number(invoice.discount ?? 0);
+  const tax = Number(invoice.tax ?? 0);
+  const total = Number(invoice.total ?? subtotal - discount + tax);
+
+  const customerName = invoice.customerName?.trim() || "Guest";
+  const customerEmail = invoice.customerEmail?.trim() || "-";
+  const customerPhone = invoice.customerPhone?.trim() || "-";
+  const paymentMethod = invoice.payment.paymentMethod ?? "Midtrans";
+  const provider = invoice.payment.provider ?? "Midtrans";
+  const fieldName = DEFAULT_FIELD_NAME;
+  const timeRange = `${invoice.booking.startTime} - ${invoice.booking.endTime}`;
+  const durationHours = Math.max(1, Math.ceil(
+    ((new Date(`1970-01-02T${invoice.booking.endTime}:00`).getTime() - new Date(`1970-01-02T${invoice.booking.startTime}:00`).getTime()) / 3600000)
+  ));
+
+  const paymentLabel = paymentMethod || "Midtrans";
+  const summaryRows = [
+    { label: "Subtotal", value: formatCurrency(subtotal) },
+    ...(discount > 0 ? [{ label: "Discount", value: `- ${formatCurrency(discount)}` }] : []),
+    ...(tax > 0 ? [{ label: "Tax", value: formatCurrency(tax) }] : []),
+    { label: "Total", value: formatCurrency(total) },
+  ];
 
   const headerLines = [
-    writeRect(35, 720, 525, 100),
-    writeRect(40, 726, 90, 90),
-    writeText("KIM", 50, 776, 20),
-    writeText("MiniSoccer", 140, 790, 18),
-    writeText("Lapangan Mini Soccer Klaten", 140, 776, 9),
-    writeText("Invoice", 140, 748, 16),
-    writeText(`Invoice #: ${invoice.invoiceNumber}`, 400, 796, 10),
-    writeText(`Date: ${invoice.issuedAt.toISOString().slice(0, 10)}`, 400, 780, 10),
-    writeText("Status:", 400, 764, 10),
-    writeRect(445, 752, 110, 18),
-    writeText(invoiceBadge, 450, 766, 10),
-    writeText("Jl. Raya Klaten No. 123, Klaten, Jawa Tengah", 140, 734, 8),
-    writeText("Telp: +62 812-3456-7890 | info@minisoccer.id", 140, 722, 8),
+    writeRect(32, 760, 530, 64),
+    writeLine(32, 760, 562, 760),
+    writeLine(32, 824, 562, 824),
+    writeRect(32, 760, 120, 64),
+    writeText("KIM", 56, 792, 26),
+    writeText("Klaten International Minisoccer", 170, 794, 10),
+    writeText("Jl. Stadion, Klaten", 170, 782, 7),
+    writeText("hello@minisoccer.id", 170, 772, 7),
+    writeText("INVOICE", 470, 798, 18),
+    writeText(`No. ${invoice.invoiceNumber}`, 464, 786, 8),
+    writeText(`Date: ${issueDate}`, 464, 774, 7),
+    // status badge background (filled light gray)
+    `0.88 g 444 760 84 18 re f 0 g`,
+    writeText(statusBadge, 452, 764, 8),
   ];
 
   const customerLines = [
-    writeRect(35, 614, 250, 96),
-    writeText("Billed to", 40, 704, 10),
-    writeText(`${invoice.customerName ?? "Guest"}`, 40, 688, 12),
-    writeText(`${invoice.customerEmail ?? "-"}`, 40, 672, 12),
-    writeText(`${invoice.customerPhone ?? "-"}`, 40, 656, 12),
+    writeRect(32, 620, 250, 108),
+    writeText("CUSTOMER", 48, 705, 10),
+    writeLine(32, 698, 282, 698),
+    writeText("Name", 48, 684, 8),
+    writeText(customerName, 120, 684, 8),
+    writeText("Phone", 48, 670, 8),
+    writeText(customerPhone, 120, 670, 8),
+    writeText("Email", 48, 656, 8),
+    writeText(customerEmail, 120, 656, 8),
   ];
 
   const bookingLines = [
-    writeRect(320, 614, 240, 96),
-    writeText("Booking details", 325, 704, 10),
-    writeText(`Field: ${DEFAULT_FIELD_NAME}`, 325, 688, 12),
-    writeText(`Booking date: ${bookingDate}`, 325, 672, 12),
-    writeText(`Time: ${invoice.booking.startTime} - ${invoice.booking.endTime}`, 325, 656, 12),
-    writeText(`Booking ID: ${invoice.booking.id}`, 325, 640, 12),
-    writeText(`Transaction ID: ${invoice.payment.transactionId}`, 325, 624, 12),
-    writeText(`Payment method: ${invoice.payment.paymentMethod ?? "-"}`, 325, 608, 12),
-    writeText(`Provider: ${invoice.payment.provider ?? "-"}`, 325, 592, 12),
+    writeRect(312, 620, 250, 108),
+    writeText("BOOKING", 328, 705, 10),
+    writeLine(312, 698, 562, 698),
+    writeText("Date", 328, 684, 8),
+    writeText(bookingDate, 392, 684, 8),
+    writeText("Time", 328, 670, 8),
+    writeText(timeRange, 392, 670, 8),
+    writeText("Duration", 328, 656, 8),
+    writeText(`${durationHours} Hours`, 392, 656, 8),
+    writeText("Payment", 328, 642, 8),
+    writeText(paymentLabel, 392, 642, 8),
   ];
 
-  const itemLines = [
-    writeRect(35, 484, 525, 116),
-    writeText("Description", 40, 596, 12),
-    writeText("Amount", 400, 596, 12),
-    writeLine(40, 590, 555, 590),
-    writeText("Lapangan rental", 40, 572, 12),
-    writeText(formatCurrency(invoice.subtotal), 400, 572, 12),
-    writeLine(40, 564, 555, 564),
+  const tableHeader = [
+    writeRect(32, 470, 500, 118),
+    writeText("BOOKING SUMMARY", 48, 566, 11),
+    writeLine(32, 560, 532, 560),
+    writeText("DESCRIPTION", 48, 545, 8),
+    writeText("QTY", 368, 545, 8),
+    writeText("UNIT PRICE", 420, 545, 8),
+    writeText("AMOUNT", 485, 545, 8),
+    writeLine(32, 536, 532, 536),
   ];
 
-  const totalsLines = [
-    writeRect(320, 364, 240, 108),
-    writeText("Subtotal:", 330, 444, 12),
-    writeText(formatCurrency(invoice.subtotal), 460, 444, 12),
-    writeText("Discount:", 330, 428, 12),
-    writeText(formatCurrency(invoice.discount ?? 0), 460, 428, 12),
-    writeText("Tax:", 330, 412, 12),
-    writeText(formatCurrency(invoice.tax ?? 0), 460, 412, 12),
-    writeLine(330, 404, 555, 404),
-    writeText("Total", 330, 386, 14),
-    writeText(formatCurrency(invoice.total), 460, 386, 14),
+  const bookingRow = [
+    writeText(fieldName, 48, 516, 9),
+    writeText("1", 378, 516, 9),
+    writeText(formatCurrency(subtotal), 424, 516, 9),
+    writeText(formatCurrency(subtotal), 487, 516, 9),
+    writeLine(32, 500, 532, 500),
   ];
 
-  const footerLines = [
-    writeLine(35, 340, 560, 340),
-    writeText("Terima kasih telah memesan. Simpan invoice ini sebagai bukti pembayaran.", 40, 322, 10),
-    writeText("Contact: +62 812-3456-7890 | info@minisoccer.id", 40, 308, 10),
-    writeText("Bank transfer: BNI 123-456-7890 a.n. MiniSoccer Klaten", 40, 294, 10),
-    writeText("Syarat: Pembayaran lunas sebelum penggunaan lapangan.", 40, 280, 10),
+  const totalsBox = [
+    writeRect(342, 294, 190, 136),
+    writeLine(342, 360, 532, 360),
+    writeText("GRAND TOTAL", 358, 388, 10),
+    writeText(formatCurrency(total), 430, 370, 14),
+  ];
+
+  const breakdownLines = [
+    writeText(`Booking Date: ${bookingDate}`, 48, 360, 8),
+    writeText(`Time Slot: ${timeRange}`, 48, 346, 8),
+    writeText(`Provider: ${provider}`, 48, 332, 8),
+    writeText(`Transaction ID: ${invoice.payment.transactionId}`, 48, 318, 8),
+  ];
+
+  const amountBreakdown = summaryRows.map((row, index) => {
+    const y = 440 - index * 16;
+    return [writeText(row.label, 372, y, 8), writeText(row.value, 488, y, 8)];
+  }).flat();
+
+  const footer = [
+    writeLine(32, 182, 562, 182),
+    writeText("Thank you for booking with KIM", 208, 160, 10),
+    writeText("@kim.soccerfield • klaten-international-minisoccer.vercel.app", 170, 144, 8),
+    writeText("For questions: +62 812-3456-7890", 216, 130, 8),
+    writeRect(0, 0, 595, 26),
+    writeLine(0, 0, 595, 26),
+    writeLine(0, 0, 595, 0),
+  ];
+
+  const accentLines = [
+    writeLine(0, 0, 90, 26),
+    writeLine(0, 26, 90, 0),
+    writeLine(510, 0, 595, 26),
+    writeLine(510, 26, 595, 0),
   ];
 
   const lines = [
-    writeLine(35, 742, 560, 742),
+    ...accentLines,
     ...headerLines,
-    writeLine(35, 730, 560, 730),
     ...customerLines,
     ...bookingLines,
-    writeLine(35, 620, 560, 620),
-    ...itemLines,
-    ...totalsLines,
-    ...footerLines,
+    ...tableHeader,
+    ...bookingRow,
+    ...amountBreakdown,
+    ...totalsBox,
+    ...breakdownLines,
+    ...footer,
   ];
 
   return createInvoicePdf(lines);
