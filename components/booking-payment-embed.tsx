@@ -43,6 +43,16 @@ type PaymentUiState =
   | "refunded"
   | "error";
 
+type MidtransPaymentResult = {
+  transaction_id?: string | null;
+  transactionId?: string | null;
+  order_id?: string | null;
+  orderId?: string | null;
+  status_code?: string | number | null;
+  transaction_status?: string | null;
+  transactionStatus?: string | null;
+};
+
 type BookingPaymentEmbedProps = {
   bookingId: string;
   amount: number;
@@ -303,14 +313,14 @@ export function BookingPaymentEmbed({
           clearFallback();
           setStatus("success");
           setMessage("Payment successful. Redirecting...");
-          const successUrl = buildPaymentSuccessRedirectUrl(result as any, successTransactionId);
+          const successUrl = buildPaymentSuccessRedirectUrl(result as MidtransPaymentResult, successTransactionId);
           window.location.href = successUrl;
         },
         onPending: (result) => {
           clearFallback();
           setStatus("pending");
           setMessage("Payment pending. Confirming status...");
-          const successUrl = buildPaymentSuccessRedirectUrl(result as any, successTransactionId);
+          const successUrl = buildPaymentSuccessRedirectUrl(result as MidtransPaymentResult, successTransactionId);
           window.location.href = successUrl;
         },
         onError: () => {
