@@ -83,3 +83,14 @@ export function buildPaymentSuccessRedirectUrl(
   }
   return `/payment/success?${params.toString()}`;
 }
+
+export function buildDirectPaymentUrl(directUrl?: string | null, fallbackUrl?: string | null) {
+  const cleanedDirectUrl = directUrl?.trim();
+  const cleanedFallbackUrl = fallbackUrl?.trim();
+
+  if (cleanedDirectUrl) {
+    return cleanedDirectUrl;
+  }
+
+  return cleanedFallbackUrl ?? "";
+}

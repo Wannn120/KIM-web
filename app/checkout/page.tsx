@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatedCard } from "@/components/animated-card";
+import { buildDirectPaymentUrl } from "@/lib/payment-utils";
 import { DEFAULT_FIELD_NAME } from "@/lib/venue";
 
 export const dynamic = "force-dynamic";
@@ -101,13 +102,30 @@ export default function CheckoutPage() {
         throw new Error(result.message || "Unable to create booking.");
       }
 
-      const paymentUrl = `/booking/${encodeURIComponent(result.booking.id)}/payment?autoOpen=1`;
-      const popupWindow = window.open("", "_blank", "width=1000,height=900");
-      if (popupWindow) {
-        popupWindow.location.href = paymentUrl;
-      } else {
-        router.push(paymentUrl);
+      const paymentResponse = await fetch("/api/payments/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookingId: result.booking.id,
+          amount,
+          paymentMethod: "Midtrans",
+          customerName,
+          email: customerEmail,
+          phone: customerPhone,
+        }),
+      });
+
+      const paymentResult = await paymentResponse.json().catch(() => null);
+      if (!paymentResponse.ok || !paymentResult?.success || !paymentResult?.snapUrl) {
+        throw new Error(paymentResult?.message || paymentResult?.error || "Unable to create direct payment link.");
       }
+
+      const directPaymentUrl = buildDirectPaymentUrl(paymentResult.snapUrl, paymentResult.transaction?.snapUrl);
+      if (!directPaymentUrl) {
+        throw new Error("No direct payment URL was returned.");
+      }
+
+      window.location.href = directPaymentUrl;
       return;
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

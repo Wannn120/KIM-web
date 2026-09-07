@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { getPopupBlockedMessage, isPopupWindowOpenable, shouldPreferDirectNavigation } from "../lib/popup-fallback";
 import { buildPaymentLookupWhere, normalizePaymentStatus, resolvePaymentUpdateTransactionId, shouldReclaimBookingStatus } from "../lib/payment-service";
 import { expireStalePendingBookings, isBookingSlotBlocked, reclaimExpiredSlotBookings } from "../lib/booking-engine";
-import { buildPaymentSuccessRedirectUrl, resolvePaymentSuccessTransactionId } from "../lib/payment-utils";
+import { buildDirectPaymentUrl, buildPaymentSuccessRedirectUrl, resolvePaymentSuccessTransactionId } from "../lib/payment-utils";
 import { resolveMidtransTransactionStatus, verifyMidtransSignature } from "../lib/midtrans";
 import { isSupportedFieldId, normalizeFieldId } from "../lib/venue";
 
@@ -96,6 +96,12 @@ describe("popup fallback UX", () => {
     expect(redirectUrl).toContain("order_id=TX-mtqq5mti-yo65hk");
     expect(redirectUrl).toContain("transaction_status=settlement");
     expect(redirectUrl).toContain("transaction_id=73e79bf3-3172-4e86-b0ec-c10669f5e8fa");
+  });
+
+  it("uses the direct Midtrans payment URL without going through the old popup/payment page flow", () => {
+    expect(buildDirectPaymentUrl("https://app.midtrans.com/snap/v2/vtweb/abc123")).toBe("https://app.midtrans.com/snap/v2/vtweb/abc123");
+    expect(buildDirectPaymentUrl("", "https://app.midtrans.com/snap/v2/vtweb/xyz999")).toBe("https://app.midtrans.com/snap/v2/vtweb/xyz999");
+    expect(buildDirectPaymentUrl("", "")).toBe("");
   });
 
   it("maps Midtrans status_code values to the correct payment state", () => {
