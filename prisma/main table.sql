@@ -305,19 +305,47 @@ CREATE INDEX IF NOT EXISTS idx_booking_status ON booking(status);
 -- ==================== TIMEZONE NORMALIZATION (JAKARTA WIB) ====================
 -- NOTE: Safe to run manually on existing data. This keeps booking_date aligned with Jakarta timezone.
 -- Run this after table creation or whenever legacy records appear shifted by UTC.
-UPDATE booking
-SET booking_date = (
-  (booking_date AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Jakarta'
-)::timestamp
-WHERE booking_date IS NOT NULL;
+-- ==================== TIMEZONE NORMALIZATION (JAKARTA WIB) ====================
+-- This section provides safe preview queries and two "apply" options depending on
+-- the actual column type of `booking.booking_date` in your database.
+-- IMPORTANT: Inspect the preview results first. Run only the UPDATE that matches
+-- your column type. If `booking_date` is a DATE (no time component) you do NOT
+-- need timezone normalization.
 
-SELECT
-  id,
-  booking_date,
-  start_time,
-  end_time
+-- 1) Preview helper: show current value and candidate normalized value (first 50 rows)
+SELECT id,
+       booking_date AS current_value,
+       -- Interpret as timestamptz -> convert to Asia/Jakarta local timestamp for preview
+       ((booking_date AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Jakarta')::timestamp AS preview_jakarta
 FROM booking
-ORDER BY created_at;
+WHERE booking_date IS NOT NULL
+LIMIT 50;
+
+-- 2) If `booking_date` column is of type TIMESTAMP WITH TIME ZONE (timestamptz)
+--    and values were stored/interpreted as UTC but should represent Jakarta local time,
+--    you can run the following UPDATE to rewrite stored values to Jakarta-local timestamps
+--    (this stores a TIMESTAMP WITHOUT TIME ZONE representing the local wall-clock time):
+-- UPDATE booking
+-- SET booking_date = ((booking_date AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Jakarta')::timestamp
+-- WHERE booking_date IS NOT NULL;
+
+-- 3) If `booking_date` column is of type TIMESTAMP WITHOUT TIME ZONE and values
+--    were recorded as if they were UTC but intended to be Jakarta-local instants,
+--    run the following (preview first):
+-- SELECT id, booking_date,
+--        ((booking_date AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Jakarta')::timestamp AS preview_jakarta
+-- FROM booking LIMIT 50;
+-- Then apply:
+-- UPDATE booking
+-- SET booking_date = ((booking_date AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Jakarta')::timestamp
+-- WHERE booking_date IS NOT NULL;
+
+-- 4) If `booking_date` is of type DATE (no time), no timezone adjustment is necessary.
+--    If you instead need to migrate from timestamp columns to date-only values, handle
+--    that explicitly using date-truncation functions.
+
+-- NOTE: The queries above are intentionally explicit and commented for safety.
+-- Remove the leading `-- ` from the chosen UPDATE when you are ready to apply it.
 
 CREATE INDEX IF NOT EXISTS idx_review_booking_id ON review(booking_id);
 CREATE INDEX IF NOT EXISTS idx_admin_setting_key ON admin_setting(key);
