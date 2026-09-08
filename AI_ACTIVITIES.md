@@ -127,3 +127,38 @@ This file records the main activities, changes, fixes, and decisions made by the
 - Real secrets must be stored in GitHub/Vercel environment variables or in a local untracked `.env` file outside the repository.
 - This log is intended to document major AI-driven fixes and changes for future troubleshooting and handoff.
 - When a database value is valid, the app should prefer it and avoid legacy fallback data that can silently override correct values.
+
+## 2026-09-08
+
+### 21. Timezone normalization and booking fixes
+- Added `lib/timezone.ts` with Jakarta (WIB) parsing/format helpers.
+- Updated `lib/booking-engine.ts` to parse and normalize booking dates using Jakarta timezone and to use those helpers for overlap checks.
+- Updated `lib/data.ts` to map bookings to presentation slots using Jakarta-normalized date keys.
+
+### 22. UI and payment updates
+- Updated `components/booking-form.tsx` to default date to Jakarta-local today and display times with "WIB".
+- Updated `app/checkout/page.tsx` and `app/payment/success/page.tsx` to display Jakarta-formatted dates/times.
+- Updated `lib/payment-service.ts` to use Jakarta date formatting in notifications and invoice fields.
+
+### 23. DB normalization tooling
+- Added `scripts/fix-booking-timezone.js` to detect and optionally apply booking_date normalization (`--dry-run` / `--apply`).
+- Appended a non-destructive SQL normalization block to `prisma/main table.sql` (see file; DO NOT run the entire SQL file as it contains DROP statements).
+
+### 24. Invoice PDF pipeline and typing fixes
+- Created `lib/types.ts` to centralize `Invoice` types.
+- Typed and hardened `lib/invoice-html-template.ts` (formatters, optional chaining, currency/date formatting) and `lib/invoice-html-pdf.ts` (annotated `Invoice` parameter and Puppeteer option fixes).
+- Reworked `app/api/invoices/download/route.ts` to use dynamic `import()` for the HTML→PDF path, build a typed payload for both HTML and server PDF generators, and return a Uint8Array body safely.
+
+### 25. Tests, build, and CI checks
+- Added `tests/timezone-fix.test.ts` to validate Jakarta parsing/formatting; ran test suite: all tests passed (5 suites, 28 tests).
+- Ran `npm run build`; encountered TypeScript/ESLint errors, then fixed them (typed helper params, optional chaining, corrected Puppeteer `waitUntil` usage, and refined payload types). Final production build completed successfully.
+
+### 26. Commit & push
+- Committed the above changes and pushed to `main` branch.
+- Noted that GitHub reported dependency vulnerability alerts in the remote repo during push (dependabot details available in the repo security tab).
+
+### Files created or substantially modified
+- Created: `lib/timezone.ts`, `lib/types.ts`, `scripts/fix-booking-timezone.js`, `tests/timezone-fix.test.ts`
+- Modified: `lib/booking-engine.ts`, `lib/data.ts`, `lib/payment-service.ts`, `components/booking-form.tsx`, `app/checkout/page.tsx`, `app/payment/success/page.tsx`, `prisma/main table.sql`, `lib/invoice-html-template.ts`, `lib/invoice-html-pdf.ts`, `app/api/invoices/download/route.ts`
+
+If you want, I can open a PR with these changes, run `npm run lint -- --fix`, or prepare the DB normalization SQL to run in Supabase SQL editor. Which would you like next?
