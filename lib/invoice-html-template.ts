@@ -56,6 +56,7 @@ export function renderInvoiceHtml(invoice: Invoice) {
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Invoice ${invoice.invoiceNumber}</title>
     <style>
+      :root { --accent: #1b6f3f; --accent-soft: #eaf6ee; }
       @font-face { font-family: 'PoppinsLocal'; src: url('assets/fonts/Poppins-Regular.ttf') format('truetype'); font-weight:400; }
       @font-face { font-family: 'PoppinsLocal'; src: url('assets/fonts/Poppins-SemiBold.ttf') format('truetype'); font-weight:600; }
       @page { size: A4; margin: 12mm 10mm 12mm 10mm; }
@@ -63,9 +64,13 @@ export function renderInvoiceHtml(invoice: Invoice) {
       .page { position:relative; width:210mm; min-height:297mm; margin:0 auto; padding:10mm 16mm 0; box-sizing:border-box; background:#fff }
       .header { display:flex; justify-content:space-between; align-items:flex-start; z-index:2; position:relative; padding-top:6px; margin-bottom:18px; }
         .header .header-inner { position:relative; z-index:2; width:100%; display:flex; justify-content:space-between; align-items:flex-start }
-      .header-banner { width:100%; border-bottom:2px solid #e6f3ea; padding:8px 0 12px 0; margin-bottom:10px }
-      .header-banner .brand-title { font-weight:800; font-size:20px; color:#133a2b }
+      .header-banner { width:100%; border-bottom:2px solid var(--accent-soft); padding:10px 0 12px 0; margin-bottom:12px; display:flex; justify-content:space-between; align-items:flex-start }
+      .header-banner .brand-title { font-weight:800; font-size:22px; color:var(--accent) }
       .header-banner .brand-sub { font-size:11px; color:#2d5b44 }
+      .invoice-meta { text-align:right; min-width:220px }
+      .invoice-meta .label { font-size:12px; color:#6b8b78 }
+      .invoice-meta .value { font-size:13px; font-weight:700; color:#0b2b18 }
+      .paid-badge { display:inline-block; background:var(--accent-soft); color:var(--accent); padding:6px 12px; border-radius:16px; font-weight:800; font-size:11px; margin-top:6px }
       .brand { display:flex; gap:12px; align-items:center; padding-top:8px; min-width:0 }
       .brand .title { font-weight:700; font-size:17px; color:#133a2b; line-height:1.2 }
       .brand .sub { font-size:10px; line-height:1.35; color:#2d5b44 }
@@ -101,15 +106,16 @@ export function renderInvoiceHtml(invoice: Invoice) {
     <div class="page">
       <div class="watermark">K I M</div>
       <div class="header-banner">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start">
-          <div>
-            <div class="brand-title">Klaten International Minisoccer</div>
-            <div class="brand-sub">Jl. Stadion, Klaten • hello@minisoccer.id • klaten-international-minisoccer.vercel.app</div>
-          </div>
-          <div style="text-align:right">
-            <div style="font-size:22px;font-weight:800;color:#0b2b18">INVOICE</div>
-            <div style="font-size:12px;color:#6b8b78;margin-top:6px">Invoice No. ${invoice.invoiceNumber}</div>
-          </div>
+        <div>
+          <div class="brand-title">Klaten International Minisoccer</div>
+          <div class="brand-sub">Jl. Stadion, Klaten • hello@minisoccer.id</div>
+        </div>
+        <div class="invoice-meta">
+          <div style="font-size:20px;font-weight:800;color:#0b2b18">INVOICE</div>
+          <div style="margin-top:6px"><div class="label">Invoice No.</div><div class="value">${invoice.invoiceNumber}</div></div>
+          <div style="margin-top:6px"><div class="label">Invoice Date</div><div class="value">${issueDate}</div></div>
+          <div style="margin-top:6px"><div class="label">Payment Date</div><div class="value">${paidDate}</div></div>
+          <div style="margin-top:6px"><span class="paid-badge">${(invoice.status||'').toString().toUpperCase()}</span></div>
         </div>
       </div>
       <div class="header">
