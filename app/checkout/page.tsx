@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatedCard } from "@/components/animated-card";
+import { formatJakartaDate } from "@/lib/timezone";
 import { buildDirectPaymentUrl } from "@/lib/payment-utils";
 import { DEFAULT_FIELD_NAME } from "@/lib/venue";
 
@@ -26,10 +27,10 @@ function formatTimeRange(start: string, end: string) {
   const parsedEnd = parseTime(end);
 
   if (!parsedStart || !parsedEnd) {
-    return `${start} - ${end}`;
+    return `${start} - ${end} WIB`;
   }
 
-  return `${formatTime(parsedStart.hour, parsedStart.minute)} - ${formatTime(parsedEnd.hour, parsedEnd.minute)}`;
+  return `${formatTime(parsedStart.hour, parsedStart.minute)} - ${formatTime(parsedEnd.hour, parsedEnd.minute)} WIB`;
 }
 
 function getSearchParam(value: string | null, fallback = "") {
@@ -151,7 +152,7 @@ export default function CheckoutPage() {
             </div>
             <div className="rounded-3xl border border-white/10 card-surface p-6">
               <p className="text-sm uppercase tracking-[0.25em] text-[color:var(--muted)]">Date</p>
-              <p className="mt-2 text-xl font-semibold text-white">{bookingDate || "—"}</p>
+              <p className="mt-2 text-xl font-semibold text-white">{bookingDate ? formatJakartaDate(bookingDate) : "—"}</p>
               <p className="mt-2 text-sm text-[color:var(--muted)]">{startTime && endTime ? formatTimeRange(startTime, endTime) : "—"}</p>
             </div>
             <div className="rounded-3xl border border-white/10 card-surface p-6">

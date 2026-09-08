@@ -6,6 +6,7 @@ import { createMidtransTransaction, getMidtransTransactionStatus, resolveMidtran
 import { DEFAULT_FIELD_NAME } from "@/lib/venue";
 import { buildMidtransCustomerDetails, isUuid } from "@/lib/payment-utils";
 import { buildInvoiceAttachment } from "@/lib/invoice-pdf";
+import { formatJakartaDateKey } from "@/lib/timezone";
 
 const paymentProvider = new DemoPaymentProvider();
 
@@ -589,8 +590,8 @@ export async function processWebhookEvent(transactionId: string, status: Payment
       amount: updatedPayment.amount,
       customerName: booking.customerName,
       fieldName: DEFAULT_FIELD_NAME,
-      startAt: `${booking.bookingDate.toISOString().slice(0, 10)} ${booking.startTime}`,
-      endAt: `${booking.bookingDate.toISOString().slice(0, 10)} ${booking.endTime}`,
+      startAt: `${formatJakartaDateKey(booking.bookingDate)} ${booking.startTime} WIB`,
+      endAt: `${formatJakartaDateKey(booking.bookingDate)} ${booking.endTime} WIB`,
       email: booking.customerEmail ?? undefined,
       phone: booking.customerPhone,
       attachment,

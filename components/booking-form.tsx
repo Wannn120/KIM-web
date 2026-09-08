@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Field } from "@/types";
 import { formatCurrency } from "@/utils/formatting";
+import { formatJakartaDate, getTodayDateStringInTimeZone } from "@/lib/timezone";
 
 type AvailabilitySlot = {
   id: string;
@@ -13,7 +14,7 @@ type AvailabilitySlot = {
 };
 
 function getTodayIso() {
-  return new Date().toISOString().slice(0, 10);
+  return getTodayDateStringInTimeZone();
 }
 
 function parseTimeToMinutes(time: string) {
@@ -105,7 +106,7 @@ export function BookingForm({ fields }: { fields: Field[] }) {
   const selectedAmount = selectedRange ? selectedField.price * selectedDuration : 0;
 
   const selectedLabel = selectedRange
-    ? `${selectedRange.startTime} - ${selectedRange.endTime}`
+    ? `${selectedRange.startTime} - ${selectedRange.endTime} WIB`
     : "Not selected";
 
   const handleSlotToggle = (slot: AvailabilitySlot) => {
@@ -202,6 +203,7 @@ export function BookingForm({ fields }: { fields: Field[] }) {
             onChange={(event) => setSelectedDate(event.target.value)}
             className="mt-2 w-full rounded-3xl border border-white/10 bg-[color:var(--surface)] px-4 py-3 text-white outline-none focus:border-[color:var(--accent)]"
           />
+          <p className="mt-2 text-xs text-[color:var(--muted)]">Jakarta time zone: {selectedDate ? formatJakartaDate(selectedDate) : "—"}</p>
         </div>
       </div>
 
@@ -281,8 +283,8 @@ export function BookingForm({ fields }: { fields: Field[] }) {
                 <p className="text-lg font-semibold text-white">{selectedRange ? `${selectedDuration} hour(s)` : "Select a slot"}</p>
               </div>
               <div>
-                <p className="text-sm text-[color:var(--muted)]">Time</p>
-                <p className="mt-1 text-white">{selectedLabel}</p>
+                <p className="text-sm text-[color:var(--muted)]">Date & time</p>
+                <p className="mt-1 text-white">{selectedDate ? formatJakartaDate(selectedDate) : "—"} • {selectedLabel}</p>
               </div>
               {selectedRange && !selectedRange.isContinuous ? (
                 <p className="text-sm text-amber-300">Select continuous slots without gaps.</p>

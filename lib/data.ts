@@ -1,6 +1,7 @@
 import type { Field } from "@/types";
 import { prisma } from "@/lib/prisma";
 import { BLOCKING_BOOKING_STATUSES } from "@/lib/booking-engine";
+import { formatJakartaDateKey } from "@/lib/timezone";
 import { DEFAULT_FIELD_NAME, DEFAULT_FIELD } from "@/lib/venue";
 import { getFieldHourlyRate } from "@/lib/site-content";
 import { facilityImages, getFallbackReviews } from "@/lib/mock-data";
@@ -127,7 +128,7 @@ export type BookedSlot = {
 
 export function mapBookingsToSlots(bookings: Array<{ bookingDate: Date; startTime: string; endTime: string; status: string }>): BookedSlot[] {
   return bookings.map((booking) => ({
-    date: booking.bookingDate.toISOString().slice(0, 10),
+    date: formatJakartaDateKey(booking.bookingDate),
     time: `${booking.startTime} - ${booking.endTime}`,
     field: DEFAULT_FIELD_NAME,
     status: booking.status === "pending" ? "Booked" : booking.status,

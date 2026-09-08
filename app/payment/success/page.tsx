@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AnimatedCard } from "@/components/animated-card";
 import { InvoiceActions } from "@/components/invoice-actions";
 import { getPaymentTransaction, reconcilePaymentStatus } from "@/lib/payment-service";
+import { formatJakartaDateKey } from "@/lib/timezone";
 import { DEFAULT_FIELD_NAME } from "@/lib/venue";
 
 export const dynamic = "force-dynamic";
@@ -108,7 +109,7 @@ export default async function PaymentSuccessPage({
               customerName={payment.invoice.customerName ?? payment.booking.customerName}
               customerEmail={payment.invoice.customerEmail ?? payment.booking.customerEmail ?? undefined}
               amount={payment.invoice.total ?? payment.amount}
-              bookingDate={payment.booking.bookingDate.toISOString().slice(0, 10)}
+              bookingDate={formatJakartaDateKey(payment.booking.bookingDate)}
               bookingTime={`${payment.booking.startTime} - ${payment.booking.endTime}`}
             />
           ) : null}

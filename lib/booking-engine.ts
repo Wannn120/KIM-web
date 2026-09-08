@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { DEFAULT_TIMEZONE, formatJakartaDateKey, parseDateOnlyInTimeZone } from "@/lib/timezone";
 
 export type BookingStatus = "pending" | "confirmed" | "completed" | "cancelled" | "expired" | "refunded" | "rescheduled";
 
@@ -27,7 +28,7 @@ export async function reclaimExpiredSlotBookings(bookingDate?: string | Date, st
   };
 
   if (bookingDate) {
-    const normalizedDate = bookingDate instanceof Date ? bookingDate : new Date(`${bookingDate}T00:00:00.000Z`);
+    const normalizedDate = bookingDate instanceof Date ? bookingDate : parseDateOnlyInTimeZone(bookingDate, DEFAULT_TIMEZONE);
     if (!Number.isNaN(normalizedDate.getTime())) {
       where.bookingDate = normalizedDate;
     }
@@ -245,9 +246,10 @@ export async function expireStalePendingBookings(now: Date = new Date()) {
 }
 
 async function hasOverlap(bookingDate: string, startTime: string, endTime: string) {
+  const normalizedDate = parseDateOnlyInTimeZone(bookingDate, DEFAULT_TIMEZONE);
   const overlapping = await prisma.booking.findFirst({
     where: {
-      bookingDate: new Date(bookingDate),
+      bookingDate: normalizedDate,
       status: {
         in: BLOCKING_BOOKING_STATUSES,
       },
@@ -260,10 +262,10 @@ async function hasOverlap(bookingDate: string, startTime: string, endTime: strin
 }
 
 export async function createBooking(input: CreateBookingInput): Promise<BookingResult> {
-  const bookingDate = new Date(input.bookingDate);
+  const bookingDate = parseDateOnlyInTimeZone(input.bookingDate, input.timezone ?? DEFAULT_TIMEZONE);
   const startTime = input.startTime;
   const endTime = input.endTime;
-  const timezone = input.timezone ?? "UTC";
+  const timezone = input.timezone ?? DEFAULT_TIMEZONE;
 
   if (!input.customerName || !input.customerPhone) {
     return {
@@ -337,7 +339,7 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingR
     message: "Booking reserved successfully.",
     booking: {
       id: record.id,
-      bookingDate: record.bookingDate.toISOString(),
+      bookingDate: formatJakartaDateKey(record.bookingDate),
       startTime: record.startTime,
       endTime: record.endTime,
       status: record.status as BookingStatus,

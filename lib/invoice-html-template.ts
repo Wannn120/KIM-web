@@ -1,14 +1,45 @@
 export function renderInvoiceHtml(invoice) {
-  const bookingDate = new Date(invoice.booking.bookingDate).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-  const issueDate = new Date(invoice.issuedAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-  const paidDate = invoice.paidAt ? new Date(invoice.paidAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : (invoice.payment?.paidAt ? new Date(invoice.payment.paidAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-');
+  const pad = (n) => String(n).padStart(2, '0');
+  const formatJakartaDate = (value) => {
+    const date = value ? new Date(value) : null;
+    if (!date || Number.isNaN(date.getTime())) return '-';
+    const parts = new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Jakarta', day: '2-digit', month: '2-digit', year: 'numeric' }).formatToParts(date);
+    const day = parts.find(p => p.type === 'day')?.value ?? '00';
+    const month = parts.find(p => p.type === 'month')?.value ?? '00';
+    const year = parts.find(p => p.type === 'year')?.value ?? '0000';
+    return `${day}-${month}-${year}`;
+  };
+  const formatJakartaDateTime = (value) => {
+    const date = value ? new Date(value) : null;
+    if (!date || Number.isNaN(date.getTime())) return '-';
+    const dt = new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Jakarta', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(date);
+    const day = dt.find(p => p.type === 'day')?.value ?? '00';
+    const month = dt.find(p => p.type === 'month')?.value ?? '00';
+    const year = dt.find(p => p.type === 'year')?.value ?? '0000';
+    const hour = dt.find(p => p.type === 'hour')?.value ?? '00';
+    const minute = dt.find(p => p.type === 'minute')?.value ?? '00';
+    return `${day}-${month}-${year} ${hour}:${minute} WIB`;
+  };
+  const normalizeTime = (value) => {
+    if (!value || typeof value !== 'string') return '-';
+    const match = value.match(/^\s*(\d{1,2}):(\d{2})\s*$/);
+    if (!match) return value;
+    const h = Number(match[1]);
+    const m = Number(match[2]);
+    if (Number.isNaN(h) || Number.isNaN(m)) return value;
+    return `${pad(h)}:${pad(m)} WIB`;
+  };
+
+  const bookingDate = formatJakartaDate(invoice.booking?.bookingDate || invoice.bookingDate);
+  const issueDate = formatJakartaDate(invoice.issuedAt);
+  const paidDate = invoice.paidAt ? formatJakartaDateTime(invoice.paidAt) : (invoice.payment?.paidAt ? formatJakartaDateTime(invoice.payment.paidAt) : '-');
 
   const customerName = invoice.customerName || invoice.booking.customerName || 'Guest';
   const customerEmail = invoice.customerEmail || invoice.booking.customerEmail || '-';
   const customerPhone = invoice.customerPhone || invoice.booking.customerPhone || '-';
 
   const fieldName = invoice.fieldName || 'Lapangan Klaten International';
-  const timeRange = `${invoice.booking.startTime} - ${invoice.booking.endTime}`;
+  const timeRange = `${normalizeTime(invoice.booking?.startTime)} - ${normalizeTime(invoice.booking?.endTime)}`;
 
   const subtotal = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(invoice.subtotal || 0);
   const discount = invoice.discount ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' , minimumFractionDigits:0}).format(invoice.discount) : null;
@@ -38,11 +69,11 @@ export function renderInvoiceHtml(invoice) {
       .meta h1 { margin:0; font-size:42px; color:#0b2b18; letter-spacing:0.5px; line-height:1 }
       .meta .meta-row { display:block; font-size:11px; color:#6b8b78; margin-top:4px; line-height:1.25; overflow-wrap:break-word; word-break:break-word }
       .badge-paid { position:absolute; right:8px; top:64px; background:#e9f9ed; color:#1b4b2b; padding:8px 14px; border-radius:18px; font-weight:700; box-shadow:0 2px 0 rgba(27,75,43,0.08); font-size:12px }
-      .boxed { border:1px solid #dbeedf; border-radius:8px; padding:16px 18px; background:#fff; margin-bottom:14px; overflow:hidden }
+      .boxed { border:1px solid #dbeedf; border-radius:8px; padding:16px 18px; background:#fff; margin-bottom:14px; overflow:visible }
       .boxed .label { color:#3b6b4f; font-weight:700; margin-bottom:8px; font-size:14px; letter-spacing:0.02em }
-      .boxed .kv { display:flex; justify-content:space-between; margin:7px 0; align-items:center; gap:10px }
-      .kv .key { width:38%; color:#3b6b4f; font-size:12px; line-height:1.4 }
-      .kv .value { width:60%; text-align:right; word-break:break-word; overflow-wrap:break-word; font-weight:600; font-size:12px; line-height:1.4 }
+      .boxed .kv { display:grid; grid-template-columns: 38% 1fr; gap:10px; margin:7px 0; align-items:start }
+      .kv .key { color:#3b6b4f; font-size:12px; line-height:1.4; word-break:break-word }
+      .kv .value { text-align:right; word-break:break-word; overflow-wrap:anywhere; white-space:normal; font-weight:600; font-size:12px; line-height:1.4 }
       .row { display:flex; gap:18px; flex-wrap:nowrap }
       .col { flex:1; min-width:0; box-sizing:border-box }
       table { width:100%; border-collapse:collapse; table-layout:fixed }

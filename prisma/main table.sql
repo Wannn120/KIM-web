@@ -302,6 +302,23 @@ CREATE INDEX IF NOT EXISTS idx_booking_customer_phone ON booking(customer_phone)
 CREATE INDEX IF NOT EXISTS idx_booking_booking_date ON booking(booking_date);
 CREATE INDEX IF NOT EXISTS idx_booking_status ON booking(status);
 
+-- ==================== TIMEZONE NORMALIZATION (JAKARTA WIB) ====================
+-- NOTE: Safe to run manually on existing data. This keeps booking_date aligned with Jakarta timezone.
+-- Run this after table creation or whenever legacy records appear shifted by UTC.
+UPDATE booking
+SET booking_date = (
+  (booking_date AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Jakarta'
+)::timestamp
+WHERE booking_date IS NOT NULL;
+
+SELECT
+  id,
+  booking_date,
+  start_time,
+  end_time
+FROM booking
+ORDER BY created_at;
+
 CREATE INDEX IF NOT EXISTS idx_review_booking_id ON review(booking_id);
 CREATE INDEX IF NOT EXISTS idx_admin_setting_key ON admin_setting(key);
 CREATE INDEX IF NOT EXISTS idx_admin_user_email ON admin_user(email);
