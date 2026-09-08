@@ -28,21 +28,23 @@ export function renderInvoiceHtml(invoice) {
       @page { size: A4; margin: 24mm 12mm; }
       body { font-family: 'PoppinsLocal', 'Poppins', Inter, Arial, sans-serif; color:#1b4b2b; background:white }
       .page { position:relative; width:210mm; margin:0 auto; padding:16mm 18mm; box-sizing:border-box; background:#fff }
-      .header { display:flex; justify-content:space-between; align-items:flex-start; z-index:2; position:relative; background-image: url('assets/invoice/header.png'); background-repeat:no-repeat; background-position: top left; background-size: cover; padding-top:28px; margin-bottom:8px }
+      .header { display:flex; justify-content:space-between; align-items:flex-start; z-index:2; position:relative; padding-top:12px; margin-bottom:8px }
         .header img.header-img { position:absolute; left:0; top:0; width:100%; height:120px; object-fit:cover; z-index:0 }
         .header .header-inner { position:relative; z-index:2; width:100%; display:flex; justify-content:space-between; align-items:flex-start }
       .brand { display:flex; gap:12px; align-items:center; }
       .brand .title { font-weight:700; font-size:18px; color:#133a2b; }
-      .meta { text-align:right; position:relative }
-      .meta h1 { margin:0; font-size:44px; color:#0b2b18; letter-spacing:0.6px }
-      .meta .meta-row { font-size:11px; color:#6b8b78 }
-      .badge-paid { position:absolute; right:0; top:72px; background:#e9f9ed; color:#1b4b2b; padding:8px 14px; border-radius:18px; font-weight:700; box-shadow:0 2px 0 rgba(27,75,43,0.08) }
-      .boxed { border:1px solid #dbeedf; border-radius:8px; padding:14px 16px; background:#fff; margin-bottom:12px }
+      .meta { text-align:right; position:relative; width:320px }
+      .meta h1 { margin:0; font-size:40px; color:#0b2b18; letter-spacing:0.6px; line-height:1 }
+      .meta .meta-row { display:block; font-size:11px; color:#6b8b78; margin-top:6px; overflow-wrap:break-word; word-break:break-word }
+      .badge-paid { position:absolute; right:0; top:18px; background:#e9f9ed; color:#1b4b2b; padding:8px 14px; border-radius:18px; font-weight:700; box-shadow:0 2px 0 rgba(27,75,43,0.08) }
+      .boxed { border:1px solid #dbeedf; border-radius:8px; padding:14px 16px; background:#fff; margin-bottom:12px; overflow:hidden }
       .boxed .label { color:#3b6b4f; font-weight:700; margin-bottom:8px }
-      .boxed .kv { display:flex; justify-content:space-between; margin:6px 0 }
-        .row { display:flex; gap:20px; flex-wrap:wrap }
-        .col { flex:1; min-width:260px; box-sizing:border-box }
-      table { width:100%; border-collapse:collapse; }
+      .boxed .kv { display:flex; justify-content:space-between; margin:6px 0; align-items:center }
+      .kv .key { max-width:45%; color:#3b6b4f }
+      .kv .value { max-width:55%; text-align:right; word-break:break-word; overflow-wrap:break-word }
+      .row { display:flex; gap:20px; flex-wrap:wrap }
+      .col { flex:1; min-width:260px; box-sizing:border-box }
+      table { width:100%; border-collapse:collapse; table-layout:fixed }
       th, td { padding:12px 10px; border-bottom:1px solid #eef7ef; }
       th { text-align:left; color:#0b2b18; font-size:12px; font-weight:700 }
       thead th { background:transparent }
@@ -50,9 +52,8 @@ export function renderInvoiceHtml(invoice) {
       .grand { background:#f6fff7; border:1px solid #dfeee1; padding:14px; border-radius:8px; text-align:center; font-weight:700; font-size:16px; margin-top:14px }
       .grand .amount { background:#e9f9ed; display:inline-block; padding:10px 18px; border-radius:8px; font-size:18px; font-weight:800; color:#0b3f24 }
       .footer { text-align:center; color:#3b6b4f; margin-top:40px; font-size:12px; z-index:2; position:relative }
-        .footer img.footer-img { position:absolute; left:0; right:0; bottom:0; width:100%; height:120px; object-fit:cover; z-index:1 }
-      .watermark { position:absolute; left:50%; top:45%; transform:translate(-50%,-50%); font-size:220px; color:#8fc79f; opacity:0.06; font-weight:800; z-index:0; pointer-events:none; letter-spacing:12px }
-      .decor-bottom { position:absolute; left:0; right:0; height:120px; bottom:0; background-image: url('assets/invoice/footer.png'); background-repeat:no-repeat; background-position: bottom left; background-size: cover; z-index:1 }
+      .footer img.footer-img { position:absolute; left:0; right:0; bottom:0; width:100%; height:120px; object-fit:cover; z-index:1 }
+      .watermark { position:absolute; left:50%; top:45%; transform:translate(-50%,-50%); font-size:200px; color:#8fc79f; opacity:0.03; font-weight:800; z-index:0; pointer-events:none; letter-spacing:12px }
       .content { position:relative; z-index:2 }
     </style>
   </head>
