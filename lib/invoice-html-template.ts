@@ -61,36 +61,38 @@ export function renderInvoiceHtml(invoice: Invoice) {
       @page { size: A4; margin: 12mm 10mm 12mm 10mm; }
       body { font-family: 'PoppinsLocal', 'Poppins', Inter, Arial, sans-serif; color:#1b4b2b; background:white; margin:0; }
       .page { position:relative; width:210mm; min-height:297mm; margin:0 auto; padding:10mm 16mm 0; box-sizing:border-box; background:#fff }
-      .header { display:flex; justify-content:space-between; align-items:flex-start; z-index:2; position:relative; padding-top:12px; margin-bottom:18px; height:132px }
-        .header img.header-img { position:absolute; left:-16mm; top:0; width:calc(100% + 32mm); height:132px; object-fit:cover; z-index:0 }
+      .header { display:flex; justify-content:space-between; align-items:flex-start; z-index:2; position:relative; padding-top:6px; margin-bottom:18px; }
         .header .header-inner { position:relative; z-index:2; width:100%; display:flex; justify-content:space-between; align-items:flex-start }
-      .brand { display:flex; gap:12px; align-items:center; padding-top:18px; min-width:0 }
+      .header-banner { width:100%; border-bottom:2px solid #e6f3ea; padding:8px 0 12px 0; margin-bottom:10px }
+      .header-banner .brand-title { font-weight:800; font-size:20px; color:#133a2b }
+      .header-banner .brand-sub { font-size:11px; color:#2d5b44 }
+      .brand { display:flex; gap:12px; align-items:center; padding-top:8px; min-width:0 }
       .brand .title { font-weight:700; font-size:17px; color:#133a2b; line-height:1.2 }
       .brand .sub { font-size:10px; line-height:1.35; color:#2d5b44 }
-      .meta { text-align:right; position:relative; width:318px; padding-top:6px; padding-right:8px }
-      .meta h1 { margin:0; font-size:42px; color:#0b2b18; letter-spacing:0.5px; line-height:1 }
-      .meta .meta-row { display:block; font-size:11px; color:#6b8b78; margin-top:4px; line-height:1.25; overflow-wrap:break-word; word-break:break-word }
-      .badge-paid { position:absolute; right:8px; top:64px; background:#e9f9ed; color:#1b4b2b; padding:8px 14px; border-radius:18px; font-weight:700; box-shadow:0 2px 0 rgba(27,75,43,0.08); font-size:12px }
-      .boxed { border:1px solid #dbeedf; border-radius:8px; padding:16px 18px; background:#fff; margin-bottom:14px; overflow:visible }
+      .meta { text-align:right; position:relative; width:260px; padding-top:6px; padding-right:8px; display:flex; flex-direction:column; gap:6px; align-items:flex-end }
+      .meta h1 { margin:0; font-size:20px; color:#0b2b18; letter-spacing:0.5px; line-height:1.05 }
+      .meta .meta-row { display:block; font-size:11px; color:#6b8b78; line-height:1.25; overflow-wrap:break-word; word-break:break-word }
+      .badge-paid { display:inline-block; background:#e9f9ed; color:#1b4b2b; padding:6px 12px; border-radius:16px; font-weight:700; box-shadow:0 2px 0 rgba(27,75,43,0.06); font-size:11px; margin-top:8px }
+      .boxed { border:1px solid #dbeedf; border-radius:8px; padding:18px; background:#fff; margin-bottom:14px; overflow-wrap:anywhere; word-break:break-word }
       .boxed .label { color:#3b6b4f; font-weight:700; margin-bottom:8px; font-size:14px; letter-spacing:0.02em }
-      .boxed .kv { display:grid; grid-template-columns: 38% 1fr; gap:10px; margin:7px 0; align-items:start }
+      .boxed .kv { display:grid; grid-template-columns: 36% 1fr; gap:8px; margin:7px 0; align-items:start }
       .kv .key { color:#3b6b4f; font-size:12px; line-height:1.4; word-break:break-word }
       .kv .value { text-align:right; word-break:break-word; overflow-wrap:anywhere; white-space:normal; font-weight:600; font-size:12px; line-height:1.4 }
       .row { display:flex; gap:18px; flex-wrap:nowrap }
       .col { flex:1; min-width:0; box-sizing:border-box }
-      table { width:100%; border-collapse:collapse; table-layout:fixed }
-      th, td { padding:12px 10px; border-bottom:1px solid #eef7ef; vertical-align:middle; font-size:12px }
+      table { width:100%; border-collapse:collapse; table-layout:auto }
+      th, td { padding:12px 10px; border-bottom:1px solid #eef7ef; vertical-align:middle; font-size:12px; word-break:break-word; white-space:normal; overflow-wrap:anywhere }
       th { text-align:left; color:#0b2b18; font-size:12px; font-weight:700 }
       thead th { background:transparent }
       .amount { text-align:right; }
       .summary-label { font-weight:700; margin-bottom:8px; font-size:13px; letter-spacing:0.02em; }
-      .grand-total-wrap { margin-top:16px }
-      .grand-total { border:1px solid #dfeee1; border-radius:8px; padding:14px 12px; text-align:center; font-weight:800; font-size:18px; color:#0b3f24; background:#fff }
-      .grand-total .amount { font-size:20px; display:inline-block; padding:8px 12px }
+      .grand-total-wrap { margin-top:16px; display:flex; justify-content:flex-end }
+      .grand-total { border:1px solid #dfeee1; border-radius:8px; padding:12px 16px; text-align:right; font-weight:800; font-size:16px; color:#0b3f24; background:#fff; min-width:220px }
+      .grand-total .amount { font-size:18px; display:inline-block; padding-left:8px }
       .detail-block { margin-top:18px; font-size:12px; color:#2b5d46; line-height:1.5 }
       .detail-block strong { font-weight:700; }
-      .footer { text-align:center; color:#3b6b4f; margin-top:16px; font-size:12px; z-index:2; position:relative; padding-top:17px; border-top:1px solid #dfeee1 }
-      .footer img.footer-img { position:absolute; left:-16mm; right:-16mm; bottom:0; width:calc(100% + 32mm); height:110px; object-fit:cover; z-index:1 }
+      .footer { text-align:center; color:#3b6b4f; margin-top:16px; font-size:12px; z-index:2; position:relative; padding-top:12px; border-top:1px solid #dfeee1 }
+      .footer .footer-inner { position:relative; z-index:2; padding:8px 0 }
       .watermark { position:absolute; left:50%; top:44%; transform:translate(-50%,-50%); font-size:200px; color:#8fc79f; opacity:0.02; font-weight:800; z-index:0; pointer-events:none; letter-spacing:12px }
       .content { position:relative; z-index:2 }
     </style>
@@ -98,8 +100,19 @@ export function renderInvoiceHtml(invoice: Invoice) {
   <body>
     <div class="page">
       <div class="watermark">K I M</div>
+      <div class="header-banner">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div class="brand-title">Klaten International Minisoccer</div>
+            <div class="brand-sub">Jl. Stadion, Klaten • hello@minisoccer.id • klaten-international-minisoccer.vercel.app</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:22px;font-weight:800;color:#0b2b18">INVOICE</div>
+            <div style="font-size:12px;color:#6b8b78;margin-top:6px">Invoice No. ${invoice.invoiceNumber}</div>
+          </div>
+        </div>
+      </div>
       <div class="header">
-        <img class="header-img" src="assets/invoice/header.png" alt="header" />
         <div class="header-inner">
           <div class="brand">
             <div style="width:74px;height:52px;background:#eaf6ee;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#1b4b2b;font-size:22px;border:1px solid rgba(27,75,43,0.08)">KIM</div>
@@ -125,9 +138,6 @@ export function renderInvoiceHtml(invoice: Invoice) {
           <div class="col boxed">
             <div class="label">Customer</div>
             <div class="kv"><div class="key">Name</div><div class="value">${customerName}</div></div>
-            <div class="kv"><div class="key">Phone</div><div class="value">${customerPhone}</div></div>
-            <div class="kv"><div class="key">Email</div><div class="value">${customerEmail}</div></div>
-            <div class="kv"><div class="key">Member ID</div><div class="value">${invoice.customerMemberId || invoice.booking?.memberId || '-'}</div></div>
           </div>
           <div class="col boxed">
             <div class="label">BOOKING</div>
@@ -135,6 +145,8 @@ export function renderInvoiceHtml(invoice: Invoice) {
             <div class="kv"><div class="key">Time</div><div class="value">${timeRange}</div></div>
             <div class="kv"><div class="key">Duration</div><div class="value">${invoice.booking?.durationHours ?? '-'} Hours</div></div>
             <div class="kv"><div class="key">Payment Method</div><div class="value">${invoice.payment?.paymentMethod || invoice.payment?.provider || '-'}</div></div>
+            <div class="kv"><div class="key">Transaction ID</div><div class="value">${invoice.payment?.transactionId || '-'}</div></div>
+            <div class="kv"><div class="key">Order ID</div><div class="value">${invoice.payment?.midtransOrderId || '-'}</div></div>
           </div>
         </div>
 
@@ -168,10 +180,11 @@ export function renderInvoiceHtml(invoice: Invoice) {
       </div>
 
       <div class="footer">
-        <div>Thanks for playing with KIM ⚽</div>
-        <div style="margin-top:2px;">@kim.soccerfield • klaten-international-minisoccer.vercel.app</div>
+        <div class="footer-inner">
+          <div>Thanks for playing with KIM ⚽</div>
+          <div style="margin-top:4px;">@kim.soccerfield • klaten-international-minisoccer.vercel.app</div>
+        </div>
       </div>
-      <img class="footer-img" src="assets/invoice/footer.png" alt="footer" />
     </div>
   </body>
   </html>

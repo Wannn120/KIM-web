@@ -106,7 +106,7 @@ export function BookingForm({ fields }: { fields: Field[] }) {
   const selectedAmount = selectedRange ? selectedField.price * selectedDuration : 0;
 
   const selectedLabel = selectedRange
-    ? `${selectedRange.startTime} - ${selectedRange.endTime} WIB`
+    ? `${selectedRange.startTime} - ${selectedRange.endTime}`
     : "Not selected";
 
   const handleSlotToggle = (slot: AvailabilitySlot) => {
@@ -203,7 +203,7 @@ export function BookingForm({ fields }: { fields: Field[] }) {
             onChange={(event) => setSelectedDate(event.target.value)}
             className="mt-2 w-full rounded-3xl border border-white/10 bg-[color:var(--surface)] px-4 py-3 text-white outline-none focus:border-[color:var(--accent)]"
           />
-          <p className="mt-2 text-xs text-[color:var(--muted)]">Jakarta time zone: {selectedDate ? formatJakartaDate(selectedDate) : "—"}</p>
+          <p className="mt-2 text-xs text-[color:var(--muted)]">Display: {selectedDate ? formatJakartaDate(selectedDate) : "—"} (DD-MM-YYYY)</p>
         </div>
       </div>
 

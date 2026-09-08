@@ -9,7 +9,12 @@ export async function generateInvoicePdfBufferHtml(invoice: Invoice) {
   try {
     const page = await browser.newPage();
     const baseUrl = `file://${process.cwd().replace(/\\/g, '/')}/`;
-    await page.setContent(html, { waitUntil: 'load' });
+    // Ensure relative asset URLs in the generated HTML resolve to local filesystem
+    let resolvedHtml = html.replace(/src="assets\//g, `src="${baseUrl}assets/`);
+    resolvedHtml = resolvedHtml.replace(/url\('assets\//g, `url('${baseUrl}assets/`);
+    resolvedHtml = resolvedHtml.replace(/url\("assets\//g, `url("${baseUrl}assets/`);
+    resolvedHtml = resolvedHtml.replace(/url\(\s*assets\//g, `url(${baseUrl}assets/`);
+    await page.setContent(resolvedHtml, { waitUntil: 'load' });
     const pdf = await page.pdf({ format: 'A4', printBackground: true, margin: { top: '36px', bottom: '36px', left: '36px', right: '36px' } });
     return pdf;
   } finally {
