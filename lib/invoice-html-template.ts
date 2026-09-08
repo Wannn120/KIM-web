@@ -29,6 +29,8 @@ export function renderInvoiceHtml(invoice) {
       body { font-family: 'PoppinsLocal', 'Poppins', Inter, Arial, sans-serif; color:#1b4b2b; background:white }
       .page { position:relative; width:210mm; margin:0 auto; padding:16mm 18mm; box-sizing:border-box; background:#fff }
       .header { display:flex; justify-content:space-between; align-items:flex-start; z-index:2; position:relative; background-image: url('assets/invoice/header.png'); background-repeat:no-repeat; background-position: top left; background-size: cover; padding-top:28px; margin-bottom:8px }
+        .header img.header-img { position:absolute; left:0; top:0; width:100%; height:120px; object-fit:cover; z-index:0 }
+        .header .header-inner { position:relative; z-index:2; width:100%; display:flex; justify-content:space-between; align-items:flex-start }
       .brand { display:flex; gap:12px; align-items:center; }
       .brand .title { font-weight:700; font-size:18px; color:#133a2b; }
       .meta { text-align:right; position:relative }
@@ -38,8 +40,8 @@ export function renderInvoiceHtml(invoice) {
       .boxed { border:1px solid #dbeedf; border-radius:8px; padding:14px 16px; background:#fff; margin-bottom:12px }
       .boxed .label { color:#3b6b4f; font-weight:700; margin-bottom:8px }
       .boxed .kv { display:flex; justify-content:space-between; margin:6px 0 }
-      .row { display:flex; gap:20px; }
-      .col { flex:1; }
+        .row { display:flex; gap:20px; flex-wrap:wrap }
+        .col { flex:1; min-width:260px; box-sizing:border-box }
       table { width:100%; border-collapse:collapse; }
       th, td { padding:12px 10px; border-bottom:1px solid #eef7ef; }
       th { text-align:left; color:#0b2b18; font-size:12px; font-weight:700 }
@@ -48,6 +50,7 @@ export function renderInvoiceHtml(invoice) {
       .grand { background:#f6fff7; border:1px solid #dfeee1; padding:14px; border-radius:8px; text-align:center; font-weight:700; font-size:16px; margin-top:14px }
       .grand .amount { background:#e9f9ed; display:inline-block; padding:10px 18px; border-radius:8px; font-size:18px; font-weight:800; color:#0b3f24 }
       .footer { text-align:center; color:#3b6b4f; margin-top:40px; font-size:12px; z-index:2; position:relative }
+        .footer img.footer-img { position:absolute; left:0; right:0; bottom:0; width:100%; height:120px; object-fit:cover; z-index:1 }
       .watermark { position:absolute; left:50%; top:45%; transform:translate(-50%,-50%); font-size:220px; color:#8fc79f; opacity:0.06; font-weight:800; z-index:0; pointer-events:none; letter-spacing:12px }
       .decor-bottom { position:absolute; left:0; right:0; height:120px; bottom:0; background-image: url('assets/invoice/footer.png'); background-repeat:no-repeat; background-position: bottom left; background-size: cover; z-index:1 }
       .content { position:relative; z-index:2 }
@@ -57,6 +60,8 @@ export function renderInvoiceHtml(invoice) {
     <div class="page">
       <div class="watermark">K I M</div>
       <div class="header">
+        <img class="header-img" src="assets/invoice/header.png" alt="header" />
+        <div class="header-inner">
         <div class="brand">
           <div style="width:84px;height:64px;background:#eaf6ee;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#1b4b2b">KIM</div>
           <div>
@@ -72,6 +77,7 @@ export function renderInvoiceHtml(invoice) {
           <div class="meta-row">Invoice Date ${issueDate}</div>
           <div class="meta-row">Payment Date ${paidDate}</div>
           <div class="badge-paid">${(invoice.status||'').toString().toUpperCase()}</div>
+        </div>
         </div>
       </div>
 
@@ -137,6 +143,7 @@ export function renderInvoiceHtml(invoice) {
       </div>
 
       <div class="footer">Thanks for playing with KIM • @kim.soccerfield • klaten-international-minisoccer.vercel.app</div>
+      <img class="footer-img" src="assets/invoice/footer.png" alt="footer" />
       <div class="decor-bottom" aria-hidden="true"></div>
     </div>
   </body>
