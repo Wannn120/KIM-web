@@ -1,6 +1,8 @@
-export function renderInvoiceHtml(invoice) {
-  const pad = (n) => String(n).padStart(2, '0');
-  const formatJakartaDate = (value) => {
+import type { Invoice } from './types';
+
+export function renderInvoiceHtml(invoice: Invoice) {
+  const pad = (n: number | string) => String(n).padStart(2, '0');
+  const formatJakartaDate = (value?: string | Date | null): string => {
     const date = value ? new Date(value) : null;
     if (!date || Number.isNaN(date.getTime())) return '-';
     const parts = new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Jakarta', day: '2-digit', month: '2-digit', year: 'numeric' }).formatToParts(date);
@@ -9,7 +11,7 @@ export function renderInvoiceHtml(invoice) {
     const year = parts.find(p => p.type === 'year')?.value ?? '0000';
     return `${day}-${month}-${year}`;
   };
-  const formatJakartaDateTime = (value) => {
+  const formatJakartaDateTime = (value?: string | Date | null): string => {
     const date = value ? new Date(value) : null;
     if (!date || Number.isNaN(date.getTime())) return '-';
     const dt = new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Jakarta', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(date);
@@ -20,7 +22,7 @@ export function renderInvoiceHtml(invoice) {
     const minute = dt.find(p => p.type === 'minute')?.value ?? '00';
     return `${day}-${month}-${year} ${hour}:${minute} WIB`;
   };
-  const normalizeTime = (value) => {
+  const normalizeTime = (value?: string | null): string => {
     if (!value || typeof value !== 'string') return '-';
     const match = value.match(/^\s*(\d{1,2}):(\d{2})\s*$/);
     if (!match) return value;
@@ -34,9 +36,9 @@ export function renderInvoiceHtml(invoice) {
   const issueDate = formatJakartaDate(invoice.issuedAt);
   const paidDate = invoice.paidAt ? formatJakartaDateTime(invoice.paidAt) : (invoice.payment?.paidAt ? formatJakartaDateTime(invoice.payment.paidAt) : '-');
 
-  const customerName = invoice.customerName || invoice.booking.customerName || 'Guest';
-  const customerEmail = invoice.customerEmail || invoice.booking.customerEmail || '-';
-  const customerPhone = invoice.customerPhone || invoice.booking.customerPhone || '-';
+  const customerName = invoice.customerName || invoice.booking?.customerName || 'Guest';
+  const customerEmail = invoice.customerEmail || invoice.booking?.customerEmail || '-';
+  const customerPhone = invoice.customerPhone || invoice.booking?.customerPhone || '-';
 
   const fieldName = invoice.fieldName || 'Lapangan Klaten International';
   const timeRange = `${normalizeTime(invoice.booking?.startTime)} - ${normalizeTime(invoice.booking?.endTime)}`;
@@ -110,7 +112,7 @@ export function renderInvoiceHtml(invoice) {
           <div class="meta">
             <h1>Invoice</h1>
             <div class="meta-row">Invoice No. ${invoice.invoiceNumber}</div>
-            <div class="meta-row">Booking ID ${invoice.booking.id}</div>
+            <div class="meta-row">Booking ID ${invoice.booking?.id || '-'}</div>
             <div class="meta-row">Invoice Date ${issueDate}</div>
             <div class="meta-row">Payment Date ${paidDate}</div>
             <div class="badge-paid">${(invoice.status||'').toString().toUpperCase()}</div>
@@ -125,14 +127,14 @@ export function renderInvoiceHtml(invoice) {
             <div class="kv"><div class="key">Name</div><div class="value">${customerName}</div></div>
             <div class="kv"><div class="key">Phone</div><div class="value">${customerPhone}</div></div>
             <div class="kv"><div class="key">Email</div><div class="value">${customerEmail}</div></div>
-            <div class="kv"><div class="key">Member ID</div><div class="value">${invoice.customerMemberId || invoice.booking.memberId || '-'}</div></div>
+            <div class="kv"><div class="key">Member ID</div><div class="value">${invoice.customerMemberId || invoice.booking?.memberId || '-'}</div></div>
           </div>
           <div class="col boxed">
             <div class="label">BOOKING</div>
             <div class="kv"><div class="key">Date</div><div class="value">${bookingDate}</div></div>
             <div class="kv"><div class="key">Time</div><div class="value">${timeRange}</div></div>
-            <div class="kv"><div class="key">Duration</div><div class="value">${invoice.booking.durationHours ?? '-'} Hours</div></div>
-            <div class="kv"><div class="key">Payment Method</div><div class="value">${invoice.payment.paymentMethod || invoice.payment.provider || '-'}</div></div>
+            <div class="kv"><div class="key">Duration</div><div class="value">${invoice.booking?.durationHours ?? '-'} Hours</div></div>
+            <div class="kv"><div class="key">Payment Method</div><div class="value">${invoice.payment?.paymentMethod || invoice.payment?.provider || '-'}</div></div>
           </div>
         </div>
 
@@ -158,8 +160,8 @@ export function renderInvoiceHtml(invoice) {
         </div>
 
         <div class="detail-block">
-          <div><strong>Transaction ID:</strong> ${invoice.payment.transactionId || '-'}</div>
-          <div><strong>Order ID:</strong> ${invoice.payment.midtransOrderId || '-'}</div>
+          <div><strong>Transaction ID:</strong> ${invoice.payment?.transactionId || '-'}</div>
+          <div><strong>Order ID:</strong> ${invoice.payment?.midtransOrderId || '-'}</div>
           <div><strong>Invoice No:</strong> ${invoice.invoiceNumber}</div>
           <div><strong>Paid:</strong> ${paidDate}</div>
         </div>
