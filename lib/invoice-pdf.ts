@@ -144,7 +144,7 @@ export function generateInvoicePdfBuffer(invoice: InvoicePdfInput) {
     writeText(`Date: ${issueDate}`, 464, 774, 7),
     // status badge background (filled light gray)
     `0.88 g 444 760 84 18 re f 0 g`,
-    writeText(statusBadge, 452, 764, 8),
+    writeText(statusBadge, 464, 764, 8),
   ];
 
   const customerLines = [
@@ -152,11 +152,7 @@ export function generateInvoicePdfBuffer(invoice: InvoicePdfInput) {
     writeText("CUSTOMER", 48, 705, 10),
     writeLine(32, 698, 282, 698),
     writeText("Name", 48, 684, 8),
-    writeText(customerName, 120, 684, 8),
-    writeText("Phone", 48, 670, 8),
-    writeText(customerPhone, 120, 670, 8),
-    writeText("Email", 48, 656, 8),
-    writeText(customerEmail, 120, 656, 8),
+    writeText(customerName.substring(0, 25), 120, 684, 8),
   ];
 
   const bookingLines = [
@@ -164,52 +160,53 @@ export function generateInvoicePdfBuffer(invoice: InvoicePdfInput) {
     writeText("BOOKING", 328, 705, 10),
     writeLine(312, 698, 562, 698),
     writeText("Booking ID", 328, 688, 7),
-    writeText(invoice.booking.id, 392, 688, 7),
-    writeText("Date", 328, 684, 8),
-    writeText(bookingDate, 392, 684, 8),
-    writeText("Time", 328, 670, 8),
-    writeText(timeRange, 392, 670, 8),
-    writeText("Duration", 328, 656, 8),
-    writeText(`${invoice.booking.durationHours ?? durationHours} Hours`, 392, 656, 8),
-    writeText("Payment", 328, 642, 8),
-    writeText(paymentLabel, 392, 642, 8),
-    writeText("Paid", 328, 630, 7),
-    writeText(paidDate, 392, 630, 7),
+    writeText(invoice.booking.id.substring(0, 20) + "...", 392, 688, 7),
+    writeText("Date", 328, 674, 8),
+    writeText(bookingDate, 392, 674, 8),
+    writeText("Time", 328, 660, 8),
+    writeText(timeRange, 392, 660, 8),
+    writeText("Duration", 328, 646, 8),
+    writeText(`${invoice.booking.durationHours ?? durationHours} Hours`, 392, 646, 8),
+    writeText("Payment", 328, 632, 8),
+    writeText(paymentLabel, 392, 632, 8),
   ];
 
   const tableHeader = [
-    writeRect(32, 470, 500, 118),
+    writeRect(32, 470, 530, 118),
     writeText("BOOKING SUMMARY", 48, 566, 11),
-    writeLine(32, 560, 532, 560),
+    writeLine(32, 560, 562, 560),
     writeText("DESCRIPTION", 48, 545, 8),
     writeText("QTY", 368, 545, 8),
     writeText("UNIT PRICE", 420, 545, 8),
     writeText("AMOUNT", 485, 545, 8),
-    writeLine(32, 536, 532, 536),
+    writeLine(32, 536, 562, 536),
   ];
 
   const bookingRow = [
-    writeText(fieldName, 48, 516, 9),
+    writeText(fieldName.substring(0, 40), 48, 516, 9),
     writeText("1", 378, 516, 9),
     writeText(formatCurrency(subtotal), 424, 516, 9),
     writeText(formatCurrency(subtotal), 487, 516, 9),
-    writeLine(32, 500, 532, 500),
+    writeLine(32, 500, 562, 500),
   ];
 
   const totalsBox = [
-    writeRect(342, 294, 190, 136),
-    writeLine(342, 360, 532, 360),
+    writeRect(342, 294, 220, 136),
+    writeLine(342, 360, 562, 360),
     writeText("GRAND TOTAL", 358, 388, 10),
     writeText(formatCurrency(total), 430, 370, 14),
   ];
 
   const breakdownLines = [
-    writeText(`Booking Date: ${bookingDate}`, 48, 360, 8),
-    writeText(`Time Slot: ${timeRange}`, 48, 346, 8),
-    writeText(`Provider: ${provider}`, 48, 332, 8),
-    writeText(`Transaction ID: ${invoice.payment.transactionId}`, 48, 318, 8),
-    writeText(`Invoice No: ${invoice.invoiceNumber}`, 48, 304, 8),
-    writeText(`Order ID: ${invoice.payment.midtransOrderId ?? '-'}`, 48, 290, 8),
+    writeRect(32, 294, 280, 136),
+    writeText("DETAILS", 48, 415, 10),
+    writeLine(32, 408, 312, 408),
+    writeText(`Booking Date: ${bookingDate}`, 48, 390, 8),
+    writeText(`Time Slot: ${timeRange}`, 48, 376, 8),
+    writeText(`Provider: ${provider}`, 48, 362, 8),
+    writeText(`Transaction ID: ${invoice.payment.transactionId.substring(0, 25)}`, 48, 348, 8),
+    writeText(`Invoice No: ${invoice.invoiceNumber}`, 48, 334, 8),
+    writeText(`Order ID: ${invoice.payment.midtransOrderId?.substring(0, 25) ?? "-"}`, 48, 320, 8),
   ];
 
   const amountBreakdown = summaryRows.map((row, index) => {
