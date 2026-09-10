@@ -192,39 +192,35 @@ export function generateInvoicePdfBuffer(invoice: InvoicePdfInput) {
 
   const totalsBox = [
     writeRect(342, 294, 220, 136),
-    writeText("SUMMARY", 358, 415, 9),
-    writeLine(342, 408, 562, 408),
-    writeText("Subtotal", 358, 392, 8),
-    writeText(formatCurrency(subtotal), 488, 392, 8),
+    writeLine(342, 416, 562, 416),
+    writeText("Subtotal", 358, 404, 8),
+    writeText(formatCurrency(subtotal), 470, 404, 8),
     ...(discount > 0 ? [
-      writeText("Discount", 358, 378, 8),
-      writeText(`- ${formatCurrency(discount)}`, 488, 378, 8),
+      writeText("Discount", 358, 390, 8),
+      writeText(`-${formatCurrency(discount)}`, 470, 390, 8),
     ] : []),
     ...(tax > 0 ? [
-      writeText("Tax", 358, 378 - (discount > 0 ? 14 : 0), 8),
-      writeText(formatCurrency(tax), 488, 378 - (discount > 0 ? 14 : 0), 8),
+      writeText("Tax", 358, 376, 8),
+      writeText(formatCurrency(tax), 470, 376, 8),
     ] : []),
-    writeLine(342, 340, 562, 340),
-    writeText("GRAND TOTAL", 358, 324, 10),
-    writeText(formatCurrency(total), 430, 306, 14),
+    writeLine(342, 366, 562, 366),
+    writeText("GRAND TOTAL", 358, 352, 10),
+    writeText(formatCurrency(total), 430, 338, 14),
   ];
 
   const breakdownLines = [
     writeRect(32, 294, 280, 136),
     writeText("DETAILS", 48, 415, 10),
     writeLine(32, 408, 312, 408),
-    writeText(`Booking Date: ${bookingDate}`, 48, 390, 8),
-    writeText(`Time Slot: ${timeRange}`, 48, 376, 8),
-    writeText(`Provider: ${provider}`, 48, 362, 8),
-    writeText(`Transaction ID: ${invoice.payment.transactionId.substring(0, 25)}`, 48, 348, 8),
-    writeText(`Invoice No: ${invoice.invoiceNumber}`, 48, 334, 8),
-    writeText(`Order ID: ${invoice.payment.midtransOrderId?.substring(0, 25) ?? "-"}`, 48, 320, 8),
+    writeText(`Booking Date: ${bookingDate}`, 48, 394, 8),
+    writeText(`Time Slot: ${timeRange}`, 48, 380, 8),
+    writeText(`Provider: ${provider}`, 48, 366, 8),
+    writeText(`Transaction ID: ${invoice.payment.transactionId.substring(0, 25)}`, 48, 352, 8),
+    writeText(`Invoice No: ${invoice.invoiceNumber}`, 48, 338, 8),
+    writeText(`Order ID: ${invoice.payment.midtransOrderId?.substring(0, 25) ?? "-"}`, 48, 324, 8),
   ];
 
-  const amountBreakdown = summaryRows.map((row, index) => {
-    const y = 440 - index * 16;
-    return [writeText(row.label, 372, y, 8), writeText(row.value, 488, y, 8)];
-  }).flat();
+  const amountBreakdown: string[] = [];
 
   const footer = [
     writeLine(32, 182, 562, 182),
