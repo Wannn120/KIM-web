@@ -192,9 +192,21 @@ export function generateInvoicePdfBuffer(invoice: InvoicePdfInput) {
 
   const totalsBox = [
     writeRect(342, 294, 220, 136),
-    writeLine(342, 360, 562, 360),
-    writeText("GRAND TOTAL", 358, 388, 10),
-    writeText(formatCurrency(total), 430, 370, 14),
+    writeText("SUMMARY", 358, 415, 9),
+    writeLine(342, 408, 562, 408),
+    writeText("Subtotal", 358, 392, 8),
+    writeText(formatCurrency(subtotal), 488, 392, 8),
+    ...(discount > 0 ? [
+      writeText("Discount", 358, 378, 8),
+      writeText(`- ${formatCurrency(discount)}`, 488, 378, 8),
+    ] : []),
+    ...(tax > 0 ? [
+      writeText("Tax", 358, 378 - (discount > 0 ? 14 : 0), 8),
+      writeText(formatCurrency(tax), 488, 378 - (discount > 0 ? 14 : 0), 8),
+    ] : []),
+    writeLine(342, 340, 562, 340),
+    writeText("GRAND TOTAL", 358, 324, 10),
+    writeText(formatCurrency(total), 430, 306, 14),
   ];
 
   const breakdownLines = [
