@@ -79,6 +79,8 @@ export function renderInvoiceHtml(invoice: Invoice) {
       .meta .meta-row { display:block; font-size:11px; color:#6b8b78; line-height:1.25; overflow-wrap:break-word; word-break:break-word }
       .badge-paid { display:inline-block; background:#e9f9ed; color:#1b4b2b; padding:6px 12px; border-radius:16px; font-weight:700; box-shadow:0 2px 0 rgba(27,75,43,0.06); font-size:11px; margin-top:8px }
       .boxed { border:1px solid #dbeedf; border-radius:8px; padding:18px; background:#fff; margin-bottom:14px; overflow-wrap:anywhere; word-break:break-word }
+      .boxed .kv { padding:8px 0; border-bottom:1px solid #eef7ef }
+      .boxed .kv:last-child { border-bottom: none }
       .boxed .label { color:#3b6b4f; font-weight:700; margin-bottom:8px; font-size:14px; letter-spacing:0.02em }
       .boxed .kv { display:grid; grid-template-columns: 36% 1fr; gap:8px; margin:7px 0; align-items:start }
       .kv .key { color:#3b6b4f; font-size:12px; line-height:1.4; word-break:break-word }
@@ -92,7 +94,7 @@ export function renderInvoiceHtml(invoice: Invoice) {
       .amount { text-align:right; }
       .summary-label { font-weight:700; margin-bottom:8px; font-size:13px; letter-spacing:0.02em; }
       .grand-total-wrap { margin-top:16px; display:flex; justify-content:flex-end }
-      .grand-total { border:1px solid #dfeee1; border-radius:8px; padding:12px 16px; text-align:right; font-weight:800; font-size:16px; color:#0b3f24; background:#fff; min-width:220px }
+      .grand-total { border:1px solid #dfeee1; border-radius:8px; padding:12px 16px; text-align:right; font-weight:800; font-size:16px; color:#0b3f24; background:#fff; box-sizing:border-box; width:220px }
       .grand-total .amount { font-size:18px; display:inline-block; padding-left:8px }
       .detail-block { margin-top:18px; font-size:12px; color:#2b5d46; line-height:1.5 }
       .detail-block strong { font-weight:700; }
@@ -118,26 +120,7 @@ export function renderInvoiceHtml(invoice: Invoice) {
           <div style="margin-top:6px"><span class="paid-badge">${(invoice.status||'').toString().toUpperCase()}</span></div>
         </div>
       </div>
-      <div class="header">
-        <div class="header-inner">
-          <div class="brand">
-            <div style="width:74px;height:52px;background:#eaf6ee;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#1b4b2b;font-size:22px;border:1px solid rgba(27,75,43,0.08)">KIM</div>
-            <div>
-              <div class="title">Klaten International Minisoccer</div>
-              <div class="sub">Jl. Stadion, Klaten • hello@minisoccer.id</div>
-              <div class="sub">klaten-international-minisoccer.vercel.app</div>
-            </div>
-          </div>
-          <div class="meta">
-            <h1>Invoice</h1>
-            <div class="meta-row">Invoice No. ${invoice.invoiceNumber}</div>
-            <div class="meta-row">Booking ID ${invoice.booking?.id || '-'}</div>
-            <div class="meta-row">Invoice Date ${issueDate}</div>
-            <div class="meta-row">Payment Date ${paidDate}</div>
-            <div class="badge-paid">${(invoice.status||'').toString().toUpperCase()}</div>
-          </div>
-        </div>
-      </div>
+      <!-- single header above (header-banner) is used; removed duplicate header to avoid overlap -->
 
       <div class="content">
         <div class="row">
@@ -171,17 +154,20 @@ export function renderInvoiceHtml(invoice: Invoice) {
               </tr>
             </tbody>
           </table>
-        </div>
 
-        <div class="grand-total-wrap">
-          <div class="grand-total">GRAND TOTAL: <span class="amount">${total}</span></div>
-        </div>
-
-        <div class="detail-block">
-          <div><strong>Transaction ID:</strong> ${invoice.payment?.transactionId || '-'}</div>
-          <div><strong>Order ID:</strong> ${invoice.payment?.midtransOrderId || '-'}</div>
-          <div><strong>Invoice No:</strong> ${invoice.invoiceNumber}</div>
-          <div><strong>Paid:</strong> ${paidDate}</div>
+          <div style="display:flex;gap:12px;margin-top:14px;align-items:flex-start">
+            <div style="flex:1">
+              <div class="kv"><div class="key">Booking Date</div><div class="value">${bookingDate}</div></div>
+              <div class="kv"><div class="key">Time Slot</div><div class="value">${timeRange}</div></div>
+              <div class="kv"><div class="key">Provider</div><div class="value">${invoice.payment?.provider || '-'}</div></div>
+              <div class="kv"><div class="key">Transaction ID</div><div class="value">${invoice.payment?.transactionId || '-'}</div></div>
+              <div class="kv"><div class="key">Order ID</div><div class="value">${invoice.payment?.midtransOrderId || '-'}</div></div>
+              <div class="kv"><div class="key">Invoice No.</div><div class="value">${invoice.invoiceNumber}</div></div>
+            </div>
+            <div style="width:260px;">
+              <div class="grand-total">GRAND TOTAL: <div class="amount">${total}</div></div>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -5,7 +5,7 @@ import { sendNotification } from "@/lib/notifications";
 import { createMidtransTransaction, getMidtransTransactionStatus, resolveMidtransTransactionStatus } from "@/lib/midtrans";
 import { DEFAULT_FIELD_NAME } from "@/lib/venue";
 import { buildMidtransCustomerDetails, isUuid } from "@/lib/payment-utils";
-import { buildInvoiceAttachment } from "@/lib/invoice-pdf";
+import { buildInvoiceAttachmentAuto } from "@/lib/invoice-pdf";
 import { formatJakartaDateKey } from "@/lib/timezone";
 
 const paymentProvider = new DemoPaymentProvider();
@@ -559,27 +559,35 @@ export async function processWebhookEvent(transactionId: string, status: Payment
     const invoice = await prisma.invoice.findUnique({ where: { bookingId: booking.id } });
 
     const attachment = invoice
-      ? buildInvoiceAttachment({
+      ? await buildInvoiceAttachmentAuto({
           invoiceNumber: invoice.invoiceNumber,
           customerName: invoice.customerName ?? booking.customerName,
           customerEmail: invoice.customerEmail ?? booking.customerEmail,
           customerPhone: invoice.customerPhone ?? booking.customerPhone,
           status: invoice.status,
-          subtotal: invoice.subtotal,
-          discount: invoice.discount,
-          tax: invoice.tax,
-          total: invoice.total,
+          subtotal: Number(invoice.subtotal ?? 0),
+          discount: invoice.discount != null ? Number(invoice.discount) : null,
+          tax: invoice.tax != null ? Number(invoice.tax) : null,
+          total: Number(invoice.total ?? invoice.subtotal ?? 0),
           issuedAt: invoice.issuedAt,
+          paidAt: invoice.paidAt ?? updatedPayment.paidAt ?? null,
           booking: {
             id: booking.id,
             bookingDate: booking.bookingDate,
             startTime: booking.startTime,
             endTime: booking.endTime,
+            customerName: booking.customerName,
+            customerEmail: booking.customerEmail,
+            customerPhone: booking.customerPhone,
+            durationHours: booking.durationHours,
+            totalPrice: booking.totalPrice,
           },
           payment: {
             transactionId: updatedPayment.transactionId,
             paymentMethod: updatedPayment.paymentMethod,
             provider: updatedPayment.provider,
+            paidAt: updatedPayment.paidAt ?? null,
+            midtransOrderId: updatedPayment.midtransOrderId ?? null,
           },
         })
       : undefined;

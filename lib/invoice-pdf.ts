@@ -258,3 +258,72 @@ export function buildInvoiceAttachment(invoice: InvoicePdfInput) {
     content: pdfBuffer.toString("base64"),
   };
 }
+
+/** Convert legacy Date-based input to Classic HTML Invoice shape (ISO strings). */
+function toClassicInvoicePayload(invoice: InvoicePdfInput) {
+  return {
+    invoiceNumber: invoice.invoiceNumber,
+    customerName: invoice.customerName ?? null,
+    customerEmail: invoice.customerEmail ?? null,
+    customerPhone: invoice.customerPhone ?? null,
+    status: invoice.status ?? null,
+    subtotal: invoice.subtotal ?? null,
+    discount: invoice.discount ?? null,
+    tax: invoice.tax ?? null,
+    total: invoice.total ?? null,
+    issuedAt: invoice.issuedAt ? invoice.issuedAt.toISOString() : null,
+    paidAt: invoice.paidAt
+      ? invoice.paidAt.toISOString()
+      : invoice.payment.paidAt
+        ? invoice.payment.paidAt.toISOString()
+        : null,
+    booking: {
+      id: invoice.booking.id,
+      bookingDate: invoice.booking.bookingDate ? invoice.booking.bookingDate.toISOString() : null,
+      startTime: invoice.booking.startTime ?? null,
+      endTime: invoice.booking.endTime ?? null,
+      customerName: invoice.booking.customerName ?? null,
+      customerEmail: invoice.booking.customerEmail ?? null,
+      customerPhone: invoice.booking.customerPhone ?? null,
+      durationHours: invoice.booking.durationHours ?? null,
+    },
+    payment: {
+      transactionId: invoice.payment.transactionId ?? null,
+      paymentMethod: invoice.payment.paymentMethod ?? null,
+      provider: invoice.payment.provider ?? null,
+      paidAt: invoice.payment.paidAt ? invoice.payment.paidAt.toISOString() : null,
+      midtransOrderId: invoice.payment.midtransOrderId ?? null,
+    },
+  };
+}
+
+/**
+ * Classic (HTML/Puppeteer) first, legacy fallback on failure.
+ * Used by live download route + email attachment.
+ */
+export async function generateInvoicePdfBufferAuto(invoice: InvoicePdfInput): Promise<{ buffer: Buffer; engine: "classic" | "legacy" }> {
+  // Allow emergency opt-out: INVOICE_PDF_ENGINE=legacy forces old generator.
+  if (process.env.INVOICE_PDF_ENGINE === "legacy") {
+    return { buffer: generateInvoicePdfBuffer(invoice), engine: "legacy" };
+  }
+  try {
+    const mod = await import("./invoice-html-pdf");
+    const pdf = await mod.generateInvoicePdfBufferHtml(toClassicInvoicePayload(invoice) as never);
+    return { buffer: Buffer.from(pdf), engine: "classic" };
+  } catch (err) {
+    console.warn("[invoice-pdf] Classic HTML PDF failed, using legacy fallback", {
+      invoiceNumber: invoice.invoiceNumber,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return { buffer: generateInvoicePdfBuffer(invoice), engine: "legacy" };
+  }
+}
+
+export async function buildInvoiceAttachmentAuto(invoice: InvoicePdfInput) {
+  const { buffer, engine } = await generateInvoicePdfBufferAuto(invoice);
+  return {
+    filename: `invoice-${invoice.invoiceNumber}.pdf`,
+    content: buffer.toString("base64"),
+    engine,
+  };
+}
