@@ -273,6 +273,12 @@ export function AdminContentEditor() {
             </div>
           ) : null}
           {uploadStatus ? <p className="mt-2 text-sm text-[color:var(--accent)]">{uploadStatus}</p> : null}
+          {content.backgroundImageUrl && backgroundUrlIsValid ? (
+            <div className="mt-3 overflow-hidden rounded-3xl border border-white/10">
+              <Image src={content.backgroundImageUrl} alt="Hero background preview" width={600} height={300} unoptimized className="h-48 w-full object-cover" />
+              <p className="px-3 py-2 text-xs text-[color:var(--muted)]">Hero background preview</p>
+            </div>
+          ) : null}
         </label>
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block text-sm text-[color:var(--muted)]">

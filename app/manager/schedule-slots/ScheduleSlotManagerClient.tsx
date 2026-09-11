@@ -22,6 +22,7 @@ export default function ScheduleSlotManagerClient({ adminName }: { adminName: st
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<ScheduleSlotItem | null>(null);
+  const [showForm, setShowForm] = useState(false);
   const [formState, setFormState] = useState<ScheduleSlotFormState>({
     startTime: "",
     endTime: "",
@@ -49,6 +50,7 @@ export default function ScheduleSlotManagerClient({ adminName }: { adminName: st
 
   const resetForm = () => {
     setEditing(null);
+    setShowForm(false);
     setFormState({ startTime: "", endTime: "", isActive: true, sortOrder: 0 });
   };
 
@@ -81,6 +83,7 @@ export default function ScheduleSlotManagerClient({ adminName }: { adminName: st
 
   const handleEdit = (slot: ScheduleSlotItem) => {
     setEditing(slot);
+    setShowForm(true);
     setFormState({
       startTime: slot.startTime,
       endTime: slot.endTime,
@@ -133,7 +136,7 @@ export default function ScheduleSlotManagerClient({ adminName }: { adminName: st
               <h2 className="text-xl font-semibold text-white sm:text-2xl">Schedule slots</h2>
                 <p className="mt-2 text-sm text-[color:var(--muted)]">Slots are rendered in booking availability and validated on checkout.</p>
               </div>
-              <button onClick={() => void loadSlots()} className="btn-secondary px-4 py-2">Refresh</button>
+              <div className="flex gap-2"><button onClick={() => void loadSlots()} className="btn-secondary px-4 py-2">Refresh</button><button onClick={() => setShowForm(true)} className="btn-secondary px-4 py-2">New slot</button></div>
             </div>
 
             <div className="mt-6 overflow-x-auto rounded-3xl border border-white/10 bg-[color:var(--background)]">
@@ -172,7 +175,7 @@ export default function ScheduleSlotManagerClient({ adminName }: { adminName: st
             </div>
           </section>
 
-          <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-5 sm:p-6">
+          {showForm ? <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-5 sm:p-6">
             <h2 className="text-xl font-semibold text-white sm:text-2xl">Create / update slot</h2>
             <div className="mt-6 space-y-4">
               <div>
@@ -202,7 +205,7 @@ export default function ScheduleSlotManagerClient({ adminName }: { adminName: st
                 </button>
               </div>
             </div>
-          </section>
+          </section> : null}
         </div>
       </div>
   );

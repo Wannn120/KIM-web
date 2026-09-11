@@ -9,6 +9,7 @@ import FieldManagerClient from "@/app/manager/fields/FieldManagerClient";
 import BookingManagerClient from "@/app/manager/bookings/BookingManagerClient";
 import PaymentManagerClient from "@/app/manager/payments/PaymentManagerClient";
 import VenueFeatureManager from "@/components/venue-feature-manager";
+import VenueGalleryManager from "@/components/venue-gallery-manager";
 import { AdminContentEditor } from "@/components/admin-content-editor";
 
 export const dynamic = "force-dynamic";
@@ -53,6 +54,7 @@ export default async function SuperadminPage() {
         <AdminResourceManager resource="settings" canManage={admin.permissions.canManageSettings} adminName={admin.name} />
         <AdminResourceManager resource="users" canManage={admin.permissions.canManageAdmins} adminName={admin.name} />
         <VenueFeatureManager />
+        <VenueGalleryManager />
         <AdminContentEditor />
       </>
     );

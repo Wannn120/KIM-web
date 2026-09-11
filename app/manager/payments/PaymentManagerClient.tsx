@@ -39,6 +39,7 @@ export default function PaymentManagerClient({ adminName, useMain = true }: { ad
   const [query, setQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [editing, setEditing] = useState<PaymentItem | null>(null);
+  const [showForm, setShowForm] = useState(false);
   const [formState, setFormState] = useState<PaymentFormState>({
     bookingId: "",
     transactionId: "",
@@ -91,6 +92,7 @@ export default function PaymentManagerClient({ adminName, useMain = true }: { ad
 
   const resetForm = () => {
     setEditing(null);
+    setShowForm(false);
     setFormState({
       bookingId: "",
       transactionId: "",
@@ -137,6 +139,7 @@ export default function PaymentManagerClient({ adminName, useMain = true }: { ad
 
   const handleEdit = (payment: PaymentItem) => {
     setEditing(payment);
+    setShowForm(true);
     setFormState({
       bookingId: payment.booking.id,
       transactionId: payment.transactionId,
@@ -200,7 +203,7 @@ export default function PaymentManagerClient({ adminName, useMain = true }: { ad
                   {statusOptions.map((s) => (<option key={s} value={s}>{s}</option>))}
                 </select>
                 <button onClick={handleSearch} className="btn-secondary px-4 py-2">Filter</button>
-                <button onClick={resetForm} className="btn-secondary px-4 py-2">New payment</button>
+                <button onClick={() => setShowForm(true)} className="btn-secondary px-4 py-2">New payment</button>
               </div>
             </div>
             {error ? (
@@ -260,7 +263,7 @@ export default function PaymentManagerClient({ adminName, useMain = true }: { ad
             </div>
           </section>
 
-          <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-5 sm:p-6">
+          {showForm ? <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-5 sm:p-6">
             <h2 className="text-xl font-semibold text-white sm:text-2xl">Create / update payment</h2>
             <div className="mt-6 space-y-4">
               <div>
@@ -322,7 +325,7 @@ export default function PaymentManagerClient({ adminName, useMain = true }: { ad
                 </button>
               </div>
             </div>
-          </section>
+          </section> : null}
         </div>
       </div>
     </div>

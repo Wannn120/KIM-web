@@ -5,6 +5,8 @@ import { getAdminSummary, getDefaultAdminSummary } from "@/lib/admin-dashboard";
 import AdminDashboard from "@/components/admin-dashboard";
 import StaffBookingViewer from "@/app/staff/bookings/StaffBookingViewer";
 import StaffPaymentViewer from "@/app/staff/payments/StaffPaymentViewer";
+import VenueFeatureManager from "@/components/venue-feature-manager";
+import VenueGalleryManager from "@/components/venue-gallery-manager";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +41,8 @@ export default async function StaffPage() {
         <AdminDashboard admin={admin} summary={summary} />
         <StaffBookingViewer adminName={admin.name} useMain={false} />
         <StaffPaymentViewer adminName={admin.name} useMain={false} />
+        <VenueFeatureManager />
+        <VenueGalleryManager />
       </>
     );
   } catch (error) {

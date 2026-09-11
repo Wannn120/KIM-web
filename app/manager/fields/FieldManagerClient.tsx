@@ -33,6 +33,7 @@ export default function FieldManagerClient({ adminName, useMain = true }: { admi
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<FieldItem | null>(null);
+  const [showForm, setShowForm] = useState(false);
   const [formState, setFormState] = useState<FieldFormState>({
     name: "",
     location: "",
@@ -72,6 +73,7 @@ export default function FieldManagerClient({ adminName, useMain = true }: { admi
 
   const resetForm = () => {
     setEditing(null);
+    setShowForm(false);
     setFormState({
       name: "",
       location: "",
@@ -125,6 +127,7 @@ export default function FieldManagerClient({ adminName, useMain = true }: { admi
 
   const handleEdit = (field: FieldItem) => {
     setEditing(field);
+    setShowForm(true);
     setFormState({
       name: field.name ?? "",
       location: field.location ?? "",
@@ -185,7 +188,7 @@ export default function FieldManagerClient({ adminName, useMain = true }: { admi
               <div className="flex items-center gap-2">
                 <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search name or location" className="rounded-3xl border border-white/10 bg-[color:var(--background)] px-3 py-2 text-sm text-white" />
                 <button onClick={handleSearch} className="btn-secondary px-4 py-2">Search</button>
-                <button onClick={resetForm} className="btn-secondary px-4 py-2">New field</button>
+                <button onClick={() => setShowForm(true)} className="btn-secondary px-4 py-2">New field</button>
               </div>
             </div>
 
@@ -249,7 +252,7 @@ export default function FieldManagerClient({ adminName, useMain = true }: { admi
             </div>
           </section>
 
-          <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-5 sm:p-6">
+          {showForm ? <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-5 sm:p-6">
             <h2 className="text-xl font-semibold text-white sm:text-2xl">Create / update field</h2>
             <div className="mt-6 space-y-4">
               <div>
@@ -305,7 +308,7 @@ export default function FieldManagerClient({ adminName, useMain = true }: { admi
                 </button>
               </div>
             </div>
-          </section>
+          </section> : null}
         </div>
       </div>
     </div>

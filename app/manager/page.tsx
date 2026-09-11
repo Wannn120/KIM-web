@@ -4,6 +4,8 @@ import { getAuthenticatedAdminFromToken, getAdminPanelPath, isAdminRoleAllowed }
 import { getAdminSummary, getDefaultAdminSummary } from "@/lib/admin-dashboard";
 import AdminDashboard from "@/components/admin-dashboard";
 import AdminResourceManager from "@/components/admin-resource-manager";
+import VenueFeatureManager from "@/components/venue-feature-manager";
+import VenueGalleryManager from "@/components/venue-gallery-manager";
 import FieldManagerClient from "@/app/manager/fields/FieldManagerClient";
 import BookingManagerClient from "@/app/manager/bookings/BookingManagerClient";
 import PaymentManagerClient from "@/app/manager/payments/PaymentManagerClient";
@@ -49,6 +51,8 @@ export default async function ManagerPage() {
         <AdminResourceManager resource="features" canManage={admin.permissions.canManageFeatures} adminName={admin.name} />
         <AdminResourceManager resource="gallery" canManage={admin.permissions.canManageGallery} adminName={admin.name} />
         <AdminResourceManager resource="settings" canManage={admin.permissions.canManageSettings} adminName={admin.name} />
+        <VenueFeatureManager />
+        <VenueGalleryManager />
       </>
     );
   } catch (error) {

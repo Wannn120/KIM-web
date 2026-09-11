@@ -36,6 +36,7 @@ export default function BookingManagerClient({ adminName, useMain = true }: { ad
   const [query, setQuery] = useState("");
   const [filterDate, setFilterDate] = useState("");
   const [editing, setEditing] = useState<BookingItem | null>(null);
+  const [showForm, setShowForm] = useState(false);
   const [formState, setFormState] = useState<BookingFormState>({
     customerName: "",
     customerPhone: "",
@@ -90,6 +91,7 @@ export default function BookingManagerClient({ adminName, useMain = true }: { ad
 
   const resetForm = () => {
     setEditing(null);
+    setShowForm(false);
     setFormState({
       customerName: "",
       customerPhone: "",
@@ -132,6 +134,7 @@ export default function BookingManagerClient({ adminName, useMain = true }: { ad
 
   const handleEdit = (booking: BookingItem) => {
     setEditing(booking);
+    setShowForm(true);
     setFormState({
       customerName: booking.customerName,
       customerPhone: booking.customerPhone,
@@ -187,7 +190,7 @@ export default function BookingManagerClient({ adminName, useMain = true }: { ad
                 <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search customer or phone" className="rounded-3xl border border-white/10 bg-[color:var(--background)] px-3 py-2 text-sm text-white" />
                 <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="rounded-3xl border border-white/10 bg-[color:var(--background)] px-3 py-2 text-sm text-white" />
                 <button onClick={handleSearch} className="btn-secondary px-4 py-2">Filter</button>
-                <button onClick={resetForm} className="btn-secondary px-4 py-2">New booking</button>
+                <button onClick={() => setShowForm(true)} className="btn-secondary px-4 py-2">New booking</button>
               </div>
             </div>
 
@@ -249,7 +252,7 @@ export default function BookingManagerClient({ adminName, useMain = true }: { ad
             </div>
           </section>
 
-          <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-5 sm:p-6">
+          {showForm ? <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-5 sm:p-6">
             <h2 className="text-xl font-semibold text-white sm:text-2xl">Create / update booking</h2>
             <div className="mt-6 space-y-4">
               <div>
@@ -299,7 +302,7 @@ export default function BookingManagerClient({ adminName, useMain = true }: { ad
                 </button>
               </div>
             </div>
-          </section>
+          </section> : null}
         </div>
       </div>
     </div>
