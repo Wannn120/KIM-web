@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     if (process.env.NODE_ENV === "production") {
       const ok = signature && verifyMidtransSignature(rawBody, signature);
       if (!ok) {
-        console.warn("[WEBHOOK] Invalid Midtrans signature detected", { headers: Object.fromEntries(request.headers), timestamp: new Date().toISOString() });
+        console.warn("[WEBHOOK] Invalid Midtrans signature detected", { timestamp: new Date().toISOString() });
         return NextResponse.json({ success: false, message: "Invalid Midtrans signature." }, { status: 401 });
       }
     }

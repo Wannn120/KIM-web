@@ -1,13 +1,27 @@
 import { NextResponse } from "next/server";
 import { createPaymentTransaction } from "@/lib/payment-service";
 
+const ALLOWED_HOSTS = new Set([
+  "klaten-international-minisoccer.vercel.app",
+  "localhost:3000",
+  "127.0.0.1:3000",
+]);
+
+function resolveAppBaseUrl(request: Request): string {
+  const envUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (envUrl) return envUrl;
+  const forwardedHost = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "";
+  if (forwardedHost && ALLOWED_HOSTS.has(forwardedHost)) {
+    const forwardedProto = request.headers.get("x-forwarded-proto") ?? new URL(request.url).protocol.replace(/:$/, "");
+    return `${forwardedProto}://${forwardedHost}`;
+  }
+  return "https://klaten-international-minisoccer.vercel.app";
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const requestUrl = new URL(request.url);
-    const forwardedHost = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
-    const forwardedProto = request.headers.get("x-forwarded-proto") ?? requestUrl.protocol.replace(/:$/, "");
-    const appBaseUrl = forwardedHost ? `${forwardedProto}://${forwardedHost}` : process.env.NEXT_PUBLIC_APP_URL ?? "https://klaten-international-minisoccer.vercel.app";
+    const appBaseUrl = resolveAppBaseUrl(request);
 
     const result = await createPaymentTransaction({
       bookingId: typeof body?.bookingId === "string" ? body.bookingId : "",

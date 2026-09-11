@@ -1,14 +1,8 @@
 import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 
-const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
-
-interface RateLimitResult {
-  allowed: boolean;
-  remaining: number;
-  resetAt: number;
-  limit: number;
-}
+// Re-export canonical security helpers from security-headers.ts
+export { applySecurityHeaders, getRateLimitResult } from "./security-headers";
 
 interface CookieOptions {
   maxAge?: number;
@@ -34,52 +28,15 @@ function fromBase64Url(value: string) {
 }
 
 function getSecret() {
-  return getEnv("JWT_SECRET", "local-dev-secret-change-me");
-}
-
-export function getRateLimitResult(identifier: string, limit = Number(getEnv("RATE_LIMIT_MAX", "60")), windowMs = Number(getEnv("RATE_LIMIT_WINDOW_MS", "60000"))): RateLimitResult {
-  const now = Date.now();
-  const existing = rateLimitStore.get(identifier);
-
-  if (!existing || existing.resetAt <= now) {
-    const next = { count: 1, resetAt: now + windowMs };
-    rateLimitStore.set(identifier, next);
-    return { allowed: true, remaining: limit - 1, resetAt: next.resetAt, limit };
+  const secret = getEnv("JWT_SECRET", "");
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("JWT_SECRET is not configured. Tokens cannot be created or verified.");
+    }
+    console.warn("[security] JWT_SECRET not set — using dev fallback. Set JWT_SECRET in production.");
+    return "local-dev-secret-change-me";
   }
-
-  if (existing.count >= limit) {
-    return { allowed: false, remaining: 0, resetAt: existing.resetAt, limit };
-  }
-
-  existing.count += 1;
-  return { allowed: true, remaining: limit - existing.count, resetAt: existing.resetAt, limit };
-}
-
-export function applySecurityHeaders(response: NextResponse, request?: NextRequest) {
-  const csp = [
-    "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://app.sandbox.midtrans.com https://app.midtrans.com https://snap-assets.sandbox.midtrans.com https://snap-assets.midtrans.com https://api.sandbox.midtrans.com https://api.midtrans.com https://pay.google.com https://gwk.gopayapi.com/sdk/stable/gp-container.min.js https://www.googletagmanager.com https://o.alicdn.com https://g.alicdn.com",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "img-src 'self' data: https://snap-assets.sandbox.midtrans.com https://snap-assets.midtrans.com https://api.sandbox.midtrans.com https://api.midtrans.com https://pay.google.com https://g.alicdn.com https://res.cloudinary.com",
-    "connect-src 'self' https://app.sandbox.midtrans.com https://app.midtrans.com https://api.sandbox.midtrans.com https://api.midtrans.com https://snap-assets.sandbox.midtrans.com",
-    "frame-src https://app.sandbox.midtrans.com https://app.midtrans.com",
-    "child-src https://app.sandbox.midtrans.com https://app.midtrans.com",
-    "frame-ancestors 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-  ].join("; ");
-
-  response.headers.set("content-security-policy", csp);
-  response.headers.set("x-content-type-options", "nosniff");
-  response.headers.set("x-frame-options", "DENY");
-  response.headers.set("referrer-policy", "no-referrer");
-  response.headers.set("x-xss-protection", "1; mode=block");
-
-  if (request?.headers.get("x-forwarded-proto") === "https" || process.env.NODE_ENV === "production") {
-    response.headers.set("strict-transport-security", "max-age=31536000; includeSubDomains");
-  }
-
-  return response;
+  return secret;
 }
 
 export function createJwt(payload: Record<string, unknown>, secret = getSecret()) {
