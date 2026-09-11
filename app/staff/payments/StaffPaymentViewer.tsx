@@ -91,13 +91,13 @@ export default function StaffPaymentViewer({ adminName, useMain = true }: { admi
   };
 
   const content = (
-    <div className="mx-auto max-w-7xl space-y-8" id="staff-payments">
-      <div className="mx-auto max-w-7xl space-y-8">
-        <div className="rounded-[2rem] border border-white/10 bg-[color:var(--surface-strong)] p-8">
+    <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8" id="staff-payments">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <div className="rounded-[2rem] border border-white/10 bg-[color:var(--surface-strong)] p-6 sm:p-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Staff payment viewer</p>
-              <h1 className="mt-2 text-4xl font-semibold text-white">Payments</h1>
+              <h1 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">Payments</h1>
               <p className="mt-3 text-sm leading-7 text-[color:var(--muted)]">
                 Read-only payment history for staff review.
               </p>
@@ -106,9 +106,9 @@ export default function StaffPaymentViewer({ adminName, useMain = true }: { admi
           </div>
         </div>
 
-        <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold text-white">Payment records</h2>
+        <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-5 sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-xl font-semibold text-white sm:text-2xl">Payment records</h2>
             <div className="flex items-center gap-2">
               <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search transaction" className="rounded-3xl border border-white/10 bg-[color:var(--background)] px-3 py-2 text-sm text-white" />
               <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-3xl border border-white/10 bg-[color:var(--background)] px-3 py-2 text-sm text-white">

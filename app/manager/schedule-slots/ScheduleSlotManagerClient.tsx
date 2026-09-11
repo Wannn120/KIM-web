@@ -108,30 +108,29 @@ export default function ScheduleSlotManagerClient({ adminName }: { adminName: st
   };
 
   return (
-    <main className="flex-1 px-6 py-16 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-8">
-        <div className="rounded-[2rem] border border-white/10 bg-[color:var(--surface-strong)] p-8">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Schedule manager</p>
-              <h1 className="mt-2 text-4xl font-semibold text-white">Booking schedule slots</h1>
-              <p className="mt-3 text-sm leading-7 text-[color:var(--muted)]">
-                Manage schedule slots that control availability for the booking engine.
-              </p>
-            </div>
-            <div className="rounded-full bg-white/10 px-4 py-2 text-sm text-[color:var(--muted)]">Signed in as {adminName}</div>
+    <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8" id="schedule-slots">
+      <div className="rounded-[2rem] border border-white/10 bg-[color:var(--surface-strong)] p-6 sm:p-8">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Schedule manager</p>
+            <h1 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">Booking schedule slots</h1>
+            <p className="mt-3 text-sm leading-7 text-[color:var(--muted)]">
+              Manage schedule slots that control availability for the booking engine.
+            </p>
           </div>
+          <div className="rounded-full bg-white/10 px-4 py-2 text-sm text-[color:var(--muted)]">Signed in as {adminName}</div>
         </div>
+      </div>
 
-        {error ? (
-          <div className="rounded-3xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">{error}</div>
-        ) : null}
+      {error ? (
+        <div className="rounded-3xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">{error}</div>
+      ) : null}
 
-        <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
-          <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-6">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-semibold text-white">Schedule slots</h2>
+      <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
+        <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-5 sm:p-6">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-semibold text-white sm:text-2xl">Schedule slots</h2>
                 <p className="mt-2 text-sm text-[color:var(--muted)]">Slots are rendered in booking availability and validated on checkout.</p>
               </div>
               <button onClick={() => void loadSlots()} className="btn-secondary px-4 py-2">Refresh</button>
@@ -173,8 +172,8 @@ export default function ScheduleSlotManagerClient({ adminName }: { adminName: st
             </div>
           </section>
 
-          <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-6">
-            <h2 className="text-2xl font-semibold text-white">Create / update slot</h2>
+          <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-5 sm:p-6">
+            <h2 className="text-xl font-semibold text-white sm:text-2xl">Create / update slot</h2>
             <div className="mt-6 space-y-4">
               <div>
                 <label className="text-sm text-[color:var(--muted)]">Start time</label>
@@ -206,6 +205,5 @@ export default function ScheduleSlotManagerClient({ adminName }: { adminName: st
           </section>
         </div>
       </div>
-    </main>
   );
 }

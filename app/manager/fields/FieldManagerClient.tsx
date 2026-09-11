@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 
@@ -162,11 +162,11 @@ export default function FieldManagerClient({ adminName, useMain = true }: { admi
   const content = (
     <div className="mx-auto max-w-7xl space-y-8" id="fields">
       <div className="mx-auto max-w-7xl space-y-8">
-        <div className="rounded-[2rem] border border-white/10 bg-[color:var(--surface-strong)] p-8">
+        <div className="rounded-[2rem] border border-white/10 bg-[color:var(--surface-strong)] p-6 sm:p-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Field manager</p>
-              <h1 className="mt-2 text-4xl font-semibold text-white">Manager CRUD Table</h1>
+              <h1 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">Manager CRUD Table</h1>
               <p className="mt-3 text-sm leading-7 text-[color:var(--muted)]">
                 Manage field records directly. Create, update, and delete fields for booking operations.
               </p>
@@ -176,10 +176,10 @@ export default function FieldManagerClient({ adminName, useMain = true }: { admi
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-          <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-6">
+          <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-5 sm:p-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-semibold text-white">Field list</h2>
+                <h2 className="text-xl font-semibold text-white sm:text-2xl">Field list</h2>
                 <p className="mt-2 text-sm text-[color:var(--muted)]">CRUD table untuk semua lapangan.</p>
               </div>
               <div className="flex items-center gap-2">
@@ -249,8 +249,8 @@ export default function FieldManagerClient({ adminName, useMain = true }: { admi
             </div>
           </section>
 
-          <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-6">
-            <h2 className="text-2xl font-semibold text-white">Create / update field</h2>
+          <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-5 sm:p-6">
+            <h2 className="text-xl font-semibold text-white sm:text-2xl">Create / update field</h2>
             <div className="mt-6 space-y-4">
               <div>
                 <label className="text-sm text-[color:var(--muted)]">Name</label>
@@ -311,5 +311,6 @@ export default function FieldManagerClient({ adminName, useMain = true }: { admi
     </div>
   );
 
-  return useMain ? <main className="flex-1 px-6 py-16 lg:px-8">{content}</main> : content;
+  return useMain ? <main className="flex-1 px-4 sm:px-6 lg:px-8">{content}</main> : content;
 }
+

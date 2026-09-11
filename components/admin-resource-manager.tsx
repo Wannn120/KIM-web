@@ -96,9 +96,9 @@ export default function AdminResourceManager({ resource, canManage, adminName }:
   }
 
   const title = labels[resource];
-  return <section className="mx-auto max-w-7xl space-y-6 px-6 py-10 lg:px-8">
+  return <section className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
     <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-      <div><p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Admin workspace</p><h1 className="mt-2 text-3xl font-semibold text-white">{title}</h1><p className="mt-2 text-sm text-[color:var(--muted)]">Signed in as {adminName}</p></div>
+      <div><p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Admin workspace</p><h1 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">{title}</h1><p className="mt-2 text-sm text-[color:var(--muted)]">Signed in as {adminName}</p></div>
       <button onClick={() => void load()} className="btn-secondary">Refresh</button>
     </div>
     {message ? <p className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-amber-200">{message}</p> : null}
@@ -106,3 +106,4 @@ export default function AdminResourceManager({ resource, canManage, adminName }:
     <div className="overflow-x-auto rounded-2xl border border-white/10 bg-[color:var(--surface)]"><table className="w-full text-left text-sm"><thead className="bg-white/5 text-[color:var(--muted)]"><tr><th className="px-4 py-3">ID</th><th className="px-4 py-3">Details</th>{canManage && resource !== "audit-logs" ? <th className="px-4 py-3">Action</th> : null}</tr></thead><tbody>{loading ? <tr><td className="px-4 py-6 text-[color:var(--muted)]" colSpan={3}>Loading...</td></tr> : rows.map((row, index) => <tr key={String(row.id || index)} className="border-t border-white/10"><td className="max-w-xs px-4 py-3 font-mono text-xs text-[color:var(--muted)]">{String(row.id || row.key || index + 1)}</td><td className="px-4 py-3 text-white"><div className="grid gap-1 md:grid-cols-2">{Object.entries(row).filter(([key]) => !["id", "updatedAt"].includes(key)).slice(0, 8).map(([key, value]) => <span key={key}><b className="text-[color:var(--muted)]">{key}: </b>{typeof value === "object" ? JSON.stringify(value) : String(value ?? "-")}</span>)}</div></td>{canManage && resource !== "audit-logs" ? <td className="space-x-3 px-4 py-3"><button className="text-sky-300 hover:text-sky-200" onClick={() => void update(row)}>Edit</button><button className="text-rose-300 hover:text-rose-200" onClick={() => void remove(String(row.id))}>Delete</button></td> : null}</tr>)}</tbody></table></div>
   </section>;
 }
+

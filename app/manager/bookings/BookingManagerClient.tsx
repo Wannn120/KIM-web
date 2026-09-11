@@ -163,11 +163,11 @@ export default function BookingManagerClient({ adminName, useMain = true }: { ad
   const content = (
     <div className="mx-auto max-w-7xl space-y-8" id="bookings">
       <div className="mx-auto max-w-7xl space-y-8">
-        <div className="rounded-[2rem] border border-white/10 bg-[color:var(--surface-strong)] p-8">
+        <div className="rounded-[2rem] border border-white/10 bg-[color:var(--surface-strong)] p-6 sm:p-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Booking manager</p>
-              <h1 className="mt-2 text-4xl font-semibold text-white">Booking CRUD table</h1>
+              <h1 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">Booking CRUD table</h1>
               <p className="mt-3 text-sm leading-7 text-[color:var(--muted)]">
                 Create, update, and delete bookings with staff-grade operational controls.
               </p>
@@ -177,10 +177,10 @@ export default function BookingManagerClient({ adminName, useMain = true }: { ad
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-          <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-6">
+          <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-5 sm:p-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-semibold text-white">Booking list</h2>
+                <h2 className="text-xl font-semibold text-white sm:text-2xl">Booking list</h2>
                 <p className="mt-2 text-sm text-[color:var(--muted)]">Operational booking table with quick edit and delete actions.</p>
               </div>
               <div className="flex items-center gap-2">
@@ -249,8 +249,8 @@ export default function BookingManagerClient({ adminName, useMain = true }: { ad
             </div>
           </section>
 
-          <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-6">
-            <h2 className="text-2xl font-semibold text-white">Create / update booking</h2>
+          <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-5 sm:p-6">
+            <h2 className="text-xl font-semibold text-white sm:text-2xl">Create / update booking</h2>
             <div className="mt-6 space-y-4">
               <div>
                 <label className="text-sm text-[color:var(--muted)]">Field</label>

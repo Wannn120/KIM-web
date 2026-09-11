@@ -55,12 +55,12 @@ export default function FinancialReport({ adminName }: { adminName: string }) {
   const maxRevenue = data?.buckets.reduce((max, b) => Math.max(max, b.revenue), 0) ?? 0;
 
   return (
-    <section className="mx-auto max-w-7xl space-y-6 px-6 py-10 lg:px-8" id="financial-report">
-      <div className="rounded-[2rem] border border-white/10 bg-[color:var(--surface-strong)] p-8">
+    <section className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8" id="financial-report">
+      <div className="rounded-[2rem] border border-white/10 bg-[color:var(--surface-strong)] p-6 sm:p-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Financial report</p>
-            <h1 className="mt-2 text-4xl font-semibold text-white">Laporan Keuangan</h1>
+            <h1 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">Laporan Keuangan</h1>
             <p className="mt-3 text-sm leading-7 text-[color:var(--muted)]">
               Revenue harian, mingguan, bulanan, atau rentang tanggal tertentu. Signed in as {adminName}
             </p>
@@ -121,26 +121,26 @@ export default function FinancialReport({ adminName }: { adminName: string }) {
         </div>
       ) : data ? (
         <>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-6">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-5 sm:p-6">
               <p className="text-sm text-[color:var(--muted)]">Total revenue</p>
-              <p className="mt-3 text-3xl font-semibold text-white">Rp {data.totalRevenue.toLocaleString("id-ID")}</p>
+              <p className="mt-3 text-2xl font-semibold text-white sm:text-3xl">Rp {data.totalRevenue.toLocaleString("id-ID")}</p>
             </div>
-            <div className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-6">
+            <div className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-5 sm:p-6">
               <p className="text-sm text-[color:var(--muted)]">Total bookings</p>
-              <p className="mt-3 text-3xl font-semibold text-white">{data.totalBookings}</p>
+              <p className="mt-3 text-2xl font-semibold text-white sm:text-3xl">{data.totalBookings}</p>
             </div>
-            <div className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-6">
+            <div className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-5 sm:p-6">
               <p className="text-sm text-[color:var(--muted)]">Successful payments</p>
-              <p className="mt-3 text-3xl font-semibold text-white">{data.totalPayments}</p>
+              <p className="mt-3 text-2xl font-semibold text-white sm:text-3xl">{data.totalPayments}</p>
             </div>
-            <div className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-6">
+            <div className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-5 sm:p-6">
               <p className="text-sm text-[color:var(--muted)]">Avg per booking</p>
-              <p className="mt-3 text-3xl font-semibold text-white">Rp {data.avgPerBooking.toLocaleString("id-ID")}</p>
+              <p className="mt-3 text-2xl font-semibold text-white sm:text-3xl">Rp {data.avgPerBooking.toLocaleString("id-ID")}</p>
             </div>
           </div>
 
-          <div className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-6">
+          <div className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-5 sm:p-6">
             <h2 className="text-xl font-semibold text-white">
               Grafik Revenue {period === "daily" ? "Harian" : period === "weekly" ? "Mingguan" : "Bulanan"}
             </h2>
