@@ -24,6 +24,9 @@ export default function StaffPaymentViewer({ adminName, useMain = true }: { admi
   const [totalPages, setTotalPages] = useState(1);
   const [query, setQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editStatus, setEditStatus] = useState("");
+  const [editAmount, setEditAmount] = useState<number>(0);
 
   const fetchPayments = async (pageParam = 1, q = "", status = "") => {
     setLoading(true);
@@ -61,6 +64,30 @@ export default function StaffPaymentViewer({ adminName, useMain = true }: { admi
     if (p > totalPages) p = totalPages;
     setPage(p);
     await fetchPayments(p, query, filterStatus);
+  };
+
+  const handleUpdatePayment = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/payments/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: editStatus, amount: editAmount }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Gagal update");
+      setEditingId(null);
+      await fetchPayments(page, query, filterStatus);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  };
+
+  const handleDeletePayment = async (id: string) => {
+    if (!confirm("Hapus pembayaran ini?")) return;
+    try {
+      const res = await fetch(`/api/admin/payments/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Gagal hapus");
+      await fetchPayments(page, query, filterStatus);
+    } catch (e) {
+      setError((e as Error).message);
+    }
   };
 
   const content = (
@@ -106,6 +133,7 @@ export default function StaffPaymentViewer({ adminName, useMain = true }: { admi
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Method</th>
                   <th className="px-4 py-3">Provider</th>
+                  <th className="px-4 py-3">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/10">
@@ -114,14 +142,38 @@ export default function StaffPaymentViewer({ adminName, useMain = true }: { admi
                     <td className="px-4 py-3 text-white">{payment.transactionId}</td>
                     <td className="px-4 py-3">{payment.booking.customerName}</td>
                     <td className="px-4 py-3">Rp {Number(payment.amount).toLocaleString("id-ID")}</td>
-                    <td className="px-4 py-3">{payment.status}</td>
+                    <td className="px-4 py-3">
+                      {editingId === payment.id ? (
+                        <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)} className="rounded border border-white/10 bg-[color:var(--background)] px-2 py-1 text-sm text-white">
+                          <option value="pending">pending</option>
+                          <option value="success">success</option>
+                          <option value="failed">failed</option>
+                          <option value="refunded">refunded</option>
+                        </select>
+                      ) : (
+                        payment.status
+                      )}
+                    </td>
                     <td className="px-4 py-3">{payment.paymentMethod}</td>
                     <td className="px-4 py-3">{payment.provider}</td>
+                    <td className="px-4 py-3">
+                      {editingId === payment.id ? (
+                        <>
+                          <button onClick={() => handleUpdatePayment(payment.id)} className="rounded bg-emerald-600 px-3 py-1 text-sm text-white">Simpan</button>
+                          <button onClick={() => setEditingId(null)} className="ml-2 rounded bg-gray-600 px-3 py-1 text-sm text-white">Batal</button>
+                        </>
+                      ) : (
+                        <>
+                          <button onClick={() => { setEditingId(payment.id); setEditStatus(payment.status); setEditAmount(payment.amount); }} className="rounded bg-blue-600 px-3 py-1 text-sm text-white">Edit</button>
+                          <button onClick={() => handleDeletePayment(payment.id)} className="ml-2 rounded bg-rose-600 px-3 py-1 text-sm text-white">Hapus</button>
+                        </>
+                      )}
+                    </td>
                   </tr>
                 ))}
                 {payments.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-sm text-[color:var(--muted)]">
+                    <td colSpan={7} className="px-4 py-6 text-center text-sm text-[color:var(--muted)]">
                       {loading ? "Loading payments..." : "No payments found."}
                     </td>
                   </tr>

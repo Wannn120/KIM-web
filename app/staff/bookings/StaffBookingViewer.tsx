@@ -23,6 +23,13 @@ export default function StaffBookingViewer({ adminName, useMain = true }: { admi
   const [totalPages, setTotalPages] = useState(1);
   const [query, setQuery] = useState("");
   const [filterDate, setFilterDate] = useState("");
+  const [showWalkIn, setShowWalkIn] = useState(false);
+  const [walkInForm, setWalkInForm] = useState({ customerName: "", customerPhone: "", customerEmail: "", bookingDate: "", startTime: "", endTime: "", paymentMethod: "Offline" });
+  const [walkInError, setWalkInError] = useState<string | null>(null);
+  const [walkInSuccess, setWalkInSuccess] = useState<string | null>(null);
+  const [walkInLoading, setWalkInLoading] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editStatus, setEditStatus] = useState("");
 
   const fetchBookings = async (pageParam = 1, q = "", date = "") => {
     setLoading(true);
@@ -62,6 +69,53 @@ export default function StaffBookingViewer({ adminName, useMain = true }: { admi
     await fetchBookings(p, query, filterDate);
   };
 
+  const handleWalkIn = async () => {
+    setWalkInError(null);
+    setWalkInSuccess(null);
+    if (!walkInForm.customerName || !walkInForm.customerPhone || !walkInForm.bookingDate || !walkInForm.startTime || !walkInForm.endTime) {
+      setWalkInError("Nama, no HP, tanggal, dan waktu wajib diisi.");
+      return;
+    }
+    setWalkInLoading(true);
+    try {
+      const res = await fetch("/api/staff/walk-in", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(walkInForm) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Gagal membuat booking");
+      setWalkInSuccess(`Booking berhasil! Invoice: ${data.data.invoice.invoiceNumber}`);
+      setWalkInForm({ customerName: "", customerPhone: "", customerEmail: "", bookingDate: "", startTime: "", endTime: "", paymentMethod: "Offline" });
+      setShowWalkIn(false);
+      await fetchBookings(1, query, filterDate);
+    } catch (e) {
+      setWalkInError((e as Error).message);
+    } finally {
+      setWalkInLoading(false);
+    }
+  };
+
+  const handleUpdateStatus = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/bookings/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: editStatus }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Gagal update");
+      setEditingId(null);
+      await fetchBookings(page, query, filterDate);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Hapus booking ini?")) return;
+    try {
+      const res = await fetch(`/api/admin/bookings/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Gagal hapus");
+      await fetchBookings(page, query, filterDate);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  };
+
   const content = (
     <div className="mx-auto max-w-7xl space-y-8" id="staff-bookings">
       <div className="mx-auto max-w-7xl space-y-8">
@@ -85,11 +139,37 @@ export default function StaffBookingViewer({ adminName, useMain = true }: { admi
               <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search customer or phone" className="rounded-3xl border border-white/10 bg-[color:var(--background)] px-3 py-2 text-sm text-white" />
               <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="rounded-3xl border border-white/10 bg-[color:var(--background)] px-3 py-2 text-sm text-white" />
               <button onClick={handleSearch} className="btn-secondary px-3 py-1">Filter</button>
+              <button onClick={() => setShowWalkIn(true)} className="rounded-full bg-[color:var(--accent)] px-4 py-2 text-sm font-semibold text-black">+ Walk-in</button>
             </div>
           </div>
           {error ? (
             <div className="mt-4 rounded-3xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">{error}</div>
           ) : null}
+
+          {showWalkIn && (
+            <div className="mt-6 rounded-3xl border border-white/10 bg-[color:var(--surface)] p-6">
+              <h3 className="text-xl font-semibold text-white">Walk-in Booking</h3>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <input placeholder="Nama" value={walkInForm.customerName} onChange={(e) => setWalkInForm(f => ({ ...f, customerName: e.target.value }))} className="rounded-3xl border border-white/10 bg-[color:var(--background)] px-4 py-3 text-sm text-white" />
+                <input placeholder="No HP" value={walkInForm.customerPhone} onChange={(e) => setWalkInForm(f => ({ ...f, customerPhone: e.target.value }))} className="rounded-3xl border border-white/10 bg-[color:var(--background)] px-4 py-3 text-sm text-white" />
+                <input type="email" placeholder="Email" value={walkInForm.customerEmail} onChange={(e) => setWalkInForm(f => ({ ...f, customerEmail: e.target.value }))} className="rounded-3xl border border-white/10 bg-[color:var(--background)] px-4 py-3 text-sm text-white" />
+                <input type="date" placeholder="Tanggal" value={walkInForm.bookingDate} onChange={(e) => setWalkInForm(f => ({ ...f, bookingDate: e.target.value }))} className="rounded-3xl border border-white/10 bg-[color:var(--background)] px-4 py-3 text-sm text-white" />
+                <input type="time" placeholder="Mulai" value={walkInForm.startTime} onChange={(e) => setWalkInForm(f => ({ ...f, startTime: e.target.value }))} className="rounded-3xl border border-white/10 bg-[color:var(--background)] px-4 py-3 text-sm text-white" />
+                <input type="time" placeholder="Selesai" value={walkInForm.endTime} onChange={(e) => setWalkInForm(f => ({ ...f, endTime: e.target.value }))} className="rounded-3xl border border-white/10 bg-[color:var(--background)] px-4 py-3 text-sm text-white" />
+                <select value={walkInForm.paymentMethod} onChange={(e) => setWalkInForm(f => ({ ...f, paymentMethod: e.target.value }))} className="rounded-3xl border border-white/10 bg-[color:var(--background)] px-4 py-3 text-sm text-white">
+                  <option value="Offline">Cash</option>
+                  <option value="Midtrans">Midtrans</option>
+                </select>
+              </div>
+              {walkInError ? <div className="mt-4 text-sm text-rose-200">{walkInError}</div> : null}
+              {walkInSuccess ? <div className="mt-4 text-sm text-emerald-200">{walkInSuccess}</div> : null}
+              <div className="mt-6 flex gap-3">
+                <button onClick={handleWalkIn} disabled={walkInLoading} className="rounded-full bg-[color:var(--accent)] px-6 py-3 font-semibold text-black disabled:opacity-60">{walkInLoading ? "Memproses..." : "Buat Booking"}</button>
+                <button onClick={() => setShowWalkIn(false)} className="rounded-full border border-white/10 px-6 py-3 font-semibold text-white">Batal</button>
+              </div>
+            </div>
+          )}
+
           <div className="mt-6 overflow-x-auto rounded-3xl border border-white/10 bg-[color:var(--background)]">
             <table className="w-full min-w-[860px] divide-y divide-white/10 text-left text-sm">
               <thead className="bg-[color:rgba(255,255,255,0.03)] text-[color:var(--muted)]">
@@ -100,6 +180,7 @@ export default function StaffBookingViewer({ adminName, useMain = true }: { admi
                   <th className="px-4 py-3">Date / Time</th>
                   <th className="px-4 py-3">Price</th>
                   <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/10">
@@ -110,14 +191,38 @@ export default function StaffBookingViewer({ adminName, useMain = true }: { admi
                     <td className="px-4 py-3">{booking.customerName}</td>
                     <td className="px-4 py-3">{booking.bookingDate.split("T")[0]} {booking.startTime}–{booking.endTime}</td>
                     <td className="px-4 py-3">Rp {Number(booking.totalPrice).toLocaleString("id-ID")}</td>
-                    <td className="px-4 py-3">{booking.status}</td>
+                    <td className="px-4 py-3">
+                      {editingId === booking.id ? (
+                        <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)} className="rounded border border-white/10 bg-[color:var(--background)] px-2 py-1 text-sm text-white">
+                          <option value="pending">pending</option>
+                          <option value="confirmed">confirmed</option>
+                          <option value="cancelled">cancelled</option>
+                          <option value="completed">completed</option>
+                        </select>
+                      ) : (
+                        booking.status
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {editingId === booking.id ? (
+                        <>
+                          <button onClick={() => handleUpdateStatus(booking.id)} className="rounded bg-emerald-600 px-3 py-1 text-sm text-white">Simpan</button>
+                          <button onClick={() => setEditingId(null)} className="ml-2 rounded bg-gray-600 px-3 py-1 text-sm text-white">Batal</button>
+                        </>
+                      ) : (
+                        <>
+                          <button onClick={() => { setEditingId(booking.id); setEditStatus(booking.status); }} className="rounded bg-blue-600 px-3 py-1 text-sm text-white">Edit</button>
+                          <button onClick={() => handleDelete(booking.id)} className="ml-2 rounded bg-rose-600 px-3 py-1 text-sm text-white">Hapus</button>
+                        </>
+                      )}
+                    </td>
                   </tr>
                 ))}
                 {bookings.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-sm text-[color:var(--muted)]">
-                      {loading ? "Loading bookings..." : "No bookings found."}
-                    </td>
+                    <td colSpan={7} className="px-4 py-6 text-center text-sm text-[color:var(--muted)]">
+                    {loading ? "Loading bookings..." : "No bookings found."}
+                  </td>
                   </tr>
                 ) : null}
               </tbody>

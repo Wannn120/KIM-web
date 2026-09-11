@@ -126,9 +126,9 @@ function getDefaultPermissions(role: AdminRole): AdminPermissions {
       return {
         canManageFields: false,
         canReadFields: false,
-        canManageBookings: false,
+        canManageBookings: true,
         canReadBookings: true,
-        canManagePayments: false,
+        canManagePayments: true,
         canReadPayments: true,
         canManageInvoices: false,
         canReadInvoices: false,
@@ -139,7 +139,7 @@ function getDefaultPermissions(role: AdminRole): AdminPermissions {
         canManageAdmins: false,
         canViewReports: false,
         canVerifyPayments: false,
-        canCreateBookings: false,
+        canCreateBookings: true,
         canManageSettings: false,
       };
   }
