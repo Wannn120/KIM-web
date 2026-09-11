@@ -1,9 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { sanitizeObject, applySecurityHeaders } from "@/lib/security-headers";
+import { sanitizeObject, applySecurityHeaders, getRateLimitResult } from "@/lib/security-headers";
 import { authenticateAdmin, writeAdminSessionCookie } from "@/lib/admin-auth";
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+    const rateLimit = getRateLimitResult(`login:${ip}`, 10, 300000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json({ success: false, message: "Too many login attempts. Please try again later." }, { status: 429 });
+    }
+
     const body = sanitizeObject(await request.json().catch(() => ({})) as Record<string, unknown>);
     const email = typeof body.email === "string" ? body.email : "";
     const password = typeof body.password === "string" ? body.password : "";
@@ -23,7 +29,7 @@ export async function POST(request: NextRequest) {
     );
 
     return applySecurityHeaders(response);
-  } catch (error) {
-    return NextResponse.json({ success: false, message: (error as Error).message }, { status: 401 });
+  } catch {
+    return NextResponse.json({ success: false, message: "Invalid credentials." }, { status: 401 });
   }
 }

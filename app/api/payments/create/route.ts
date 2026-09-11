@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createPaymentTransaction } from "@/lib/payment-service";
+import { getRateLimitResult } from "@/lib/security-headers";
 
 const ALLOWED_HOSTS = new Set([
   "klaten-international-minisoccer.vercel.app",
@@ -20,6 +21,12 @@ function resolveAppBaseUrl(request: Request): string {
 
 export async function POST(request: Request) {
   try {
+    const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+    const rateLimit = getRateLimitResult(`payment-create:${ip}`, 20, 60000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json({ success: false, message: "Too many payment requests. Please try again later." }, { status: 429 });
+    }
+
     const body = await request.json();
     const appBaseUrl = resolveAppBaseUrl(request);
 
@@ -46,7 +53,6 @@ export async function POST(request: Request) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     console.error("[API] Payment creation error:", {
       message: errorMsg,
-      stack: error instanceof Error ? error.stack : undefined,
       timestamp: new Date().toISOString(),
     });
     
