@@ -49,8 +49,6 @@ export default async function SuperadminPage() {
         <PaymentManagerClient adminName={admin.name} useMain={false} />
         <AdminResourceManager resource="invoices" canManage={admin.permissions.canManageInvoices} adminName={admin.name} />
         <AdminResourceManager resource="reviews" canManage={admin.permissions.canManageReviews} adminName={admin.name} />
-        <AdminResourceManager resource="features" canManage={admin.permissions.canManageFeatures} adminName={admin.name} />
-        <AdminResourceManager resource="gallery" canManage={admin.permissions.canManageGallery} adminName={admin.name} />
         <AdminResourceManager resource="settings" canManage={admin.permissions.canManageSettings} adminName={admin.name} />
         <AdminResourceManager resource="users" canManage={admin.permissions.canManageAdmins} adminName={admin.name} />
         <VenueFeatureManager />
