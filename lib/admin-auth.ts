@@ -59,6 +59,10 @@ export interface AdminPermissions {
   canVerifyPayments: boolean;
   canCreateBookings: boolean;
   canManageSettings: boolean;
+  canManageFeatures: boolean;
+  canReadFeatures: boolean;
+  canManageGallery: boolean;
+  canReadGallery: boolean;
 }
 
 export interface AuthenticatedAdmin {
@@ -101,6 +105,10 @@ function getDefaultPermissions(role: AdminRole): AdminPermissions {
         canVerifyPayments: true,
         canCreateBookings: true,
         canManageSettings: true,
+        canManageFeatures: true,
+        canReadFeatures: true,
+        canManageGallery: true,
+        canReadGallery: true,
       };
     case ADMIN_ROLES.manager:
       return {
@@ -121,6 +129,10 @@ function getDefaultPermissions(role: AdminRole): AdminPermissions {
         canVerifyPayments: true,
         canCreateBookings: true,
         canManageSettings: true,
+        canManageFeatures: true,
+        canReadFeatures: true,
+        canManageGallery: true,
+        canReadGallery: true,
       };
     default:
       return {
@@ -141,6 +153,10 @@ function getDefaultPermissions(role: AdminRole): AdminPermissions {
         canVerifyPayments: false,
         canCreateBookings: true,
         canManageSettings: false,
+        canManageFeatures: false,
+        canReadFeatures: false,
+        canManageGallery: false,
+        canReadGallery: false,
       };
   }
 }

@@ -10,14 +10,16 @@ function tokenFrom(request: Request) {
 async function authorize(request: Request, manage = false) {
   const admin = await getAuthenticatedAdminFromToken(tokenFrom(request));
   if (!admin) return null;
-  const allowed = manage ? hasAdminPermission(admin, "canManageFeatures") : hasAdminPermission(admin, "canReadFeatures") || hasAdminPermission(admin, "canManageFeatures");
+  const allowed = manage
+    ? hasAdminPermission(admin, "canManageGallery")
+    : hasAdminPermission(admin, "canReadGallery") || hasAdminPermission(admin, "canManageGallery");
   return allowed ? admin : null;
 }
 
 export async function GET(request: Request) {
-  const admin = await authorize(request, false);
+  const admin = await authorize(request);
   if (!admin) return NextResponse.json({ success: false, message: "Insufficient privileges." }, { status: 403 });
-  const data = await prisma.venueFeature.findMany({ orderBy: { sortOrder: "asc" } });
+  const data = await prisma.venueGallery.findMany({ orderBy: { sortOrder: "asc" } });
   return NextResponse.json({ success: true, data });
 }
 
@@ -26,12 +28,21 @@ export async function POST(request: Request) {
   if (!admin) return NextResponse.json({ success: false, message: "Insufficient privileges." }, { status: 403 });
   try {
     const body = await request.json();
-    const name = typeof body.name === "string" ? body.name.trim() : "";
-    const description = typeof body.description === "string" ? body.description.trim() : "";
+    const title = typeof body.title === "string" ? body.title.trim() : "";
     const imageUrl = typeof body.imageUrl === "string" ? body.imageUrl.trim() : "";
-    if (!name || !description || !imageUrl) return NextResponse.json({ success: false, message: "Name, description, and image are required." }, { status: 400 });
-    const last = await prisma.venueFeature.findFirst({ orderBy: { sortOrder: "desc" }, select: { sortOrder: true } });
-    const data = await prisma.venueFeature.create({ data: { name, description, imageUrl, imagePublicId: typeof body.imagePublicId === "string" ? body.imagePublicId : null, sortOrder: (last?.sortOrder ?? -1) + 1 } });
+    if (!title || !imageUrl) return NextResponse.json({ success: false, message: "Title and image URL are required." }, { status: 400 });
+    const last = await prisma.venueGallery.findFirst({ orderBy: { sortOrder: "desc" }, select: { sortOrder: true } });
+    const data = await prisma.venueGallery.create({
+      data: {
+        title,
+        imageUrl,
+        imagePublicId: typeof body.imagePublicId === "string" ? body.imagePublicId : null,
+        sortOrder: (last?.sortOrder ?? -1) + 1,
+      },
+    });
     return NextResponse.json({ success: true, data }, { status: 201 });
-  } catch (error) { console.error("[ADMIN] Create venue feature error:", error); return NextResponse.json({ success: false, message: "Unable to create venue feature." }, { status: 500 }); }
+  } catch (error) {
+    console.error("[ADMIN] Create gallery item error:", error);
+    return NextResponse.json({ success: false, message: "Unable to create gallery item." }, { status: 500 });
+  }
 }

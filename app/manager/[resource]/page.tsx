@@ -4,7 +4,7 @@ import { getAdminPanelPath, getAuthenticatedAdminFromToken, isAdminRoleAllowed }
 import AdminResourceManager from "@/components/admin-resource-manager";
 
 export const dynamic = "force-dynamic";
-const resources = ["invoices", "reviews", "settings"] as const;
+const resources = ["invoices", "reviews", "settings", "features", "gallery"] as const;
 type Resource = (typeof resources)[number];
 
 export default async function ManagerResourcePage({ params }: { params: Promise<{ resource: string }> }) {
@@ -13,8 +13,18 @@ export default async function ManagerResourcePage({ params }: { params: Promise<
   const admin = await getAuthenticatedAdminFromToken((await cookies()).get("admin-session")?.value ?? "");
   if (!admin) redirect("/manager/login");
   if (!isAdminRoleAllowed(admin.role, ["manager", "super_admin"])) redirect(`${getAdminPanelPath(admin.role)}/login`);
-  const canManage = resource === "invoices" ? admin.permissions.canManageInvoices : resource === "reviews" ? admin.permissions.canManageReviews : admin.permissions.canManageSettings;
-  const canRead = resource === "invoices" ? admin.permissions.canReadInvoices : resource === "reviews" ? admin.permissions.canReadReviews : admin.permissions.canManageSettings;
+  const canManage =
+    resource === "invoices" ? admin.permissions.canManageInvoices
+    : resource === "reviews" ? admin.permissions.canManageReviews
+    : resource === "features" ? admin.permissions.canManageFeatures
+    : resource === "gallery" ? admin.permissions.canManageGallery
+    : admin.permissions.canManageSettings;
+  const canRead =
+    resource === "invoices" ? admin.permissions.canReadInvoices
+    : resource === "reviews" ? admin.permissions.canReadReviews
+    : resource === "features" ? admin.permissions.canReadFeatures
+    : resource === "gallery" ? admin.permissions.canReadGallery
+    : admin.permissions.canManageSettings;
   if (!canRead) redirect(getAdminPanelPath(admin.role));
   return <AdminResourceManager resource={resource as Resource} canManage={canManage} adminName={admin.name} />;
 }

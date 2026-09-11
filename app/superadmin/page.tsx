@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { getAuthenticatedAdminFromToken, getAdminPanelPath, isAdminRoleAllowed } from "@/lib/admin-auth";
 import { getAdminSummary, getDefaultAdminSummary } from "@/lib/admin-dashboard";
 import AdminDashboard from "@/components/admin-dashboard";
+import AdminResourceManager from "@/components/admin-resource-manager";
+import FinancialReport from "@/components/financial-report";
 import FieldManagerClient from "@/app/manager/fields/FieldManagerClient";
 import BookingManagerClient from "@/app/manager/bookings/BookingManagerClient";
 import PaymentManagerClient from "@/app/manager/payments/PaymentManagerClient";
@@ -40,9 +42,16 @@ export default async function SuperadminPage() {
     return (
       <>
         <AdminDashboard admin={admin} summary={summary} />
+        <FinancialReport adminName={admin.name} />
         <FieldManagerClient adminName={admin.name} useMain={false} />
         <BookingManagerClient adminName={admin.name} useMain={false} />
         <PaymentManagerClient adminName={admin.name} useMain={false} />
+        <AdminResourceManager resource="invoices" canManage={admin.permissions.canManageInvoices} adminName={admin.name} />
+        <AdminResourceManager resource="reviews" canManage={admin.permissions.canManageReviews} adminName={admin.name} />
+        <AdminResourceManager resource="features" canManage={admin.permissions.canManageFeatures} adminName={admin.name} />
+        <AdminResourceManager resource="gallery" canManage={admin.permissions.canManageGallery} adminName={admin.name} />
+        <AdminResourceManager resource="settings" canManage={admin.permissions.canManageSettings} adminName={admin.name} />
+        <AdminResourceManager resource="users" canManage={admin.permissions.canManageAdmins} adminName={admin.name} />
         <VenueFeatureManager />
         <AdminContentEditor />
       </>
