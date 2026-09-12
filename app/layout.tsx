@@ -28,9 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
   },
   description: content.heroSubtitle || siteConfig.description,
   keywords: siteConfig.keywords,
-  alternates: {
-    canonical: "/",
-  },
+  robots: { index: true, follow: true },
   openGraph: {
     title: content.heroTitle || siteConfig.title,
     description: content.heroSubtitle || siteConfig.description,
@@ -59,10 +57,11 @@ export default function RootLayout({
       lang="id"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex min-h-screen flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
+      <body className="flex min-h-screen flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
         <script src="/theme-init.js" defer></script>
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:px-4 focus:py-2 focus:bg-white">Lewati ke konten</a>
         <SiteHeader />
-        <div className="flex-1">{children}</div>
+        <div id="main-content" className="flex-1">{children}</div>
         <SiteFooter />
       </body>
     </html>

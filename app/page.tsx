@@ -61,16 +61,11 @@ export default async function Home() {
 
       <ReviewSection initialReviews={reviews} />
 
-      <section aria-labelledby="location-heading" className="rounded-[3rem] border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-6 py-16 shadow-[0_24px_80px_rgba(15,23,42,0.06)] lg:px-8">
+      <section aria-labelledby="location-heading" className="border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
             <div>
-              <SectionHeading
-                eyebrow="Lokasi lapangan"
-                title="Temukan lapangan kami di Klaten"
-                id="location-heading"
-                titleClassName="text-white"
-              />
+              <SectionHeading eyebrow="Lokasi lapangan" title="Temukan lapangan kami di Klaten" id="location-heading" />
               <p className="mt-4 max-w-2xl text-lg text-[color:var(--muted)]">
                 Lapangan terletak strategis, mudah dijangkau, dan didukung fasilitas pendukung untuk tim mini soccer.
               </p>

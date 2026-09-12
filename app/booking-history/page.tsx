@@ -92,12 +92,12 @@ export default function BookingHistoryPage() {
   };
 
   return (
-    <main className="flex-1 bg-[color:var(--background)] px-6 py-16 lg:px-8">
+    <main className="flex-1 bg-[color:var(--background)] px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-8">
-        <AnimatedCard className="p-8">
+        <AnimatedCard className="p-6 sm:p-8">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Find your bookings</p>
-            <h1 className="mt-2 text-4xl font-semibold text-white">Search your booking history</h1>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--accent-strong)]">Find your bookings</p>
+            <h1 className="mt-2 text-balance text-3xl font-semibold leading-tight text-[color:var(--foreground)] sm:text-4xl">Search your booking history</h1>
             <p className="mt-2 text-[color:var(--muted)]">Enter your email or phone number to view all your bookings.</p>
           </div>
 
@@ -145,8 +145,8 @@ export default function BookingHistoryPage() {
           <AnimatedCard className="p-8">
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Booking history</p>
-                <h1 className="mt-2 text-4xl font-semibold text-white">Your complete booking timeline</h1>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--accent-strong)]">Booking history</p>
+                <h2 className="mt-2 text-balance text-2xl font-semibold leading-tight text-[color:var(--foreground)] sm:text-3xl">Your complete booking timeline</h2>
               </div>
             </div>
 
@@ -204,22 +204,22 @@ export default function BookingHistoryPage() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-xs text-[color:var(--muted)]">Name</p>
-                            <p className="font-semibold text-white">{item.customerName}</p>
+                            <p className="font-semibold text-[color:var(--foreground)]">{item.customerName}</p>
                           </div>
                           <span className={`rounded-full px-3 py-1 text-sm ${getBadgeClasses(item.status)}`}>{item.status}</span>
                         </div>
                         <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-[color:var(--muted)]">
                           <div>
                             <p className="text-xs text-[color:var(--muted)]">Field</p>
-                            <p className="text-sm text-white">{item.fieldName}</p>
+                            <p className="text-sm text-[color:var(--foreground)]">{item.fieldName}</p>
                           </div>
                           <div>
                             <p className="text-xs text-[color:var(--muted)]">Date</p>
-                            <p className="text-sm text-white">{formatBookingDate(item.bookingDate)}</p>
+                            <p className="text-sm text-[color:var(--foreground)]">{formatBookingDate(item.bookingDate)}</p>
                           </div>
                           <div className="col-span-2">
                             <p className="text-xs text-[color:var(--muted)]">Amount</p>
-                            <p className="text-sm text-white">{formatCurrency(item.totalPrice)}</p>
+                            <p className="text-sm text-[color:var(--foreground)]">{formatCurrency(item.totalPrice)}</p>
                           </div>
                           {item.payments?.[0]?.status === "pending" && item.payments?.[0]?.snapUrl ? (
                             <div className="col-span-2">

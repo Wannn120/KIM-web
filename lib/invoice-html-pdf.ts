@@ -20,7 +20,7 @@ async function launchBrowser() {
     const puppeteerCore = await import('puppeteer-core');
     const executablePath = await chromium.executablePath();
     return puppeteerCore.launch({
-      args: [...chromium.args, '--hide-scrollbars', '--disable-web-security'],
+      args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox', '--hide-scrollbars'],
       defaultViewport: { width: 1280, height: 720 },
       executablePath,
       headless: true,

@@ -101,7 +101,7 @@ export default function AdminResourceManager({ resource, canManage, adminName }:
   const title = labels[resource];
   return <section className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
     <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-      <div><p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Admin workspace</p><h1 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">{title}</h1><p className="mt-2 text-sm text-[color:var(--muted)]">Signed in as {adminName}</p></div>
+      <div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--accent-strong)]">Admin workspace</p><h1 className="mt-2 text-balance text-2xl font-semibold leading-tight text-[color:var(--foreground)] sm:text-3xl">{title}</h1><p className="mt-2 text-sm text-[color:var(--muted)]">Signed in as {adminName}</p></div>
       <button onClick={() => void load()} className="btn-secondary">Refresh</button>
     </div>
     {message ? <p className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-amber-200">{message}</p> : null}

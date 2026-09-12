@@ -178,11 +178,11 @@ export function BookingForm({ fields }: { fields: Field[] }) {
   };
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-[color:var(--surface-strong)] p-8">
+    <div className="rounded-2xl border border-white/10 bg-[color:var(--surface-strong)] p-6 sm:p-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Book a field</p>
-          <h2 className="mt-2 text-3xl font-semibold text-white">Reserve your preferred slot</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--accent-strong)]">Book a field</p>
+          <h2 className="mt-2 text-balance text-2xl font-semibold leading-tight text-[color:var(--foreground)] sm:text-3xl">Reserve your preferred slot</h2>
         </div>
         <div>
           <p className="text-sm text-[color:var(--muted)]">Choose a field and date, then confirm the available schedule.</p>
@@ -192,7 +192,7 @@ export function BookingForm({ fields }: { fields: Field[] }) {
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
         <div className="rounded-3xl border border-white/10 bg-[color:var(--background)] p-4">
           <p className="text-sm font-medium text-[color:var(--muted)]">Field</p>
-          <p className="mt-2 text-base font-semibold text-white">{selectedField?.name}</p>
+          <p className="mt-2 text-base font-semibold text-[color:var(--foreground)]">{selectedField?.name}</p>
           <p className="text-sm text-[color:var(--muted)]">{selectedField?.location}</p>
         </div>
         <div className="rounded-3xl border border-white/10 bg-[color:var(--background)] p-4">
@@ -210,7 +210,7 @@ export function BookingForm({ fields }: { fields: Field[] }) {
       <div className="mt-8">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-white">Available time slots</h3>
+            <h3 className="text-lg font-semibold text-[color:var(--foreground)]">Available time slots</h3>
             <p className="mt-1 text-sm text-[color:var(--muted)]">Only one customer can reserve a slot at a time.</p>
           </div>
           <p className="text-sm text-[color:var(--muted)]">Price per hour: {formatCurrency(selectedField?.price ?? 0)}</p>
@@ -273,18 +273,18 @@ export function BookingForm({ fields }: { fields: Field[] }) {
         <div className="grid gap-4 sm:grid-cols-[1.1fr_0.9fr] sm:items-center">
           <div>
             <p className="text-sm uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Booking preview</p>
-            <p className="mt-2 text-lg font-semibold text-white">{selectedField?.name}</p>
+            <p className="mt-2 text-lg font-semibold text-[color:var(--foreground)]">{selectedField?.name}</p>
             <p className="text-sm text-[color:var(--muted)]">{selectedField?.location}</p>
           </div>
           <div className="rounded-3xl border border-white/10 bg-[color:var(--surface)] p-4">
             <div className="grid gap-3">
               <div>
                 <p className="text-sm text-[color:var(--muted)]">Duration</p>
-                <p className="text-lg font-semibold text-white">{selectedRange ? `${selectedDuration} hour(s)` : "Select a slot"}</p>
+                <p className="text-lg font-semibold text-[color:var(--foreground)]">{selectedRange ? `${selectedDuration} hour(s)` : "Select a slot"}</p>
               </div>
               <div>
                 <p className="text-sm text-[color:var(--muted)]">Date & time</p>
-                <p className="mt-1 text-white">{selectedDate ? formatJakartaDate(selectedDate) : "—"} • {selectedLabel}</p>
+                <p className="mt-1 text-[color:var(--foreground)]">{selectedDate ? formatJakartaDate(selectedDate) : "—"} • {selectedLabel}</p>
               </div>
               {selectedRange && !selectedRange.isContinuous ? (
                 <p className="text-sm text-amber-300">Select continuous slots without gaps.</p>
@@ -293,7 +293,7 @@ export function BookingForm({ fields }: { fields: Field[] }) {
           </div>
         </div>
 
-        <div className="mt-6 flex flex-col gap-3 border-t border-white/10 pt-4 text-white sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-6 flex flex-col gap-3 border-t border-white/10 pt-4 text-[color:var(--foreground)] sm:flex-row sm:items-center sm:justify-between">
           <span className="text-sm text-[color:var(--muted)]">Estimated total</span>
           <span className="text-2xl font-semibold">{formatCurrency(selectedAmount)}</span>
         </div>

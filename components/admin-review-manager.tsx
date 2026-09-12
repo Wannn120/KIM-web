@@ -54,11 +54,11 @@ export function AdminReviewManager() {
   };
 
   return (
-    <div className="rounded-[2rem] border border-white/10 card-surface p-6">
+    <div className="rounded-2xl border border-white/10 card-surface p-6">
           <div className="mb-6 flex items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Review management</p>
-          <h2 className="mt-2 text-2xl font-semibold text-white">Edit or remove customer ratings</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--accent-strong)]">Review management</p>
+          <h2 className="mt-2 text-balance text-2xl font-semibold leading-tight text-[color:var(--foreground)]">Edit or remove customer ratings</h2>
         </div>
       </div>
 
@@ -70,7 +70,7 @@ export function AdminReviewManager() {
             <div key={review.id} className="rounded-3xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="font-semibold text-white">{review.customerName}</p>
+                  <p className="font-semibold text-[color:var(--foreground)]">{review.customerName}</p>
                   <p className="text-sm text-[color:var(--muted)]">{review.date}</p>
                   <p className="text-sm text-[color:var(--accent)]">{review.rating} ★</p>
                 </div>

@@ -25,9 +25,9 @@ export default async function PaymentPage({
   const customerName = getSearchParam(resolvedSearchParams.customerName, "Demo Customer");
 
   return (
-    <main className="flex-1 px-6 py-16 lg:px-8">
+    <main className="flex-1 px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <AnimatedCard className="p-8">
+        <AnimatedCard className="p-6 sm:p-8">
           <PaymentSimulator
             bookingId={bookingId}
             amount={Number.isFinite(amount) ? amount : 170000}

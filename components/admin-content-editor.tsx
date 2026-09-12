@@ -145,10 +145,10 @@ export function AdminContentEditor() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-8">
-    <section className="rounded-[1.5rem] border border-white/10 bg-[color:var(--surface)] p-6 sm:p-8">
+    <section className="rounded-2xl border border-white/10 bg-[color:var(--surface)] p-6 sm:p-8">
       <div className="mb-6">
-        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Content editor</p>
-        <h2 className="mt-2 text-2xl font-semibold text-white">Change hero text and images</h2>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--accent-strong)]">Content editor</p>
+        <h2 className="mt-2 text-balance text-2xl font-semibold leading-tight text-[color:var(--foreground)]">Change hero text and images</h2>
       </div>
       <div className="grid gap-5">
         <label className="block text-sm text-[color:var(--muted)]">
@@ -264,7 +264,7 @@ export function AdminContentEditor() {
                       </svg>
                     </span>
                     <div>
-                      <p className="font-semibold text-white">Preview unavailable</p>
+                      <p className="font-semibold text-[color:var(--foreground)]">Preview unavailable</p>
                       <p className="text-sm text-[color:var(--muted)]">The uploaded image could not be displayed.</p>
                     </div>
                   </div>

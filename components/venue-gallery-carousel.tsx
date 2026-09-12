@@ -74,17 +74,17 @@ export default function VenueGalleryCarousel({ images, price }: { images: VenueG
   const next = () => setActive((currentIndex) => (currentIndex + 1) % count);
 
   return (
-    <section aria-labelledby="venue-gallery-heading" className="rounded-[3rem] border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-4 py-12 shadow-[0_24px_80px_rgba(15,23,42,0.06)] sm:px-6 lg:px-8 lg:py-16">
+    <section aria-labelledby="venue-gallery-heading" className="border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-4 py-12 sm:px-6 lg:px-8">
       <div className="w-full">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Galeri lapangan</p>
-            <h2 id="venue-gallery-heading" className="mt-2 text-3xl font-semibold text-white sm:text-4xl">Klaten International Minisoccer</h2>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--accent-strong)]">Galeri lapangan</p>
+            <h2 id="venue-gallery-heading" className="mt-2 text-balance text-3xl font-semibold leading-tight text-[color:var(--foreground)] sm:text-4xl">Klaten International Minisoccer</h2>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-[color:var(--muted)]">Lihat berbagai sudut lapangan sebelum memilih jadwal bermain.</p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-right">
             <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--muted)]">Harga sewa</p>
-            <p className="mt-1 text-lg font-semibold text-white">Rp {price.toLocaleString("id-ID")}<span className="text-sm font-normal text-[color:var(--muted)]"> / jam</span></p>
+            <p className="mt-1 text-lg font-semibold text-[color:var(--foreground)]">Rp {price.toLocaleString("id-ID")}<span className="text-sm font-normal text-[color:var(--muted)]"> / jam</span></p>
           </div>
         </div>
 

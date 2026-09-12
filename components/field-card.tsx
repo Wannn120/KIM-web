@@ -7,7 +7,7 @@ export function FieldCard({ field }: { field: Field }) {
   return (
     <article className="card-surface overflow-hidden">
       {field.imageUrl ? (
-        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[1.5rem] bg-[color:var(--surface)] sm:aspect-[16/9]">
+        <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-[color:var(--surface)]">
           <Image
             src={field.imageUrl}
             alt={field.name}
@@ -33,7 +33,7 @@ export function FieldCard({ field }: { field: Field }) {
         </div>
         <div className="mb-4 flex items-center justify-between text-sm text-[color:var(--muted)]">
           <span>{field.rating} ★</span>
-          <span className="text-white font-semibold">{formatCurrency(field.price)}/hour</span>
+          <span className="font-semibold text-[color:var(--foreground)]">{formatCurrency(field.price)}/hour</span>
         </div>
         <p className="mb-6 text-sm leading-6 text-[color:var(--muted)]">
           Premium mini soccer turf with bright lighting, quality ball nets, and fast booking.

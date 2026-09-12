@@ -47,11 +47,11 @@ export default function PaymentWebhookTestPage() {
   };
 
   return (
-    <main className="flex-1 px-6 py-16 lg:px-8">
+    <main className="flex-1 px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
-        <AnimatedCard className="p-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Webhook test</p>
-          <h1 className="mt-2 text-4xl font-semibold text-white">Verify pending → success / cancelled</h1>
+        <AnimatedCard className="p-6 sm:p-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--accent-strong)]">Webhook test</p>
+          <h1 className="mt-2 text-balance text-3xl font-semibold leading-tight text-[color:var(--foreground)] sm:text-4xl">Verify pending → success / cancelled</h1>
           <p className="mt-3 text-[color:var(--muted)]">Use this path to validate the payment status transition end-to-end against the real webhook processing handler.</p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">

@@ -135,36 +135,36 @@ export default function CheckoutPage() {
   };
 
   return (
-    <main className="flex-1 px-6 py-16 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-8">
-        <div className="card-surface p-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Secure checkout</p>
-          <h1 className="mt-3 text-4xl font-semibold text-white">Review your booking details</h1>
+    <main className="flex-1 px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-6 sm:space-y-8">
+        <div className="card-surface p-6 sm:p-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--accent-strong)]">Secure checkout</p>
+          <h1 className="mt-3 text-balance text-3xl font-semibold leading-tight text-[color:var(--foreground)] sm:text-4xl">Review your booking details</h1>
           <p className="mt-4 max-w-2xl text-lg text-[color:var(--muted)]">
             Confirm the field, date, and time, then enter your contact information to proceed to payment.
           </p>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="rounded-3xl border border-white/10 card-surface p-6">
-              <p className="text-sm uppercase tracking-[0.25em] text-[color:var(--muted)]">Field</p>
-              <p className="mt-2 text-xl font-semibold text-white">{fieldName || "Field not selected"}</p>
+            <div className="rounded-2xl border border-white/10 card-surface p-6">
+              <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--muted)]">Field</p>
+              <p className="mt-2 text-xl font-semibold text-[color:var(--foreground)]">{fieldName || "Field not selected"}</p>
               <p className="mt-2 text-sm text-[color:var(--muted)]">Review the selected slot before continuing.</p>
             </div>
-            <div className="rounded-3xl border border-white/10 card-surface p-6">
-              <p className="text-sm uppercase tracking-[0.25em] text-[color:var(--muted)]">Date</p>
-              <p className="mt-2 text-xl font-semibold text-white">{bookingDate ? formatJakartaDate(bookingDate) : "—"}</p>
+            <div className="rounded-2xl border border-white/10 card-surface p-6">
+              <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--muted)]">Date</p>
+              <p className="mt-2 text-xl font-semibold text-[color:var(--foreground)]">{bookingDate ? formatJakartaDate(bookingDate) : "—"}</p>
               <p className="mt-2 text-sm text-[color:var(--muted)]">{startTime && endTime ? formatTimeRange(startTime, endTime) : "—"}</p>
             </div>
-            <div className="rounded-3xl border border-white/10 card-surface p-6">
-              <p className="text-sm uppercase tracking-[0.25em] text-[color:var(--muted)]">Total</p>
-              <p className="mt-2 text-3xl font-semibold text-white">Rp {amount.toLocaleString("id-ID")}</p>
+            <div className="rounded-2xl border border-white/10 card-surface p-6">
+              <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--muted)]">Total</p>
+              <p className="mt-2 text-3xl font-semibold text-[color:var(--foreground)]">Rp {amount.toLocaleString("id-ID")}</p>
               <p className="mt-2 text-sm text-[color:var(--muted)]">Estimated charge</p>
             </div>
           </div>
         </div>
 
-        <AnimatedCard className="p-8">
-          <h2 className="text-2xl font-semibold text-white">Your contact information</h2>
+        <AnimatedCard className="p-6 sm:p-8">
+          <h2 className="text-balance text-2xl font-semibold leading-tight text-[color:var(--foreground)]">Your contact information</h2>
           <p className="mt-2 text-sm text-[color:var(--muted)]">Required for booking confirmation and payment receipt.</p>
 
           <div className="mt-6 space-y-4">

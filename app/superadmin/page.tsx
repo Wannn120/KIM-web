@@ -59,10 +59,10 @@ export default async function SuperadminPage() {
   } catch (error) {
     console.error("[SUPERADMIN] Unable to render dashboard:", error);
     return (
-      <main className="flex-1 px-6 py-16 lg:px-8">
-        <div className="mx-auto max-w-3xl rounded-[2rem] border border-amber-500/20 bg-[color:var(--surface)] p-10">
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-amber-300">Dashboard unavailable</p>
-          <h1 className="mt-4 text-3xl font-semibold text-white">The admin dashboard could not be rendered.</h1>
+      <main className="flex-1 px-4 py-12 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl rounded-2xl border border-amber-500/20 bg-[color:var(--surface)] p-6 sm:p-10">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-300">Dashboard unavailable</p>
+          <h1 className="mt-4 text-balance text-3xl font-semibold leading-tight text-[color:var(--foreground)]">The admin dashboard could not be rendered.</h1>
           <p className="mt-4 text-sm leading-7 text-[color:var(--muted)]">
             A temporary data issue prevented the dashboard from loading correctly. Please refresh the page or try again shortly.
           </p>

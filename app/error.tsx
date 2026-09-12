@@ -8,10 +8,10 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
   }, [error]);
 
   return (
-    <main className="flex-1 px-6 py-16 lg:px-8">
-      <div className="mx-auto max-w-3xl rounded-[2rem] border border-rose-500/20 bg-[color:var(--surface)] p-10 text-center">
-        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-rose-300">Something went wrong</p>
-        <h1 className="mt-4 text-4xl font-semibold text-white">A client-side error occurred</h1>
+    <main className="flex-1 px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-3xl rounded-2xl border border-rose-500/20 bg-[color:var(--surface)] p-6 text-center sm:p-10">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-rose-300">Something went wrong</p>
+        <h1 className="mt-4 text-balance text-3xl font-semibold leading-tight text-[color:var(--foreground)] sm:text-4xl">A client-side error occurred</h1>
         <p className="mt-4 text-sm leading-7 text-[color:var(--muted)]">
           The page failed to load correctly. Please refresh the page or try again in a few moments.
         </p>

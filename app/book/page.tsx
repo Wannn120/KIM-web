@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { bookingSteps, bookedSlots as fallbackBookedSlots, fields as fallbackFields } from "@/lib/mock-data";
 import { getUpcomingBookings, getFields, mapBookingsToSlots } from "@/lib/data";
 import { expirePendingPayments } from "@/lib/payment-service";
@@ -5,6 +6,12 @@ import { BookingForm } from "@/components/booking-form";
 import { headers } from "next/headers";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Booking Lapangan Mini Soccer Klaten",
+  description: "Pilih tanggal, jam, lapangan mini soccer Klaten. Checkout cepat, konfirmasi instan.",
+  alternates: { canonical: "/book" },
+};
 
 async function getAppUrl() {
   const requestHeaders = await headers();
@@ -70,19 +77,19 @@ export default async function BookPage() {
   const { fields, usingFallback } = await loadFields();
 
   return (
-    <main className="flex-1 px-6 py-16 lg:px-8">
+    <main className="flex-1 px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-10">
-        <section className="card-surface p-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Booking flow</p>
-          <h1 className="mt-3 text-4xl font-semibold text-white">Choose your date, time, and payment method</h1>
+        <section className="card-surface p-6 sm:p-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--accent-strong)]">Booking flow</p>
+          <h1 className="mt-3 text-balance text-3xl font-semibold leading-tight text-[color:var(--foreground)] sm:text-4xl">Choose your date, time, and payment method</h1>
           <p className="mt-4 max-w-2xl text-lg text-[color:var(--muted)]">
             The booking experience is designed for fast checkout with instant confirmation and a clean hourly schedule.
           </p>
 
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {bookingSteps.map((step) => (
-              <div key={step.title} className="rounded-3xl border border-white/10 card-surface p-6">
-                <h2 className="font-semibold text-white">{step.title}</h2>
+              <div key={step.title} className="rounded-2xl border border-white/10 card-surface p-6">
+                <h2 className="font-semibold text-[color:var(--foreground)]">{step.title}</h2>
                 <p className="mt-2 text-sm text-[color:var(--muted)]">{step.description}</p>
               </div>
             ))}
@@ -93,8 +100,8 @@ export default async function BookPage() {
           <div className="card-surface p-8 h-full">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Available schedule</p>
-                <h2 className="mt-2 text-3xl font-semibold text-white">One client per slot, selected by hour</h2>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--accent-strong)]">Available schedule</p>
+                <h2 className="mt-2 text-balance text-2xl font-semibold leading-tight text-[color:var(--foreground)] sm:text-3xl">One client per slot, selected by hour</h2>
               </div>
               <p className="text-sm text-[color:var(--muted)] max-w-xl">
                 Each booking is limited to one customer per field and time slot so schedules do not overlap.
@@ -116,7 +123,7 @@ export default async function BookPage() {
                     <tbody>
                       {bookedSlots.map((slot) => (
                         <tr key={`${slot.date}-${slot.time}-${slot.field}`} className="border-t border-white/10">
-                          <td className="px-4 py-3 text-white">{slot.date}</td>
+                          <td className="px-4 py-3 font-medium text-[color:var(--foreground)]">{slot.date}</td>
                           <td className="px-4 py-3">{slot.time}</td>
                           <td className="px-4 py-3">{slot.field}</td>
                           <td className="px-4 py-3">
@@ -136,15 +143,15 @@ export default async function BookPage() {
                       <div className="flex flex-col gap-3">
                         <div>
                           <p className="text-xs text-[color:var(--muted)]">Date</p>
-                          <p className="font-semibold text-white">{slot.date}</p>
+                          <p className="font-semibold text-[color:var(--foreground)]">{slot.date}</p>
                         </div>
                         <div>
                           <p className="text-xs text-[color:var(--muted)]">Time</p>
-                          <p className="text-sm text-white">{slot.time}</p>
+                          <p className="text-sm text-[color:var(--foreground)]">{slot.time}</p>
                         </div>
                         <div>
                           <p className="text-xs text-[color:var(--muted)]">Field</p>
-                          <p className="text-sm text-white">{slot.field}</p>
+                          <p className="text-sm text-[color:var(--foreground)]">{slot.field}</p>
                         </div>
                         <div className="flex items-center justify-between gap-4">
                           <p className="text-xs text-[color:var(--muted)]">Status</p>
@@ -162,7 +169,7 @@ export default async function BookPage() {
             {usingFallback ? (
               <div className="rounded-3xl border border-rose-500/10 bg-rose-500/5 p-8">
                 <p className="text-sm uppercase tracking-[0.3em] text-rose-200">Booking unavailable</p>
-                <h2 className="mt-3 text-3xl font-semibold text-white">Database connection required</h2>
+                <h2 className="mt-3 text-balance text-2xl font-semibold leading-tight text-[color:var(--foreground)] sm:text-3xl">Database connection required</h2>
                 <p className="mt-4 text-sm text-[color:var(--muted)]">
                   The booking service is temporarily unavailable because the database could not be accessed. Please try again later.
                 </p>

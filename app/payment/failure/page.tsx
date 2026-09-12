@@ -34,9 +34,9 @@ export default async function PaymentFailurePage({
   const paymentMethod = payment?.paymentMethod;
 
   return (
-    <main className="flex-1 px-6 py-16 lg:px-8">
+    <main className="flex-1 px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
-        <AnimatedCard className="p-8 text-center">
+        <AnimatedCard className="p-6 text-center sm:p-8">
           <div className="mx-auto mb-6 flex h-28 w-28 items-center justify-center rounded-full bg-rose-500/15 text-7xl text-rose-300">
             ✕
           </div>
@@ -45,7 +45,7 @@ export default async function PaymentFailurePage({
             {isPending ? "Payment pending" : "Payment failed or expired"}
           </div>
 
-          <h1 className="text-4xl font-semibold text-white">
+          <h1 className="text-balance text-3xl font-semibold leading-tight text-[color:var(--foreground)] sm:text-4xl">
             {isPending
               ? "Pembayaran sedang menunggu konfirmasi"
               : "Pembayaran tidak dapat diproses"}
@@ -76,7 +76,7 @@ export default async function PaymentFailurePage({
             {invoiceNumber ? (
               <div className="mb-4 rounded-2xl bg-white/5 p-4 text-left">
                 <p className="text-sm text-[color:var(--muted)]">Nomor invoice</p>
-                <p className="mt-1 text-lg font-semibold text-white">{invoiceNumber}</p>
+                <p className="mt-1 text-lg font-semibold text-[color:var(--foreground)]">{invoiceNumber}</p>
               </div>
             ) : null}
             {invoiceAmount || paymentMethod ? (
@@ -84,19 +84,19 @@ export default async function PaymentFailurePage({
                 {invoiceAmount ? (
                   <div className="rounded-2xl bg-white/5 p-4 text-left">
                     <p className="text-sm text-[color:var(--muted)]">Jumlah pembayaran</p>
-                    <p className="mt-1 text-lg font-semibold text-white">{invoiceAmount}</p>
+                    <p className="mt-1 text-lg font-semibold text-[color:var(--foreground)]">{invoiceAmount}</p>
                   </div>
                 ) : null}
                 {paymentMethod ? (
                   <div className="rounded-2xl bg-white/5 p-4 text-left">
                     <p className="text-sm text-[color:var(--muted)]">Metode pembayaran</p>
-                    <p className="mt-1 text-lg font-semibold text-white">{paymentMethod}</p>
+                    <p className="mt-1 text-lg font-semibold text-[color:var(--foreground)]">{paymentMethod}</p>
                   </div>
                 ) : null}
               </div>
             ) : null}
             <p className="text-sm text-[color:var(--muted)]">Beberapa kemungkinan penyebab:</p>
-            <ul className="mt-3 list-disc space-y-2 pl-6 text-sm text-white">
+            <ul className="mt-3 list-disc space-y-2 pl-6 text-sm text-[color:var(--foreground)]">
               <li>Payment link sudah kadaluarsa</li>
               <li>Transaksi dibatalkan oleh pengguna</li>
               <li>Transaksi gagal karena verifikasi penyedia pembayaran</li>

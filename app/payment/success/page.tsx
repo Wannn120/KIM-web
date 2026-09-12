@@ -36,9 +36,9 @@ export default async function PaymentSuccessPage({
   const continueUrl = payment?.booking ? `/booking/${payment.booking.id}/payment` : "/";
 
   return (
-    <main className="flex-1 px-6 py-16 lg:px-8">
+    <main className="flex-1 px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
-        <AnimatedCard className="p-8 text-center">
+        <AnimatedCard className="p-6 text-center sm:p-8">
           <div
             className={`mx-auto mb-6 flex h-28 w-28 items-center justify-center rounded-full text-7xl ${
               isSuccess ? "bg-emerald-500/15 text-emerald-300" : isFailed ? "bg-rose-500/15 text-rose-300" : "bg-amber-500/15 text-amber-300"
@@ -53,7 +53,7 @@ export default async function PaymentSuccessPage({
             {isSuccess ? "Payment successful" : isFailed ? "Payment failed" : "Payment pending"}
           </div>
 
-          <h1 className="text-4xl font-semibold text-white">
+          <h1 className="text-balance text-3xl font-semibold leading-tight text-[color:var(--foreground)] sm:text-4xl">
             {isSuccess ? "Thank you! Your booking is confirmed." : isFailed ? "Your payment did not complete." : "Your payment is still pending."}
           </h1>
 
@@ -83,23 +83,23 @@ export default async function PaymentSuccessPage({
 
           <div className="mt-8 rounded-3xl border border-white/10 bg-[color:var(--surface)] p-6 text-left">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-white">Payment summary</h2>
+              <h2 className="text-xl font-semibold text-[color:var(--foreground)]">Payment summary</h2>
               <span className="rounded-full bg-white/10 px-3 py-1 text-sm font-medium text-[color:var(--muted)]">{status}</span>
             </div>
             <div className="mt-6 grid gap-3 text-sm text-[color:var(--muted)] sm:grid-cols-2">
-              <div className="flex justify-between"><span>Transaction ID</span><span className="text-white">{payment?.transactionId ?? transactionId}</span></div>
-              <div className="flex justify-between"><span>Booking ID</span><span className="text-white">{payment?.bookingId ?? "—"}</span></div>
-              <div className="flex justify-between"><span>Method</span><span className="text-white">{payment?.paymentMethod ?? "—"}</span></div>
-              <div className="flex justify-between"><span>Amount</span><span className="text-white">Rp {payment?.amount?.toLocaleString("id-ID") ?? "0"}</span></div>
-              <div className="flex justify-between"><span>Provider</span><span className="text-white">{payment?.provider ?? "—"}</span></div>
-              <div className="flex justify-between"><span>Field</span><span className="text-white">{DEFAULT_FIELD_NAME}</span></div>
+              <div className="flex justify-between gap-4"><span>Transaction ID</span><span className="text-right font-medium text-[color:var(--foreground)]">{payment?.transactionId ?? transactionId}</span></div>
+              <div className="flex justify-between gap-4"><span>Booking ID</span><span className="text-right font-medium text-[color:var(--foreground)]">{payment?.bookingId ?? "—"}</span></div>
+              <div className="flex justify-between gap-4"><span>Method</span><span className="text-right font-medium text-[color:var(--foreground)]">{payment?.paymentMethod ?? "—"}</span></div>
+              <div className="flex justify-between gap-4"><span>Amount</span><span className="text-right font-medium text-[color:var(--foreground)]">Rp {payment?.amount?.toLocaleString("id-ID") ?? "0"}</span></div>
+              <div className="flex justify-between gap-4"><span>Provider</span><span className="text-right font-medium text-[color:var(--foreground)]">{payment?.provider ?? "—"}</span></div>
+              <div className="flex justify-between gap-4"><span>Field</span><span className="text-right font-medium text-[color:var(--foreground)]">{DEFAULT_FIELD_NAME}</span></div>
             </div>
           </div>
 
           <div className="mt-6 rounded-3xl border border-white/10 bg-[color:var(--surface)] p-6 text-left">
             <div className="grid gap-3 text-sm text-[color:var(--muted)] sm:grid-cols-2">
-              <div className="flex justify-between"><span>Invoice</span><span className="text-white">{payment?.invoice?.invoiceNumber ?? "—"}</span></div>
-              <div className="flex justify-between"><span>Invoice amount</span><span className="text-white">Rp {payment?.invoice?.total?.toLocaleString("id-ID") ?? payment?.amount?.toLocaleString("id-ID") ?? "0"}</span></div>
+              <div className="flex justify-between gap-4"><span>Invoice</span><span className="text-right font-medium text-[color:var(--foreground)]">{payment?.invoice?.invoiceNumber ?? "—"}</span></div>
+              <div className="flex justify-between gap-4"><span>Invoice amount</span><span className="text-right font-medium text-[color:var(--foreground)]">Rp {payment?.invoice?.total?.toLocaleString("id-ID") ?? payment?.amount?.toLocaleString("id-ID") ?? "0"}</span></div>
             </div>
           </div>
 
