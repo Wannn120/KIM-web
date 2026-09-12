@@ -162,3 +162,44 @@ This file records the main activities, changes, fixes, and decisions made by the
 - Modified: `lib/booking-engine.ts`, `lib/data.ts`, `lib/payment-service.ts`, `components/booking-form.tsx`, `app/checkout/page.tsx`, `app/payment/success/page.tsx`, `prisma/main table.sql`, `lib/invoice-html-template.ts`, `lib/invoice-html-pdf.ts`, `app/api/invoices/download/route.ts`
 
 If you want, I can open a PR with these changes, run `npm run lint -- --fix`, or prepare the DB normalization SQL to run in Supabase SQL editor. Which would you like next?
+
+## 2026-09-12
+
+### 27. Auth debug
+- `staff@klatenminisoccer.id` login fixed. `JWT_SECRET` missing. Set Vercel env redeploy.
+- Hashes verified SHA256. `staff123 10176e7b...`, `manager123 86648579...`, `superadmin123 e34f92a2...`.
+- `lib/admin-auth.ts` seed aligned. Cookie `admin-session` 8h.
+
+### 28. Admin password CRUD
+- `components/admin-resource-manager.tsx` password prompt added. Min6 enforced.
+- `app/api/admin/*` SHA256 `crypto.createHash` update. `admin_users` only `name email role is_active`.
+- Hash change via UI. No direct DB edit needed.
+
+### 29. Venue content UX
+- `components/venue-gallery-manager.tsx` created. Mirror `venue-feature-manager.tsx`. FormData upload Cloudinary.
+- Duplicate text tables removed. Image manager canonical.
+- `components/admin-content-editor.tsx` hero preview `<Image>` added. `showForm` toggles added.
+- Roles adjusted `staff manager super_admin` via `isAdminRoleAllowed` `getAdminPanelPath`.
+
+### 30. Invoice PDF classic
+- `puppeteer-core ^25.10.0` added. `next.config.ts` `serverExternalPackages` set.
+- `lib/invoice-html-pdf.ts` launch fixed `--no-sandbox --disable-setuid-sandbox`. Local ok 97968 bytes.
+- `lib/invoice-pdf.ts` `generateInvoicePdfBufferAuto` classic first fallback legacy.
+- `app/api/invoices/download/route.ts` `?engine=legacy ?format=legacy` `X-PDF-Engine` header. `INVOICE_PDF_ENGINE=classic`.
+- Verify Vercel `X-PDF-Engine: classic` after redeploy.
+
+### 31. UI design system SEO
+- Tokens unified `app/globals.css` `--space-section --text-display --text-h1 --text-h2`. System stack only.
+- Sweep `foreground` `rounded-2xl` `px-4 py-12`. Removed `text-white` `rounded-[3rem]` `tracking-[0.3em]`.
+- Semantic `header main#main-content footer nav section`. One `h1` per page. Skip link `app/layout.tsx`.
+- Metadata `layout.tsx` per-page canonical. `app/robots.ts` `app/sitemap.ts` JSON-LD SportsActivityLocation.
+- `lib/site-config.ts` url `https://klatenminisoccer.id`. `components/hero-section.tsx` skeleton `<Image>`.
+- `get_errors` clean 9 dashboard files.
+
+### 32. Spaghetti cleanup docs rebuild
+- Root dead deleted `cookiejar.txt cookies.txt db.js debug-*.js page.html migration-list.txt prisma-migrate-deploy.log tmp-*`. Push `e85217c`.
+- `scripts/` 30 files deleted except `scripts/check-env.js`. CI uses only `ci:check-env`.
+- Root `*.md` 13 files deleted. Kept `AI_ACTIVITIES.md`.
+- `README.md` recreated minimal. `SYSTEM.md` created: arsitektur sistem, database, design, env, alur.
+- Push `602dfde`. Build `prisma generate && next build` pass.
+- Skipped: workflow dedup `ci.yml ci-cd.yml prisma-deploy.yml`, manager CRUD `text-white` sweep sisa, Vercel classic verify. Add when next sweep.
