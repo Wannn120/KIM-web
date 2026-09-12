@@ -22,6 +22,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const content = await getSiteContent();
   return {
   metadataBase: new URL(siteConfig.url),
+  alternates: { canonical: siteConfig.url },
   title: {
     default: content.heroTitle || siteConfig.title,
     template: `%s | ${siteConfig.name}`,
